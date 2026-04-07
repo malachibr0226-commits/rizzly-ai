@@ -1,11 +1,12 @@
 /**
- * Sparkline MVP Header Component
- * Displays streak counter, achievement badges, and navigation
+ * Rizzly MVP Header Component
+ * Displays streak counter, achievement badges, auth, and navigation
  */
 
 "use client";
 
 import React from "react";
+import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
 import type { Achievement, StreakData } from "@/lib/analytics";
 
 interface MVPHeaderProps {
@@ -21,6 +22,7 @@ export function MVPHeader({
   showDashboard,
   onToggleDashboard,
 }: MVPHeaderProps) {
+  const { isSignedIn } = useAuth();
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
 
   return (
@@ -82,6 +84,23 @@ export function MVPHeader({
           >
             📊 Stats
           </button>
+
+          {/* Auth */}
+          {!isSignedIn ? (
+            <SignInButton mode="modal">
+              <button className="px-5 py-2.5 rounded-full text-sm font-semibold bg-gradient-to-r from-pink-500 to-cyan-500 text-white shadow-[0_0_12px_rgba(236,72,153,0.3)] hover:shadow-[0_0_20px_rgba(236,72,153,0.5)] transition-all duration-200 transform hover:scale-105 active:scale-95">
+                Sign In
+              </button>
+            </SignInButton>
+          ) : (
+            <UserButton
+              appearance={{
+                elements: {
+                  avatarBox: "w-9 h-9 ring-2 ring-pink-500/40",
+                },
+              }}
+            />
+          )}
         </div>
       </div>
     </div>

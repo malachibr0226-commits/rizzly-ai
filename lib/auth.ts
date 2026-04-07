@@ -1,13 +1,11 @@
 /**
- * Auth infrastructure scaffold.
+ * Auth infrastructure — powered by Clerk.
  *
- * Currently runs in "local-only" mode — identity lives in localStorage.
- * To upgrade to real auth:
- *   1. `npm install next-auth`
- *   2. Create app/api/auth/[...nextauth]/route.ts
- *   3. Add NEXTAUTH_SECRET + provider env vars
- *   4. Replace localUser() with the session from NextAuth
+ * Client-side: use Clerk's useUser() / useAuth() hooks directly.
+ * Server-side (API routes): use getServerAuth() below.
  */
+
+import { auth, currentUser } from "@clerk/nextjs/server";
 
 export interface User {
   id: string;
@@ -17,50 +15,34 @@ export interface User {
   createdAt: number;
 }
 
-const LOCAL_USER_KEY = "rizzly-user-v1";
+/** Get the authenticated user's ID from an API route (server-side). */
+export async function getServerAuth() {
+  const { userId } = await auth();
+  return userId;
+}
 
-/** Get or create a local-only anonymous user. */
-export function getLocalUser(): User {
-  if (typeof window === "undefined") {
-    return { id: "anon", name: null, email: null, image: null, createdAt: 0 };
-  }
-
-  try {
-    const stored = localStorage.getItem(LOCAL_USER_KEY);
-    if (stored) {
-      return JSON.parse(stored) as User;
-    }
-  } catch {
-    // ignore
-  }
-
-  const user: User = {
-    id: `local-${crypto.randomUUID()}`,
-    name: null,
-    email: null,
-    image: null,
-    createdAt: Date.now(),
+/** Get full user profile from an API route (server-side). */
+export async function getServerUser(): Promise<User | null> {
+  const user = await currentUser();
+  if (!user) return null;
+  return {
+    id: user.id,
+    name: user.firstName
+      ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ""}`
+      : null,
+    email: user.emailAddresses[0]?.emailAddress ?? null,
+    image: user.imageUrl ?? null,
+    createdAt: user.createdAt ?? Date.now(),
   };
-
-  try {
-    localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(user));
-  } catch {
-    // quota exceeded
-  }
-
-  return user;
 }
 
-/** Check if a real auth session exists (placeholder for NextAuth). */
-export function isAuthenticated(): boolean {
-  // Replace with: const session = await getServerSession(authOptions);
-  // return !!session;
-  return false;
+/** Check if the request is authenticated (server-side). */
+export async function isAuthenticated(): Promise<boolean> {
+  const userId = await getServerAuth();
+  return !!userId;
 }
 
-/** Guard an API route — returns 401 if unauthenticated. */
-export function requireAuth(_req: Request): { user: User | null; error: Response | null } {
-  // In local-only mode, always allow
-  // Replace with NextAuth session check for production
-  return { user: null, error: null };
+/** Require auth or return a 401-ready userId. Returns null if unauthenticated. */
+export async function requireAuth(): Promise<string | null> {
+  return await getServerAuth();
 }
