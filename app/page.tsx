@@ -485,11 +485,25 @@ function ToneDropdown({
           </div>
 
           <div
-            className={`shrink-0 text-white/60 transition-transform duration-200 ${
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/8 bg-white/[0.04] text-white/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-transform duration-200 ${
               open ? (openUpward ? "" : "rotate-180") : openUpward ? "rotate-180" : ""
             }`}
           >
-            v
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M4 6.25L8 10L12 6.25"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
           </div>
         </div>
       </button>
