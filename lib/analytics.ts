@@ -6,6 +6,7 @@
 export type ToneKey = "confident" | "flirty" | "funny" | "chill" | "apologetic";
 export type GoalKey = "restart" | "flirt" | "clarify" | "plan" | "repair";
 export type CategoryKey = "dating" | "friendship" | "work" | "family" | "exes" | "other";
+export type OutcomeStatus = "warm" | "neutral" | "cold" | "no-reply";
 
 export interface TonePattern {
   tone: ToneKey;
@@ -38,7 +39,12 @@ export interface ThreadTurn {
   category?: CategoryKey;
   toneIntensity?: number;
   gotResponse?: boolean;
+  outcomeStatus?: OutcomeStatus;
+  outcomeUpdatedAt?: number;
   chosenReply?: string;
+  screenshotSummary?: string;
+  relationshipNotesSnapshot?: string;
+  personaCalibrationSnapshot?: string;
   replies: any[];
   bestIndex: number | null;
   analysis: any;
@@ -52,6 +58,12 @@ export interface Thread {
   turns: ThreadTurn[];
   summary?: string;
   category?: CategoryKey;
+  profileName?: string;
+  relationshipNotes?: string;
+  personaCalibration?: string;
+  screenshotSummary?: string;
+  lastOutcome?: OutcomeStatus;
+  privacyMode?: "local-only";
   successCount?: number;
   totalTurns?: number;
 }
@@ -194,7 +206,7 @@ export function exportConversation(
       : `Conversation: ${thread.name}\nCategory: ${thread.category || "other"}\n\n${thread.turns
           .map(
             (turn) =>
-              `User (${turn.tone}/${turn.goal}): ${turn.userMessage}\n\nAssistant: ${turn.chosenReply || turn.replies[0]?.text || "No reply saved"}\n`
+              `User (${turn.tone}/${turn.goal}): ${turn.userMessage}\nOutcome: ${turn.outcomeStatus || "unknown"}\n\nAssistant: ${turn.chosenReply || turn.replies[0]?.text || "No reply saved"}\n`
           )
           .join("\n---\n\n")}`;
 

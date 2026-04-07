@@ -13,6 +13,12 @@ type ReplyWithScores = {
   };
 };
 
+type ReplyBranch = {
+  scenario: string;
+  move: string;
+  note: string;
+};
+
 type SparklineResponse = {
   analysis: {
     summary: string;
@@ -26,6 +32,11 @@ type SparklineResponse = {
     receiverPattern: string;
     languageStyle: string;
     adaptationNote: string;
+    timingWindow: string;
+    avoid: string;
+    coachNotes: string;
+    nextMoves: string[];
+    replyBranches: ReplyBranch[];
   };
   replies: ReplyWithScores[];
   bestIndex: number;
@@ -79,6 +90,11 @@ const responseSchema = {
         "receiverPattern",
         "languageStyle",
         "adaptationNote",
+        "timingWindow",
+        "avoid",
+        "coachNotes",
+        "nextMoves",
+        "replyBranches",
       ],
       properties: {
         summary: { type: "string" },
@@ -92,6 +108,30 @@ const responseSchema = {
         receiverPattern: { type: "string" },
         languageStyle: { type: "string" },
         adaptationNote: { type: "string" },
+        timingWindow: { type: "string" },
+        avoid: { type: "string" },
+        coachNotes: { type: "string" },
+        nextMoves: {
+          type: "array",
+          minItems: 3,
+          maxItems: 3,
+          items: { type: "string" },
+        },
+        replyBranches: {
+          type: "array",
+          minItems: 3,
+          maxItems: 3,
+          items: {
+            type: "object",
+            additionalProperties: false,
+            required: ["scenario", "move", "note"],
+            properties: {
+              scenario: { type: "string" },
+              move: { type: "string" },
+              note: { type: "string" },
+            },
+          },
+        },
       },
     },
     replies: {
@@ -358,6 +398,31 @@ function fallbackResponse(tone: ToneKey): SparklineResponse {
       languageStyle: "Keep the language simple, conversational, and natural.",
       adaptationNote:
         "Mirror existing slang or lowercase style only if it already appears in the thread.",
+      timingWindow: "Send when you can reply naturally and stay available for at least one follow-up.",
+      avoid: "Do not over-explain, double-text, or force a plan immediately.",
+      coachNotes: "Use the safest reply if the thread feels fragile, or the strongest one if they already reopened with warmth.",
+      nextMoves: [
+        "Send the reply that matches your actual energy, not just the highest score.",
+        "If they answer warmly, ask one easy follow-up instead of switching topics too fast.",
+        "If they stay short, keep the pace light and avoid pushing for certainty.",
+      ],
+      replyBranches: [
+        {
+          scenario: "They reply fast and warm",
+          move: "Lean in with one playful or specific follow-up.",
+          note: "That is the moment to build momentum, not to play overly cool.",
+        },
+        {
+          scenario: "They reply short but positive",
+          move: "Keep it simple and mirror their pace with one clean question.",
+          note: "Do not jump to heavy flirting or a plan too early.",
+        },
+        {
+          scenario: "They stay cold or vague",
+          move: "Pause after one more low-pressure reply and let them re-engage.",
+          note: "Protect your position instead of chasing clarity in the same moment.",
+        },
+      ],
     },
     replies,
     bestIndex: 1,
@@ -474,6 +539,47 @@ function sanitizeModelPayload(
         typeof payload?.analysis?.adaptationNote === "string"
           ? payload.analysis.adaptationNote
           : fallback.analysis.adaptationNote,
+      timingWindow:
+        typeof payload?.analysis?.timingWindow === "string"
+          ? payload.analysis.timingWindow
+          : fallback.analysis.timingWindow,
+      avoid:
+        typeof payload?.analysis?.avoid === "string"
+          ? payload.analysis.avoid
+          : fallback.analysis.avoid,
+      coachNotes:
+        typeof payload?.analysis?.coachNotes === "string"
+          ? payload.analysis.coachNotes
+          : fallback.analysis.coachNotes,
+      nextMoves:
+        Array.isArray(payload?.analysis?.nextMoves) &&
+        payload.analysis.nextMoves.length >= 3
+          ? payload.analysis.nextMoves
+              .slice(0, 3)
+              .map((item) =>
+                typeof item === "string" && item.trim()
+                  ? item.trim()
+                  : "Keep the next move simple and measured.",
+              )
+          : fallback.analysis.nextMoves,
+      replyBranches:
+        Array.isArray(payload?.analysis?.replyBranches) &&
+        payload.analysis.replyBranches.length >= 3
+          ? payload.analysis.replyBranches.slice(0, 3).map((branch) => ({
+              scenario:
+                typeof branch?.scenario === "string" && branch.scenario.trim()
+                  ? branch.scenario.trim()
+                  : "If they respond",
+              move:
+                typeof branch?.move === "string" && branch.move.trim()
+                  ? branch.move.trim()
+                  : "Keep the next move calm and natural.",
+              note:
+                typeof branch?.note === "string" && branch.note.trim()
+                  ? branch.note.trim()
+                  : "Stay measured and do not overreact.",
+            }))
+          : fallback.analysis.replyBranches,
     },
     replies,
     bestIndex,
@@ -523,6 +629,22 @@ export async function POST(req: Request) {
       typeof body.userContext === "string" ? body.userContext.trim() : "";
     const threadSummary =
       typeof body.threadSummary === "string" ? body.threadSummary.trim() : "";
+    const relationshipNotes =
+      typeof body.relationshipNotes === "string"
+        ? body.relationshipNotes.trim()
+        : "";
+    const personaCalibration =
+      typeof body.personaCalibration === "string"
+        ? body.personaCalibration.trim()
+        : "";
+    const screenshotSummary =
+      typeof body.screenshotSummary === "string"
+        ? body.screenshotSummary.trim()
+        : "";
+    const profileName =
+      typeof body.profileName === "string" ? body.profileName.trim() : "";
+    const recentOutcome =
+      typeof body.recentOutcome === "string" ? body.recentOutcome.trim() : "";
     const tone: ToneKey = (
       allowedTones.includes(rawTone as ToneKey) ? rawTone : "confident"
     ) as ToneKey;
@@ -589,12 +711,32 @@ export async function POST(req: Request) {
       `Your side pattern: ${styleSignals.youStyle}.`,
       `Receiver side pattern: ${styleSignals.themStyle}.`,
       `Detected lingo: ${styleSignals.lingo}.`,
+      profileName ? `Contact or thread label: ${profileName}.` : "",
       userContext ? `Extra user context: ${userContext}` : "",
+      relationshipNotes
+        ? `Relationship memory: ${relationshipNotes}`
+        : "",
+      personaCalibration
+        ? `User voice calibration: ${personaCalibration}`
+        : "",
+      screenshotSummary
+        ? `Screenshot extraction summary: ${screenshotSummary}`
+        : "",
+      recentOutcome
+        ? `Most recent outcome in this thread: ${recentOutcome}. Use it to decide how hard to push or how much to back off.`
+        : "",
       threadSummary ? `\nPrior conversation patterns (what has worked):\n${threadSummary}${threadPatterns}\n\nLeverage these working patterns: notice which tones and goals succeeded, mirror the language and pacing of sent replies that got responses, and adapt to the relationship dynamic that emerged. Avoid repeating mistakes from this thread.` : "",
       earlierSummary ? `Earlier thread summary:\n${earlierSummary}` : "",
       "",
       "Recent transcript:",
       recentTranscript,
+      "",
+      "In the analysis, include:",
+      "- the best timing window for sending",
+      "- one thing to avoid doing next",
+      "- short coach notes about how hard to push",
+      "- exactly 3 next moves after the send",
+      "- exactly 3 reply branches for warm, mixed, and cold outcomes",
     ].join("\n");
 
     const response = await openai.responses.create({

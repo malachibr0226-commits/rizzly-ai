@@ -7,6 +7,7 @@ import { MVPHeader } from "@/app/components/MVPHeader";
 import type {
   ToneKey,
   GoalKey,
+  OutcomeStatus,
   Thread,
   ThreadTurn,
 } from "@/lib/analytics";
@@ -35,6 +36,24 @@ type Analysis = {
   receiverPattern?: string;
   languageStyle?: string;
   adaptationNote?: string;
+  timingWindow?: string;
+  avoid?: string;
+  coachNotes?: string;
+  nextMoves?: string[];
+  replyBranches?: Array<{
+    scenario: string;
+    move: string;
+    note: string;
+  }>;
+};
+
+type ScreenshotParseResult = {
+  transcriptLines: string[];
+  suggestedProfileName: string;
+  relationshipNotes: string;
+  summary: string;
+  suggestedGoal: GoalKey;
+  personaHint: string;
 };
 
 type DictationTarget = "conversation" | "context";
@@ -71,6 +90,10 @@ function loadDraft() {
       tone: "confident" as ToneKey,
       goal: "restart" as GoalKey,
       userContext: "",
+      profileName: "",
+      relationshipNotes: "",
+      personaCalibration: "",
+      screenshotSummary: "",
     };
   }
 
@@ -90,6 +113,20 @@ function loadDraft() {
           : ("restart" as GoalKey),
       userContext:
         typeof parsed?.userContext === "string" ? parsed.userContext : "",
+      profileName:
+        typeof parsed?.profileName === "string" ? parsed.profileName : "",
+      relationshipNotes:
+        typeof parsed?.relationshipNotes === "string"
+          ? parsed.relationshipNotes
+          : "",
+      personaCalibration:
+        typeof parsed?.personaCalibration === "string"
+          ? parsed.personaCalibration
+          : "",
+      screenshotSummary:
+        typeof parsed?.screenshotSummary === "string"
+          ? parsed.screenshotSummary
+          : "",
     };
   } catch {
     return {
@@ -97,6 +134,10 @@ function loadDraft() {
       tone: "confident" as ToneKey,
       goal: "restart" as GoalKey,
       userContext: "",
+      profileName: "",
+      relationshipNotes: "",
+      personaCalibration: "",
+      screenshotSummary: "",
     };
   }
 }
@@ -137,10 +178,11 @@ function generateThreadSummary(turns: ThreadTurn[]): string {
     const outcome = chosenReply
       ? `sent: "${chosenReply.substring(0, 50)}${chosenReply.length > 50 ? "..." : ""}"`
       : `tried ${turn.replies.length} replies`;
+    const responseTag = turn.outcomeStatus ? ` [${turn.outcomeStatus}]` : "";
 
     const vibe = analysis?.vibe ? ` (${analysis.vibe})` : "";
 
-    return `[${turn.tone}/${turn.goal}]${vibe} → ${outcome}`;
+    return `[${turn.tone}/${turn.goal}]${vibe}${responseTag} → ${outcome}`;
   });
 
   return summaryParts.join(" · ");
@@ -556,10 +598,15 @@ export default function Home() {
   const [photoModalImage, setPhotoModalImage] = useState<string | null>(null);
   const [photoModalText, setPhotoModalText] = useState("");
   const [photoModalLoading, setPhotoModalLoading] = useState(false);
+  const [screenshotParsing, setScreenshotParsing] = useState(false);
   const [conversation, setConversation] = useState(() => loadDraft().conversation);
   const [tone, setTone] = useState<ToneKey>(() => loadDraft().tone);
   const [goal, setGoal] = useState<GoalKey>(() => loadDraft().goal);
   const [userContext, setUserContext] = useState(() => loadDraft().userContext);
+  const [profileName, setProfileName] = useState(() => loadDraft().profileName);
+  const [relationshipNotes, setRelationshipNotes] = useState(() => loadDraft().relationshipNotes);
+  const [personaCalibration, setPersonaCalibration] = useState(() => loadDraft().personaCalibration);
+  const [screenshotSummary, setScreenshotSummary] = useState(() => loadDraft().screenshotSummary);
   const [replies, setReplies] = useState<Reply[]>([]);
   const [bestIndex, setBestIndex] = useState<number | null>(null);
   const [sentReplyIndex, setSentReplyIndex] = useState<number | null>(null);
@@ -594,6 +641,7 @@ export default function Home() {
     conversation.length > 2200;
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const voiceInputRef = useRef<HTMLInputElement | null>(null);
+  const screenshotInputRef = useRef<HTMLInputElement | null>(null);
 
   const interestLabel = useMemo(() => {
     if (!replies.length || bestIndex === null) return null;
@@ -668,9 +716,27 @@ export default function Home() {
 
     window.localStorage.setItem(
       DRAFT_KEY,
-      JSON.stringify({ conversation, tone, goal, userContext }),
+      JSON.stringify({
+        conversation,
+        tone,
+        goal,
+        userContext,
+        profileName,
+        relationshipNotes,
+        personaCalibration,
+        screenshotSummary,
+      }),
     );
-  }, [conversation, goal, tone, userContext]);
+  }, [
+    conversation,
+    goal,
+    tone,
+    userContext,
+    profileName,
+    relationshipNotes,
+    personaCalibration,
+    screenshotSummary,
+  ]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -687,6 +753,33 @@ export default function Home() {
 
     window.localStorage.setItem(CURRENT_THREAD_KEY, currentThreadId);
   }, [currentThreadId]);
+
+  useEffect(() => {
+    if (!currentThreadId) {
+      return;
+    }
+
+    setThreads((prev) =>
+      prev.map((thread) =>
+        thread.id === currentThreadId
+          ? {
+              ...thread,
+              profileName: profileName.trim(),
+              relationshipNotes: relationshipNotes.trim(),
+              personaCalibration: personaCalibration.trim(),
+              screenshotSummary: screenshotSummary.trim(),
+              privacyMode: "local-only",
+            }
+          : thread,
+      ),
+    );
+  }, [
+    currentThreadId,
+    profileName,
+    relationshipNotes,
+    personaCalibration,
+    screenshotSummary,
+  ]);
 
   useEffect(() => {
     setVoiceSupported(detectVoiceSupport());
@@ -884,6 +977,119 @@ export default function Home() {
     }
   };
 
+  const handleScreenshotUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setScreenshotParsing(true);
+    setError(null);
+
+    try {
+      const imageDataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (loadEvent) => {
+          const result = loadEvent.target?.result;
+
+          if (typeof result === "string") {
+            resolve(result);
+            return;
+          }
+
+          reject(new Error("Failed to read screenshot."));
+        };
+        reader.onerror = () => reject(new Error("Failed to read screenshot."));
+        reader.readAsDataURL(file);
+      });
+
+      const res = await fetch("/api/parse-screenshot", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageDataUrl }),
+      });
+
+      const data = (await res.json()) as ScreenshotParseResult & { error?: string };
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to parse screenshot.");
+      }
+
+      if (Array.isArray(data.transcriptLines) && data.transcriptLines.length > 0) {
+        setConversation(data.transcriptLines.join("\n"));
+      }
+
+      if (data.suggestedGoal) {
+        setGoal(data.suggestedGoal);
+      }
+
+      if (data.suggestedProfileName && !profileName.trim()) {
+        setProfileName(data.suggestedProfileName);
+      }
+
+      if (data.relationshipNotes) {
+        setRelationshipNotes((current: string) =>
+          current.trim()
+            ? `${current.trim()}\n${data.relationshipNotes}`
+            : data.relationshipNotes,
+        );
+      }
+
+      if (data.personaHint) {
+        setPersonaCalibration((current: string) =>
+          current.trim() ? current : data.personaHint,
+        );
+      }
+
+      setScreenshotSummary(data.summary || "Screenshot imported and parsed.");
+    } catch (caughtError) {
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Failed to parse screenshot.",
+      );
+    } finally {
+      setScreenshotParsing(false);
+      event.target.value = "";
+    }
+  };
+
+  const updateThreadOutcome = (outcome: OutcomeStatus) => {
+    if (!currentThreadId) {
+      return;
+    }
+
+    setThreads((prev) =>
+      prev.map((thread) => {
+        if (thread.id !== currentThreadId || thread.turns.length === 0) {
+          return thread;
+        }
+
+        const turns = [...thread.turns];
+        const lastTurn = turns[turns.length - 1];
+        turns[turns.length - 1] = {
+          ...lastTurn,
+          outcomeStatus: outcome,
+          outcomeUpdatedAt: Date.now(),
+          gotResponse: outcome === "warm" || outcome === "neutral",
+        };
+
+        return {
+          ...thread,
+          turns,
+          lastOutcome: outcome,
+          updatedAt: Date.now(),
+          summary: generateThreadSummary(turns),
+        };
+      }),
+    );
+  };
+
   const createThread = (name: string) => {
     const newThread: Thread = {
       id: `thread-${Date.now()}`,
@@ -892,6 +1098,11 @@ export default function Home() {
       updatedAt: Date.now(),
       turns: [],
       summary: "",
+      profileName: profileName.trim(),
+      relationshipNotes: relationshipNotes.trim(),
+      personaCalibration: personaCalibration.trim(),
+      screenshotSummary: screenshotSummary.trim(),
+      privacyMode: "local-only",
     };
 
     setThreads((prev) => [newThread, ...prev]);
@@ -900,6 +1111,10 @@ export default function Home() {
     setTone("confident");
     setGoal("restart");
     setUserContext("");
+    setProfileName("");
+    setRelationshipNotes("");
+    setPersonaCalibration("");
+    setScreenshotSummary("");
     setReplies([]);
     setBestIndex(null);
     setAnalysis(null);
@@ -921,6 +1136,16 @@ export default function Home() {
       setTone(lastTurn.tone);
       setGoal(lastTurn.goal);
       setUserContext(lastTurn.userContext);
+      setProfileName(thread.profileName || "");
+      setRelationshipNotes(
+        lastTurn.relationshipNotesSnapshot || thread.relationshipNotes || "",
+      );
+      setPersonaCalibration(
+        lastTurn.personaCalibrationSnapshot || thread.personaCalibration || "",
+      );
+      setScreenshotSummary(
+        lastTurn.screenshotSummary || thread.screenshotSummary || "",
+      );
       setAnalysis(lastTurn.analysis);
       setReplies(lastTurn.replies);
       setBestIndex(lastTurn.bestIndex);
@@ -932,6 +1157,10 @@ export default function Home() {
       setTone("confident");
       setGoal("restart");
       setUserContext("");
+      setProfileName(thread.profileName || "");
+      setRelationshipNotes(thread.relationshipNotes || "");
+      setPersonaCalibration(thread.personaCalibration || "");
+      setScreenshotSummary(thread.screenshotSummary || "");
       setReplies([]);
       setBestIndex(null);
       setAnalysis(null);
@@ -984,6 +1213,11 @@ export default function Home() {
           tone,
           goal,
           userContext,
+          profileName,
+          relationshipNotes,
+          personaCalibration,
+          screenshotSummary,
+          recentOutcome: currentThread?.lastOutcome || "",
           threadSummary,
         }),
       });
@@ -1008,6 +1242,11 @@ export default function Home() {
           updatedAt: Date.now(),
           turns: [],
           summary: "",
+          profileName: profileName.trim(),
+          relationshipNotes: relationshipNotes.trim(),
+          personaCalibration: personaCalibration.trim(),
+          screenshotSummary: screenshotSummary.trim(),
+          privacyMode: "local-only",
         };
 
         setThreads((prev) => [newThread, ...prev]);
@@ -1021,6 +1260,9 @@ export default function Home() {
           tone,
           goal,
           userContext,
+          screenshotSummary,
+          relationshipNotesSnapshot: relationshipNotes,
+          personaCalibrationSnapshot: personaCalibration,
           analysis: data.analysis || null,
           replies: data.replies || [],
           bestIndex: data.bestIndex ?? null,
@@ -1052,6 +1294,9 @@ export default function Home() {
           tone,
           goal,
           userContext,
+          screenshotSummary,
+          relationshipNotesSnapshot: relationshipNotes,
+          personaCalibrationSnapshot: personaCalibration,
           analysis: data.analysis || null,
           replies: data.replies || [],
           bestIndex: data.bestIndex ?? null,
@@ -1107,6 +1352,9 @@ export default function Home() {
             turns[turns.length - 1] = {
               ...lastTurn,
               chosenReply: reply.text,
+              screenshotSummary,
+              relationshipNotesSnapshot: relationshipNotes,
+              personaCalibrationSnapshot: personaCalibration,
             };
           } else {
             turns.push({
@@ -1116,6 +1364,9 @@ export default function Home() {
               tone,
               goal,
               userContext,
+              screenshotSummary,
+              relationshipNotesSnapshot: relationshipNotes,
+              personaCalibrationSnapshot: personaCalibration,
               analysis,
               replies,
               bestIndex,
@@ -1344,6 +1595,11 @@ export default function Home() {
                     <div className="mt-1 truncate text-sm font-semibold text-white">
                       {currentThread.name}
                     </div>
+                    {currentThread.profileName && (
+                      <div className="mt-1 text-xs text-white/50">
+                        Memory linked to {currentThread.profileName}
+                      </div>
+                    )}
                     {currentThread.turns.length > 0 && (
                       <div className="mt-1 text-xs text-white/40">
                         {currentThread.turns.length} turn{currentThread.turns.length !== 1 ? "s" : ""} - {new Date(currentThread.updatedAt).toLocaleString()}
@@ -1354,6 +1610,10 @@ export default function Home() {
                     onClick={() => {
                       setCurrentThreadId(null);
                       setConversation("");
+                      setProfileName("");
+                      setRelationshipNotes("");
+                      setPersonaCalibration("");
+                      setScreenshotSummary("");
                       setReplies([]);
                       setBestIndex(null);
                       setAnalysis(null);
@@ -1391,8 +1651,25 @@ export default function Home() {
                   className={`h-40 w-full resize-none rounded-[24px] border border-white/10 bg-black/40 px-4 py-4 text-white outline-none transition-all duration-400 placeholder:text-white/30 focus:border-white/30 focus:bg-black/50 focus:ring-2 md:h-48 ${selectedTone.ring}`}
                 />
 
-                <div className="mt-4 grid items-start gap-3 sm:grid-cols-[1fr_auto_auto]">
+                <div className="mt-4 grid items-start gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
                   <ToneDropdown value={tone} onChange={setTone} />
+
+                  <input
+                    ref={screenshotInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleScreenshotUpload}
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => screenshotInputRef.current?.click()}
+                    disabled={screenshotParsing}
+                    className="rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80 transition hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {screenshotParsing ? "Reading Screenshot..." : "Import Screenshot"}
+                  </button>
 
                   <input
                     id="reply-image-upload"
@@ -1548,6 +1825,74 @@ export default function Home() {
                   />
                 </div>
 
+                <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+                        Relationship Memory
+                      </div>
+                      <div className="mt-1 text-sm text-white/55">
+                        Save context, calibrate your voice, and keep this thread adaptive over time.
+                      </div>
+                    </div>
+                    <div className="rounded-full border border-emerald-400/15 bg-emerald-500/8 px-3 py-1 text-[10px] font-medium uppercase tracking-[0.18em] text-emerald-200/80">
+                      Local Only
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <label className="block">
+                      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                        Contact Label
+                      </div>
+                      <input
+                        type="text"
+                        value={profileName}
+                        onChange={(event) => setProfileName(event.target.value)}
+                        placeholder="e.g. Maya, ex, hinge match"
+                        className="w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/20 focus:bg-black/40 focus:ring-2"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                        Your Voice Calibration
+                      </div>
+                      <textarea
+                        value={personaCalibration}
+                        onChange={(event) => setPersonaCalibration(event.target.value)}
+                        placeholder="e.g. I text direct, lowercase, a little playful, and never too eager"
+                        rows={4}
+                        className="w-full resize-none rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/20 focus:bg-black/40 focus:ring-2"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="mt-3 grid gap-3 md:grid-cols-[1.25fr_0.95fr]">
+                    <label className="block">
+                      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                        Relationship Notes
+                      </div>
+                      <textarea
+                        value={relationshipNotes}
+                        onChange={(event) => setRelationshipNotes(event.target.value)}
+                        placeholder="Save what matters: history, red flags, pacing, what worked, what backfired"
+                        rows={5}
+                        className="w-full resize-none rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/30 focus:border-white/20 focus:bg-black/40 focus:ring-2"
+                      />
+                    </label>
+
+                    <div className="rounded-xl border border-white/10 bg-black/25 p-4">
+                      <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                        Screenshot Intelligence
+                      </div>
+                      <p className="text-sm leading-6 text-white/62">
+                        {screenshotSummary || "Import a screenshot and Rizzly will extract the transcript, suggest the right goal, and store context for this thread."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="mt-4 rounded-lg border border-white/10 bg-white/3 p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
@@ -1622,9 +1967,10 @@ export default function Home() {
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Screenshot ready</div>
+                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Screenshot import</div>
                   <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Tone calibrated</div>
-                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Viral-friendly output</div>
+                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Outcome loop</div>
+                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Local memory only</div>
                   {isDeepConversation && (
                     <div className={`rounded-full border px-3 py-1.5 text-xs text-white ${selectedTone.panel}`}>
                       Deep thread mode
@@ -1676,6 +2022,42 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="mt-3 text-xs text-white/40">Estimated response likelihood based on the best reply.</p>
+              </section>
+            )}
+
+            {currentThread && currentThread.turns.length > 0 && (
+              <section className="rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-bold text-white">Outcome Loop</h2>
+                    <p className="mt-1 text-xs text-white/45">
+                      Mark how they responded so future replies get sharper for this thread.
+                    </p>
+                  </div>
+                  {currentThread.lastOutcome && (
+                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">
+                      {currentThread.lastOutcome.replace("-", " ")}
+                    </div>
+                  )}
+                </div>
+
+                <div className="grid gap-2 sm:grid-cols-4">
+                  {[
+                    { value: "warm", label: "Warm", accent: "border-emerald-400/30 bg-emerald-500/10 text-emerald-100" },
+                    { value: "neutral", label: "Neutral", accent: "border-cyan-400/30 bg-cyan-500/10 text-cyan-100" },
+                    { value: "cold", label: "Cold", accent: "border-amber-400/30 bg-amber-500/10 text-amber-100" },
+                    { value: "no-reply", label: "No Reply", accent: "border-rose-400/30 bg-rose-500/10 text-rose-100" },
+                  ].map((item) => (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => updateThreadOutcome(item.value as OutcomeStatus)}
+                      className={`rounded-xl border px-3 py-3 text-sm font-semibold transition hover:scale-[1.01] ${currentThread.lastOutcome === item.value ? item.accent : "border-white/10 bg-white/5 text-white/70 hover:border-white/20 hover:bg-white/10"}`}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
               </section>
             )}
 
@@ -1731,6 +2113,24 @@ export default function Home() {
                     <p>{analysis.adaptationNote}</p>
                   </div>
                 )}
+                {analysis.coachNotes && (
+                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Coach notes</div>
+                    <p>{analysis.coachNotes}</p>
+                  </div>
+                )}
+                {analysis.timingWindow && (
+                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Timing window</div>
+                    <p>{analysis.timingWindow}</p>
+                  </div>
+                )}
+                {analysis.avoid && (
+                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Avoid</div>
+                    <p>{analysis.avoid}</p>
+                  </div>
+                )}
                 {analysis.vibe && (
                   <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
                     <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Current vibe</div>
@@ -1747,6 +2147,33 @@ export default function Home() {
                   <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
                     <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Risk</div>
                     <p>{analysis.risk}</p>
+                  </div>
+                )}
+                {analysis.nextMoves && analysis.nextMoves.length > 0 && (
+                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
+                    <div className="mb-3 text-xs uppercase tracking-[0.2em] text-white/40">Next 3 moves</div>
+                    <div className="space-y-2">
+                      {analysis.nextMoves.map((move, index) => (
+                        <div key={`${move}-${index}`} className="rounded-xl border border-white/8 bg-white/[0.03] px-3 py-3 text-sm text-white/80">
+                          <span className="mr-2 text-white/40">0{index + 1}</span>
+                          {move}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {analysis.replyBranches && analysis.replyBranches.length > 0 && (
+                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
+                    <div className="mb-3 text-xs uppercase tracking-[0.2em] text-white/40">Branch planner</div>
+                    <div className="grid gap-3 md:grid-cols-3">
+                      {analysis.replyBranches.map((branch, index) => (
+                        <div key={`${branch.scenario}-${index}`} className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
+                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">{branch.scenario}</div>
+                          <div className="mt-2 text-sm font-semibold text-white/85">{branch.move}</div>
+                          <div className="mt-2 text-xs leading-5 text-white/55">{branch.note}</div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </section>
@@ -1781,7 +2208,17 @@ export default function Home() {
                             <span className="whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/55">
                               {thread.turns.length} turns
                             </span>
+                            {thread.lastOutcome && (
+                              <span className="whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-white/45">
+                                {thread.lastOutcome.replace("-", " ")}
+                              </span>
+                            )}
                           </div>
+                          {thread.profileName && (
+                            <div className="mt-1 text-[11px] uppercase tracking-[0.16em] text-white/35">
+                              {thread.profileName}
+                            </div>
+                          )}
                           {thread.summary && <div className="mt-2 line-clamp-2 text-xs text-white/40">{thread.summary}</div>}
                           <div className="mt-1 text-xs text-white/35">Updated {new Date(thread.updatedAt).toLocaleString()}</div>
                         </div>
