@@ -126,6 +126,21 @@ export function useMVPFeatures(threads: Thread[]): MVPFeaturesState {
     }
   }, [usedTones]);
 
+  // Auto-check achievements when relevant state changes
+  useEffect(() => {
+    if (achievements.length === 0) return;
+    const earned = checkAchievements(threads, favorites, usedTones, streak.count);
+    let changed = false;
+    const updated = achievements.map((ach) => {
+      if (!ach.unlocked && earned.includes(ach.id)) {
+        changed = true;
+        return { ...ach, unlocked: true, unlockedAt: Date.now() };
+      }
+      return ach;
+    });
+    if (changed) setAchievements(updated);
+  }, [threads, favorites, usedTones, streak]);
+
   // Handler: Rate reply
   const rateReply = useCallback((replyId: string, rating: number) => {
     setReplyRatings((prev) => ({

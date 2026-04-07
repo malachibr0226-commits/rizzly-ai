@@ -49,36 +49,4 @@ body {
   background: linear-gradient(180deg, #9d5a75, #7e97a3);
 }
 
-/* Glassmorphic card effect for dopamine hit */
-.card-glass {
-  background: linear-gradient(120deg, rgba(255,255,255,0.07) 0%, rgba(190,103,154,0.05) 100%);
-  border: 1.5px solid rgba(255,255,255,0.08);
-  box-shadow: 0 4px 24px 0 rgba(190,103,154,0.07), 0 1.5px 8px 0 rgba(126,151,163,0.06);
-  backdrop-filter: blur(10px) saturate(1.05);
-  border-radius: 1.25rem;
-}
 
-/* Dopamine accent text */
-.dopamine-text {
-  background: linear-gradient(90deg, #a89459 10%, #9d5a75 50%, #7e97a3 90%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  filter: brightness(1.01) saturate(0.95);
-}
-
-/* Subtle button hover/active dopamine effect */
-.button-dopamine {
-  transition: background 0.3s cubic-bezier(.34,1.56,.64,1), box-shadow 0.3s cubic-bezier(.34,1.56,.64,1);
-  background: linear-gradient(90deg, rgba(190,103,154,0.10) 0%, rgba(126,151,163,0.10) 100%);
-  box-shadow: 0 2px 8px 0 rgba(190,103,154,0.06);
-}
-.button-dopamine:hover {
-  background: linear-gradient(90deg, rgba(190,103,154,0.13) 0%, rgba(126,151,163,0.13) 100%);
-  box-shadow: 0 4px 16px 0 rgba(168,148,89,0.07);
-}
-.button-dopamine:active {
-  background: linear-gradient(90deg, rgba(190,103,154,0.16) 0%, rgba(126,151,163,0.16) 100%);
-  box-shadow: 0 2px 6px 0 rgba(168,148,89,0.05);
-}

@@ -186,6 +186,8 @@ export function checkAchievements(
 ): string[] {
   const newAchievements: string[] = [];
 
+  const totalReplies = threads.reduce((sum, t) => sum + t.turns.length, 0);
+  if (totalReplies >= 1) newAchievements.push("first-reply");
   if (threads.length >= 5) newAchievements.push("five-threads");
   if (threads.length >= 10) newAchievements.push("ten-threads");
   if (favorites.length >= 5) newAchievements.push("favorite-five");

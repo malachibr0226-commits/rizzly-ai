@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { rateLimit } from "@/lib/rate-limit";
 
 type ToneKey = "confident" | "flirty" | "funny" | "chill" | "apologetic";
 type GoalKey = "restart" | "flirt" | "clarify" | "plan" | "repair";
@@ -619,6 +620,14 @@ function extractThreadPatterns(threadSummary: string): string {
 }
 
 export async function POST(req: Request) {
+  const { limited, remaining } = rateLimit(req);
+  if (limited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please wait a moment and try again." },
+      { status: 429, headers: { "X-RateLimit-Remaining": String(remaining) } },
+    );
+  }
+
   try {
     const body = await req.json();
     const conversation =

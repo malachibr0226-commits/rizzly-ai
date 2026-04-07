@@ -646,6 +646,9 @@ export default function Home() {
   
   // MVP Features - using custom hook
   const mvpFeatures = useMVPFeatures(threads);
+
+  // Keep a stable ref to handleGenerate for event-driven auto-regen
+  const handleGenerateRef = useRef<() => void>(() => {});
   
   const selectedTone = tones.find((item) => item.value === tone) ?? tones[0];
   const bestReply = bestIndex !== null ? replies[bestIndex] : null;
@@ -814,18 +817,14 @@ export default function Home() {
 
       // Ctrl/Cmd + Enter to generate
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-        if (conversation.trim()) {
-          // Trigger generate
-          const event = new Event("generate-replies");
-          window.dispatchEvent(event);
-        }
         e.preventDefault();
+        handleGenerateRef.current();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [conversation, tone]);
+  }, []);
 
   useEffect(() => {
     if (!replies.length) {
@@ -1333,6 +1332,16 @@ export default function Home() {
     }
   };
 
+  // Keep ref current for event-driven calls
+  handleGenerateRef.current = handleGenerate;
+
+  // Listen for auto-regen events from tone-change buttons
+  useEffect(() => {
+    const handler = () => { handleGenerateRef.current(); };
+    window.addEventListener("auto-regen", handler);
+    return () => window.removeEventListener("auto-regen", handler);
+  }, []);
+
   const copyToClipboard = async (text: string, index: number) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -1407,14 +1416,17 @@ export default function Home() {
     setPreviewVisible(false);
   };
 
-  useEffect(() => {
-    const runGenerate = () => {
-      void handleGenerate();
-    };
-
-    window.addEventListener("generate-replies", runGenerate);
-    return () => window.removeEventListener("generate-replies", runGenerate);
-  }, [handleGenerate]);
+  const deleteThread = (threadId: string) => {
+    setThreads((prev) => prev.filter((t) => t.id !== threadId));
+    if (currentThreadId === threadId) {
+      setCurrentThreadId(null);
+      setConversation("");
+      setReplies([]);
+      setBestIndex(null);
+      setAnalysis(null);
+      setSentReplyIndex(null);
+    }
+  };
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#1a0f2e] text-white">
@@ -2016,8 +2028,15 @@ export default function Home() {
                 )}
 
                 {error && (
-                  <div className="mt-4 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-                    {error}
+                  <div className="mt-4 flex items-center gap-3 rounded-2xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                    <span className="flex-1">{error}</span>
+                    <button
+                      type="button"
+                      onClick={() => { setError(null); void handleGenerate(); }}
+                      className="shrink-0 rounded-xl border border-red-400/30 bg-red-500/20 px-3 py-1.5 text-xs font-semibold text-red-100 transition hover:bg-red-500/30"
+                    >
+                      Retry
+                    </button>
                   </div>
                 )}
               </div>
@@ -2207,16 +2226,19 @@ export default function Home() {
 
                 <div className="space-y-3">
                   {threads.map((thread) => (
-                    <button
+                    <div
                       key={thread.id}
-                      type="button"
-                      onClick={() => loadThread(thread.id)}
-                      className={`w-full rounded-2xl border p-4 text-left transition ${
+                      className={`group relative w-full rounded-2xl border p-4 text-left transition ${
                         currentThreadId === thread.id
                           ? "border-fuchsia-400/30 bg-fuchsia-500/10"
                           : "border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.05]"
                       }`}
                     >
+                      <button
+                        type="button"
+                        onClick={() => loadThread(thread.id)}
+                        className="w-full text-left"
+                      >
                       <div className="flex items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
@@ -2240,7 +2262,16 @@ export default function Home() {
                         </div>
                         <div className="shrink-0 text-lg">-&gt;</div>
                       </div>
-                    </button>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); deleteThread(thread.id); }}
+                        className="absolute right-2 top-2 hidden rounded-lg border border-red-400/20 bg-red-500/10 px-2 py-1 text-[10px] font-semibold text-red-300 transition hover:bg-red-500/20 group-hover:block"
+                        title="Delete thread"
+                      >
+                        ✕
+                      </button>
+                    </div>
                   ))}
                 </div>
 
@@ -2424,19 +2455,19 @@ export default function Home() {
                       </button>
 
                       <button
-                        onClick={() => setTone("flirty")}
+                        onClick={() => { setTone("flirty"); setTimeout(() => { const event = new Event("auto-regen"); window.dispatchEvent(event); }, 50); }}
                         className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/15 px-4 py-2 text-sm font-bold text-fuchsia-100 transition-all duration-[350ms] transform hover:scale-105 active:scale-95 hover:border-fuchsia-400/50 hover:bg-fuchsia-500/25"
                       >
                         Make Flirty
                       </button>
                       <button
-                        onClick={() => setTone("confident")}
+                        onClick={() => { setTone("confident"); setTimeout(() => { const event = new Event("auto-regen"); window.dispatchEvent(event); }, 50); }}
                         className="rounded-xl border border-cyan-400/30 bg-cyan-500/15 px-4 py-2 text-sm font-bold text-cyan-100 transition-all duration-[350ms] transform hover:scale-105 active:scale-95 hover:border-cyan-400/50 hover:bg-cyan-500/25"
                       >
                         Make Bolder
                       </button>
                       <button
-                        onClick={() => setTone("funny")}
+                        onClick={() => { setTone("funny"); setTimeout(() => { const event = new Event("auto-regen"); window.dispatchEvent(event); }, 50); }}
                         className="rounded-xl border border-amber-400/30 bg-amber-500/15 px-4 py-2 text-sm font-bold text-amber-100 transition-all duration-[350ms] transform hover:scale-105 active:scale-95 hover:border-amber-400/50 hover:bg-amber-500/25"
                       >
                         Make Funny
