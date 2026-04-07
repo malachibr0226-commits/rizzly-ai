@@ -1572,21 +1572,21 @@ export default function Home() {
                   Live Read
                 </div>
 
-                <div className="grid grid-cols-3 gap-2.5 md:gap-3">
-                  <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] md:min-h-[112px] md:px-4">
-                    <div className="bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-lg font-bold leading-tight tracking-[-0.02em] text-transparent drop-shadow-sm md:text-[1.3rem]">
+                <div className="grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-3 md:gap-3">
+                  <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] min-[420px]:py-5 md:min-h-[112px] md:px-4">
+                    <div className="bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-base font-bold leading-tight tracking-[-0.02em] text-transparent drop-shadow-sm min-[420px]:text-lg md:text-[1.3rem]">
                       {pulseMetrics.toneLabel}
                     </div>
                     <div className="mt-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] leading-relaxed text-white/46">Tone</div>
                   </div>
-                  <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] md:min-h-[112px] md:px-4">
-                    <div className="bg-gradient-to-r from-emerald-200 to-green-100 bg-clip-text text-xl font-bold leading-tight text-transparent drop-shadow-sm md:text-[1.45rem]">
+                  <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] min-[420px]:py-5 md:min-h-[112px] md:px-4">
+                    <div className="bg-gradient-to-r from-emerald-200 to-green-100 bg-clip-text text-lg font-bold leading-tight text-transparent drop-shadow-sm min-[420px]:text-xl md:text-[1.45rem]">
                       {pulseMetrics.confidenceLabel}
                     </div>
                     <div className="mt-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] leading-relaxed text-white/46">Confidence</div>
                   </div>
-                  <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-5 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] md:min-h-[112px] md:px-4">
-                    <div className="bg-gradient-to-r from-yellow-200 via-amber-100 to-white bg-clip-text text-xl font-bold leading-tight text-transparent drop-shadow-sm md:text-[1.45rem]">
+                  <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] min-[420px]:py-5 md:min-h-[112px] md:px-4">
+                    <div className="bg-gradient-to-r from-yellow-200 via-amber-100 to-white bg-clip-text text-lg font-bold leading-tight text-transparent drop-shadow-sm min-[420px]:text-xl md:text-[1.45rem]">
                       {pulseMetrics.energyLabel}
                     </div>
                     <div className="mt-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] leading-relaxed text-white/46">Interest</div>
