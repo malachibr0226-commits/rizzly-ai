@@ -2,8 +2,12 @@ import { SignUp } from "@clerk/nextjs";
 
 export default function SignUpPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#0f0a1a] via-[#1a1030] to-[#0f0a1a]">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#0f0a1a] via-[#1a1030] to-[#0f0a1a] px-4">
       <SignUp
+        path="/sign-up"
+        routing="path"
+        signInUrl="/sign-in"
+        fallbackRedirectUrl="/"
         appearance={{
           elements: {
             rootBox: "mx-auto",
