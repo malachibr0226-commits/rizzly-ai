@@ -387,7 +387,7 @@ const tones: Array<{
   },
   {
     value: "apologetic",
-    label: "Apologetic",
+    label: "Gentle",
     desc: "Soft, thoughtful, empathetic",
     chip:
       "from-slate-300/18 via-zinc-200/10 to-neutral-400/18 border-white/20 text-white/85",
@@ -1627,7 +1627,7 @@ export default function Home() {
                 <div className="grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-3 md:gap-3">
                   <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] min-[420px]:py-5 md:min-h-[112px] md:px-4">
                     <div
-                      className="mx-auto flex min-h-[2.25rem] max-w-full items-center justify-center bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-[0.8rem] font-semibold leading-tight tracking-[-0.03em] text-transparent drop-shadow-sm min-[420px]:text-[0.92rem] md:text-[1rem]"
+                      className="mx-auto flex min-h-[2.25rem] max-w-full items-center justify-center bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-[0.78rem] font-extrabold leading-tight tracking-[-0.03em] text-transparent drop-shadow-sm min-[420px]:text-[0.9rem] md:text-[0.98rem]"
                       style={{ overflowWrap: "anywhere" }}
                     >
                       {pulseMetrics.toneLabel}
