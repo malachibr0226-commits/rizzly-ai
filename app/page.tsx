@@ -1626,7 +1626,10 @@ export default function Home() {
 
                 <div className="grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-3 md:gap-3">
                   <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] min-[420px]:py-5 md:min-h-[112px] md:px-4">
-                    <div className="truncate bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-sm font-bold leading-tight tracking-[-0.02em] text-transparent drop-shadow-sm min-[420px]:text-base md:text-lg">
+                    <div
+                      className="mx-auto flex min-h-[2.25rem] max-w-full items-center justify-center bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-[0.8rem] font-semibold leading-tight tracking-[-0.03em] text-transparent drop-shadow-sm min-[420px]:text-[0.92rem] md:text-[1rem]"
+                      style={{ overflowWrap: "anywhere" }}
+                    >
                       {pulseMetrics.toneLabel}
                     </div>
                     <div className="mt-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] leading-relaxed text-white/46">Tone</div>
