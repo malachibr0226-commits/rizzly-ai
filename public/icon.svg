@@ -1,0 +1,62 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#d946a6" />
+      <stop offset="50%" stopColor="#ec4899" />
+      <stop offset="100%" stopColor="#06b6d4" />
+    </linearGradient>
+    <linearGradient id="bubbleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#fbbf24" />
+      <stop offset="100%" stopColor="#f59e0b" />
+    </linearGradient>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Main background - rounded square with gradient (TikTok style) -->
+  <rect x="32" y="32" width="448" height="448" rx="80" ry="80" fill="url(#iconGrad)" opacity="0.95"/>
+  
+  <!-- Subtle blur accent underneath -->
+  <rect x="32" y="32" width="448" height="448" rx="80" ry="80" fill="url(#iconGrad)" opacity="0.15" filter="url(#softGlow)" />
+  
+  <!-- Large smooth chat bubble shape - main texting element -->
+  <path 
+    d="M 120 160 Q 80 160 80 200 L 80 320 Q 80 360 120 360 L 280 360 L 340 420 Q 350 430 340 420 L 340 360 L 360 360 Q 400 360 400 320 L 400 200 Q 400 160 360 160 L 120 160 Z"
+    fill="white"
+    opacity="0.95"
+  />
+  
+  <!-- Subtle second chat bubble for depth -->
+  <path 
+    d="M 180 200 Q 160 200 160 220 L 160 300 Q 160 320 180 320 L 300 320 L 330 355 Q 335 360 330 355 L 330 320 L 340 320 Q 360 320 360 300 L 360 220 Q 360 200 340 200 L 180 200 Z"
+    fill="url(#bubbleGrad)"
+    opacity="0.7"
+  />
+  
+  <!-- Central sparkle element - the charm/rizz indicator -->
+  <g filter="url(#softGlow)">
+    <!-- Main sparkle center -->
+    <circle cx="256" cy="240" r="18" fill="url(#bubbleGrad)" opacity="0.95"/>
+    
+    <!-- Animated-ready sparkle rays -->
+    <circle cx="256" cy="205" r="8" fill="url(#bubbleGrad)" opacity="0.85" className="sparkle-ray-top" />
+    <circle cx="299" cy="240" r="8" fill="url(#bubbleGrad)" opacity="0.8" className="sparkle-ray-right" />
+    <circle cx="256" cy="275" r="8" fill="url(#bubbleGrad)" opacity="0.8" className="sparkle-ray-bottom" />
+    <circle cx="213" cy="240" r="8" fill="url(#bubbleGrad)" opacity="0.85" className="sparkle-ray-left" />
+    
+    <!-- Diagonal mini sparkles -->
+    <circle cx="282" cy="207" r="5" fill="url(#bubbleGrad)" opacity="0.7" className="sparkle-mini" />
+    <circle cx="282" cy="273" r="5" fill="url(#bubbleGrad)" opacity="0.7" className="sparkle-mini" />
+    <circle cx="230" cy="273" r="5" fill="url(#bubbleGrad)" opacity="0.65" className="sparkle-mini" />
+  </g>
+  
+  <!-- Subtle texting indicator dots at bottom -->
+  <circle cx="200" cy="380" r="6" fill="white" opacity="0.6"/>
+  <circle cx="256" cy="380" r="6" fill="white" opacity="0.6"/>
+  <circle cx="312" cy="380" r="6" fill="white" opacity="0.6"/>
+</svg>
