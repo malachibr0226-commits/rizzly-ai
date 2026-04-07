@@ -21,6 +21,8 @@ export default function SignUpPage() {
           routing="path"
           signInUrl="/sign-in"
           fallbackRedirectUrl="/"
+          forceRedirectUrl="/"
+          oauthFlow="redirect"
           appearance={{
             variables: {
               colorPrimary: "#ec4899",

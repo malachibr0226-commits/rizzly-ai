@@ -50,9 +50,9 @@ export function MVPHeader({
         .pulse-soft { animation: pulse-soft 3s ease-in-out infinite; }
       `}</style>
       
-      <div className="flex items-center justify-between px-4">
+      <div className="flex flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between">
         {/* Streak counter - Romantic glow effect */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {streak.count > 0 && (
             <div className="streak-glow inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-rose-200/20 to-pink-100/10 border border-rose-200/30 backdrop-blur-md hover:from-rose-200/30 hover:to-pink-100/18 transition-all duration-300">
               <span className="text-xl pulse-soft">🔥</span>
@@ -64,7 +64,7 @@ export function MVPHeader({
         </div>
 
         {/* Achievement badges + Stats button */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 md:justify-end">
           {unlockedCount > 0 && (
             <div className="badge-float inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-amber-200/20 to-yellow-100/10 border border-amber-200/30 backdrop-blur-md hover:from-amber-200/30 hover:to-yellow-100/18 transition-all duration-300">
               <span className="text-xl pulse-soft">🏆</span>
@@ -77,7 +77,7 @@ export function MVPHeader({
           {/* Dashboard toggle - Enhanced with glow */}
           <button
             onClick={onToggleDashboard}
-            className={`px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ease-spring transform hover:scale-102 active:scale-98 ${
+            className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ease-spring transform hover:scale-102 active:scale-98 ${
               showDashboard
                 ? "bg-gradient-to-r from-violet-200 to-slate-300 text-white shadow-[0_0_12px_rgba(126,151,163,0.18)]"
                 : "bg-gradient-to-r from-violet-100/20 to-slate-200/20 text-violet-100 border border-violet-100/30 hover:from-violet-100/30 hover:to-slate-200/30 hover:shadow-[0_2px_8px_rgba(126,151,163,0.10)]"
@@ -105,7 +105,7 @@ export function MVPHeader({
             </>
           ) : (
             <>
-              <div className="hidden rounded-full border border-emerald-400/20 bg-emerald-500/8 px-3 py-2 text-xs font-semibold text-emerald-200 md:block">
+              <div className="max-w-full rounded-full border border-emerald-400/20 bg-emerald-500/8 px-3 py-2 text-xs font-semibold text-emerald-200">
                 Signed in{user?.firstName ? ` as ${user.firstName}` : ""}
               </div>
               <SignOutButton>

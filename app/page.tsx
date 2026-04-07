@@ -1611,7 +1611,7 @@ export default function Home() {
           />
         )}
 
-        <section className="mb-10 grid gap-8 xl:grid-cols-[minmax(0,1fr)_400px] xl:items-end">
+        <section className="mb-10 grid gap-6 xl:gap-8 2xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] 2xl:items-end">
           <div className="max-w-4xl">
             <div className="mb-6 inline-flex rounded-full border border-cyan-500/30 bg-gradient-to-r from-cyan-500/15 to-transparent px-3.5 py-2 text-xs font-semibold tracking-[0.5px] text-cyan-200 backdrop-blur-sm" style={{ textShadow: "0 0 12px rgba(6, 182, 212, 0.2)" }}>
               Smart context-aware replies
@@ -1631,14 +1631,14 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mx-auto w-full max-w-md overflow-hidden rounded-[30px] border border-white/12 bg-gradient-to-br from-purple-950/38 via-slate-900/32 to-gray-900/26 p-6 shadow-[0_10px_28px_rgba(190,103,154,0.1)] backdrop-blur-xl md:min-h-[250px] md:p-7">
-            <div className="overflow-hidden rounded-[24px] border border-white/8 bg-white/[0.025] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] md:p-5">
-              <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="mx-auto w-full max-w-md overflow-hidden rounded-[30px] border border-white/12 bg-gradient-to-br from-purple-950/38 via-slate-900/32 to-gray-900/26 p-4 shadow-[0_10px_28px_rgba(190,103,154,0.1)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
+            <div className="overflow-hidden rounded-[24px] border border-white/8 bg-white/[0.025] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:p-4 md:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-4">
                 <div className="rounded-2xl px-3 py-2.5">
                   <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/40">Status</div>
                   <div className="mt-2 text-[1.35rem] font-bold leading-none text-white/95">{liveStatus.label}</div>
                 </div>
-                <div className="inline-flex min-h-[50px] max-w-[250px] items-center gap-2 rounded-[20px] border border-white/8 bg-white/[0.04] px-4 py-2 text-sm leading-snug text-white/62 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] xl:max-w-[270px]">
+                <div className="inline-flex min-h-[50px] w-full max-w-full items-center gap-2 rounded-[20px] border border-white/8 bg-white/[0.04] px-4 py-2 text-sm leading-snug text-white/62 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] sm:max-w-[250px] xl:max-w-[270px]">
                   <span className={`mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full ${liveStatus.dot}`} />
                   <span>{liveStatus.detail}</span>
                 </div>
@@ -1651,27 +1651,24 @@ export default function Home() {
                   Live Read
                 </div>
 
-                <div className="grid grid-cols-1 gap-2.5 min-[420px]:grid-cols-3 md:gap-3">
-                  <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] min-[420px]:py-5 md:min-h-[112px] md:px-4">
-                    <div
-                      className="mx-auto flex min-h-[2.25rem] max-w-full items-center justify-center bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-[0.78rem] font-extrabold leading-tight tracking-[-0.03em] text-transparent drop-shadow-sm min-[420px]:text-[0.9rem] md:text-[0.98rem]"
-                      style={{ overflowWrap: "anywhere" }}
-                    >
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:gap-3">
+                  <div className="col-span-2 min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-2.5 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:col-span-1 sm:px-3 md:min-h-[112px] md:px-4 md:py-5">
+                    <div className="mx-auto flex min-h-[2.5rem] max-w-full items-center justify-center px-1 text-center whitespace-nowrap bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-[clamp(0.72rem,1vw,0.95rem)] font-extrabold leading-snug tracking-[-0.02em] text-transparent drop-shadow-sm">
                       {pulseMetrics.toneLabel}
                     </div>
-                    <div className="mt-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] leading-relaxed text-white/46">Tone</div>
+                    <div className="mt-2 text-[9px] font-semibold uppercase tracking-[0.16em] leading-relaxed text-white/46 sm:text-[10px]">Tone</div>
                   </div>
-                  <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] min-[420px]:py-5 md:min-h-[112px] md:px-4">
-                    <div className="bg-gradient-to-r from-emerald-200 to-green-100 bg-clip-text text-lg font-bold leading-tight text-transparent drop-shadow-sm min-[420px]:text-xl md:text-[1.45rem]">
+                  <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-2.5 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:px-3 md:min-h-[112px] md:px-4 md:py-5">
+                    <div className="bg-gradient-to-r from-emerald-200 to-green-100 bg-clip-text text-[clamp(1rem,1.6vw,1.45rem)] font-bold leading-tight text-transparent drop-shadow-sm">
                       {pulseMetrics.confidenceLabel}
                     </div>
-                    <div className="mt-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] leading-relaxed text-white/46">Confidence</div>
+                    <div className="mt-2 text-[9px] font-semibold uppercase tracking-[0.14em] leading-relaxed text-white/46 sm:text-[10px]">Confidence</div>
                   </div>
-                  <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] min-[420px]:py-5 md:min-h-[112px] md:px-4">
-                    <div className="bg-gradient-to-r from-yellow-200 via-amber-100 to-white bg-clip-text text-lg font-bold leading-tight text-transparent drop-shadow-sm min-[420px]:text-xl md:text-[1.45rem]">
+                  <div className="min-w-0 rounded-2xl border border-white/8 bg-white/[0.03] px-2.5 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:px-3 md:min-h-[112px] md:px-4 md:py-5">
+                    <div className="bg-gradient-to-r from-yellow-200 via-amber-100 to-white bg-clip-text text-[clamp(1rem,1.6vw,1.45rem)] font-bold leading-tight text-transparent drop-shadow-sm">
                       {pulseMetrics.energyLabel}
                     </div>
-                    <div className="mt-2.5 text-[10px] font-semibold uppercase tracking-[0.2em] leading-relaxed text-white/46">Interest</div>
+                    <div className="mt-2 text-[9px] font-semibold uppercase tracking-[0.14em] leading-relaxed text-white/46 sm:text-[10px]">Interest</div>
                   </div>
                 </div>
               </div>
