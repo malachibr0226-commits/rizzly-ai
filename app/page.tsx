@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { useMVPFeatures } from "@/app/hooks/useMVPFeatures";
 import { Dashboard } from "@/app/components/Dashboard";
 import { MVPHeader } from "@/app/components/MVPHeader";
@@ -624,6 +625,9 @@ function ToneDropdown({
 }
 
 export default function Home() {
+  const { isSignedIn } = useAuth();
+  const { openSignIn } = useClerk();
+
   // Photo reply modal state (must be inside the component)
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
   const [photoModalImage, setPhotoModalImage] = useState<string | null>(null);
@@ -974,12 +978,23 @@ export default function Home() {
     recognition.start();
   };
 
+  const promptSignIn = (message: string) => {
+    setError(message);
+    void openSignIn();
+  };
+
   const handleVoiceNoteUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = event.target.files?.[0];
 
     if (!file) {
+      return;
+    }
+
+    if (!isSignedIn) {
+      promptSignIn("Sign in to transcribe voice notes.");
+      event.target.value = "";
       return;
     }
 
@@ -1025,6 +1040,12 @@ export default function Home() {
     const file = event.target.files?.[0];
 
     if (!file) {
+      return;
+    }
+
+    if (!isSignedIn) {
+      promptSignIn("Sign in to import screenshots.");
+      event.target.value = "";
       return;
     }
 
@@ -1237,6 +1258,11 @@ export default function Home() {
 
   const handleGenerate = async () => {
     if (!conversation.trim()) return;
+
+    if (!isSignedIn) {
+      promptSignIn("Sign in to generate replies.");
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -1734,7 +1760,13 @@ export default function Home() {
                   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.15fr)]">
                     <button
                       type="button"
-                      onClick={() => screenshotInputRef.current?.click()}
+                      onClick={() => {
+                        if (!isSignedIn) {
+                          promptSignIn("Sign in to import screenshots.");
+                          return;
+                        }
+                        screenshotInputRef.current?.click();
+                      }}
                       disabled={screenshotParsing}
                       className="flex min-h-[56px] items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white/78 transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                     >
@@ -1779,6 +1811,12 @@ export default function Home() {
                       <span className="whitespace-nowrap">{loading ? "Analyzing..." : "Generate Replies"}</span>
                     </button>
                   </div>
+
+                  {!isSignedIn && (
+                    <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/8 px-4 py-3 text-sm text-cyan-100">
+                      Sign in to generate replies, import screenshots, and use AI voice-note transcription.
+                    </div>
+                  )}
                 </div>
 
                 {photoModalOpen && (
@@ -2094,7 +2132,13 @@ export default function Home() {
 
                     <button
                       type="button"
-                      onClick={() => voiceInputRef.current?.click()}
+                      onClick={() => {
+                        if (!isSignedIn) {
+                          promptSignIn("Sign in to transcribe voice notes.");
+                          return;
+                        }
+                        voiceInputRef.current?.click();
+                      }}
                       disabled={transcribingVoiceNote}
                       className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/75 transition hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                     >

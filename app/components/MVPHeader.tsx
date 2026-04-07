@@ -6,7 +6,14 @@
 "use client";
 
 import React from "react";
-import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
+import {
+  SignInButton,
+  SignOutButton,
+  SignUpButton,
+  UserButton,
+  useAuth,
+  useUser,
+} from "@clerk/nextjs";
 import type { Achievement, StreakData } from "@/lib/analytics";
 
 interface MVPHeaderProps {
@@ -23,6 +30,7 @@ export function MVPHeader({
   onToggleDashboard,
 }: MVPHeaderProps) {
   const { isSignedIn } = useAuth();
+  const { user } = useUser();
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
 
   return (
@@ -87,19 +95,36 @@ export function MVPHeader({
 
           {/* Auth */}
           {!isSignedIn ? (
-            <SignInButton mode="modal">
-              <button className="px-5 py-2.5 rounded-full text-sm font-semibold bg-gradient-to-r from-pink-500 to-cyan-500 text-white shadow-[0_0_12px_rgba(236,72,153,0.3)] hover:shadow-[0_0_20px_rgba(236,72,153,0.5)] transition-all duration-200 transform hover:scale-105 active:scale-95">
-                Sign In
-              </button>
-            </SignInButton>
+            <>
+              <SignUpButton mode="modal">
+                <button className="px-4 py-2.5 rounded-full text-sm font-semibold border border-white/15 bg-white/5 text-white/85 transition hover:border-white/25 hover:bg-white/10">
+                  Sign Up
+                </button>
+              </SignUpButton>
+              <SignInButton mode="modal">
+                <button className="px-5 py-2.5 rounded-full text-sm font-semibold bg-gradient-to-r from-pink-500 to-cyan-500 text-white shadow-[0_0_12px_rgba(236,72,153,0.3)] hover:shadow-[0_0_20px_rgba(236,72,153,0.5)] transition-all duration-200 transform hover:scale-105 active:scale-95">
+                  Sign In
+                </button>
+              </SignInButton>
+            </>
           ) : (
-            <UserButton
-              appearance={{
-                elements: {
-                  avatarBox: "w-9 h-9 ring-2 ring-pink-500/40",
-                },
-              }}
-            />
+            <>
+              <div className="hidden rounded-full border border-emerald-400/20 bg-emerald-500/8 px-3 py-2 text-xs font-semibold text-emerald-200 md:block">
+                Signed in{user?.firstName ? ` as ${user.firstName}` : ""}
+              </div>
+              <SignOutButton>
+                <button className="px-4 py-2.5 rounded-full text-sm font-semibold border border-white/15 bg-white/5 text-white/85 transition hover:border-white/25 hover:bg-white/10">
+                  Sign Out
+                </button>
+              </SignOutButton>
+              <UserButton
+                appearance={{
+                  elements: {
+                    avatarBox: "w-9 h-9 ring-2 ring-pink-500/40",
+                  },
+                }}
+              />
+            </>
           )}
         </div>
       </div>
