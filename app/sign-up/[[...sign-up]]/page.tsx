@@ -37,6 +37,8 @@ export default function SignUpPage() {
               headerTitle: "text-white font-bold",
               headerSubtitle: "text-white/60",
               socialButtonsBlockButton: "border-white/20 bg-white/10 text-white hover:bg-white/20 transition-colors",
+              socialButtonsBlockButtonText: "text-white font-medium",
+              socialButtonsProviderIcon: "brightness-0 invert",
               dividerLine: "bg-white/10",
               dividerText: "text-white/40",
               formFieldLabel: "text-white/80 font-medium",
