@@ -54,7 +54,7 @@ export interface MVPFeaturesState {
   getSuggestion: () => string;
   getStats: (threads: Thread[]) => ConversationStats;
   exportData: (thread: Thread, format: "json" | "txt") => void;
-  
+
   // Derived
   isAchievementUnlocked: (id: string) => boolean;
   getAchievementCount: () => number;

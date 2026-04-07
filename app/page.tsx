@@ -1,19 +1,14 @@
-
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMVPFeatures } from "@/app/hooks/useMVPFeatures";
-import { ReplyCards } from "@/app/components/ReplyCards";
 import { Dashboard } from "@/app/components/Dashboard";
 import { MVPHeader } from "@/app/components/MVPHeader";
 import type {
   ToneKey,
   GoalKey,
-  CategoryKey,
-  Achievement,
   Thread,
   ThreadTurn,
-  TonePattern,
 } from "@/lib/analytics";
 
 type Reply = {
@@ -41,8 +36,6 @@ type Analysis = {
   languageStyle?: string;
   adaptationNote?: string;
 };
-
-type SessionEntry = Thread;
 
 type DictationTarget = "conversation" | "context";
 
@@ -558,11 +551,11 @@ function ToneDropdown({
 }
 
 export default function Home() {
-    // Photo reply modal state (must be inside the component)
-    const [photoModalOpen, setPhotoModalOpen] = useState(false);
-    const [photoModalImage, setPhotoModalImage] = useState<string | null>(null);
-    const [photoModalText, setPhotoModalText] = useState("");
-    const [photoModalLoading, setPhotoModalLoading] = useState(false);
+  // Photo reply modal state (must be inside the component)
+  const [photoModalOpen, setPhotoModalOpen] = useState(false);
+  const [photoModalImage, setPhotoModalImage] = useState<string | null>(null);
+  const [photoModalText, setPhotoModalText] = useState("");
+  const [photoModalLoading, setPhotoModalLoading] = useState(false);
   const [conversation, setConversation] = useState(() => loadDraft().conversation);
   const [tone, setTone] = useState<ToneKey>(() => loadDraft().tone);
   const [goal, setGoal] = useState<GoalKey>(() => loadDraft().goal);
@@ -948,7 +941,7 @@ export default function Home() {
     setError(null);
   };
 
-  const appendTurn = (turn: ThreadTurn, priorSummary?: string) => {
+  const appendTurn = (turn: ThreadTurn) => {
     setThreads((prev) =>
       prev.map((thread) => {
         if (thread.id === currentThreadId) {
@@ -966,10 +959,6 @@ export default function Home() {
         return thread;
       }),
     );
-  };
-
-  const loadSession = (session: SessionEntry) => {
-    loadThread(session.id);
   };
 
   const handleGenerate = async () => {
@@ -1008,6 +997,7 @@ export default function Home() {
       setReplies(data.replies || []);
       setBestIndex(data.bestIndex ?? null);
       setAnalysis(data.analysis || null);
+      mvpFeatures.trackToneUsage(tone);
 
       // Create new thread if none is selected
       if (!currentThreadId) {
@@ -1094,6 +1084,73 @@ export default function Home() {
     }
   };
 
+  const markReplySent = (index: number, reply: Reply) => {
+    setSentReplyIndex(index);
+
+    if (currentThreadId) {
+      setThreads((prev) =>
+        prev.map((thread) => {
+          if (thread.id !== currentThreadId) {
+            return thread;
+          }
+
+          const turns = [...thread.turns];
+          const lastTurn = turns.at(-1);
+          const shouldPatchLastTurn =
+            lastTurn &&
+            lastTurn.userMessage === conversation &&
+            lastTurn.tone === tone &&
+            lastTurn.goal === goal &&
+            !lastTurn.chosenReply;
+
+          if (shouldPatchLastTurn && lastTurn) {
+            turns[turns.length - 1] = {
+              ...lastTurn,
+              chosenReply: reply.text,
+            };
+          } else {
+            turns.push({
+              id: `turn-${Date.now()}`,
+              createdAt: Date.now(),
+              userMessage: conversation,
+              tone,
+              goal,
+              userContext,
+              analysis,
+              replies,
+              bestIndex,
+              chosenReply: reply.text,
+            });
+          }
+
+          return {
+            ...thread,
+            turns,
+            updatedAt: Date.now(),
+            summary: generateThreadSummary(turns),
+          };
+        }),
+      );
+    }
+
+    setConversation("");
+    setReplies([]);
+    setBestIndex(null);
+    setAnalysis(null);
+    setVisibleReplyCount(0);
+    setAnalysisVisible(false);
+    setPreviewVisible(false);
+  };
+
+  useEffect(() => {
+    const runGenerate = () => {
+      void handleGenerate();
+    };
+
+    window.addEventListener("generate-replies", runGenerate);
+    return () => window.removeEventListener("generate-replies", runGenerate);
+  }, [handleGenerate]);
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#1a0f2e] text-white">
       <style>{`
@@ -1124,206 +1181,73 @@ export default function Home() {
         .glow-pulse { animation: glow-pulse 4s ease-in-out infinite; }
         .subtle-sway { animation: subtle-sway 3s ease-in-out infinite; }
         .shine { animation: shine 3s ease-in-out infinite; }
-      `}</style>
-      
-      {/* Base gradient layers */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(217,70,239,0.08),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(168,85,247,0.06),transparent_45%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(236,72,153,0.04),transparent_60%)]" />
-      
-      {/* Animated floating orbs - romantic */}
-      <div className="absolute top-10 left-10 w-96 h-96 bg-gradient-to-br from-rose-500/12 to-pink-600/6 rounded-full blur-3xl float-1" style={{ filter: 'blur(80px)' }} />
-      <div className="absolute top-1/3 right-20 w-80 h-80 bg-gradient-to-br from-fuchsia-500/10 to-violet-600/6 rounded-full blur-3xl float-2" style={{ filter: 'blur(70px)' }} />
-      <div className="absolute bottom-20 left-1/3 w-72 h-72 bg-gradient-to-br from-violet-500/8 to-purple-600/4 rounded-full blur-3xl float-3 drift" style={{ filter: 'blur(75px)' }} />
-      <div className="absolute top-1/2 left-1/2 w-96 h-96 bg-gradient-to-br from-pink-500/5 to-rose-600/3 rounded-full blur-3xl float-1" style={{ filter: 'blur(85px)' }} />
-      
-      {/* Warm grid pattern */}
-      <div className="absolute inset-0 opacity-[0.015] [background-image:linear-gradient(rgba(236,72,153,0.4)_1px,transparent_1px),linear-gradient(90deg,rgba(217,70,239,0.4)_1px,transparent_1px)] [background-size:40px_40px]" />
-      
-      {/* Subtle top highlight */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-rose-500/3 via-pink-500/1 to-transparent" />
-      
-      {/* Accent glow edges */}
-      <div className="pointer-events-none absolute -top-1/2 -right-1/4 w-1/2 h-1/2 bg-gradient-to-bl from-fuchsia-400/5 to-transparent rounded-full blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-1/4 -left-1/2 w-1/2 h-1/2 bg-gradient-to-tr from-violet-400/4 to-transparent rounded-full blur-3xl" />
-
-      <div className="relative z-10 mx-auto max-w-6xl px-4 py-8 md:px-8">
-      <style>{`
-        /* Global smooth animations */
         @keyframes smooth-scale {
           from { transform: scale(0.98); opacity: 0; }
           to { transform: scale(1); opacity: 1; }
         }
-        @keyframes button-ripple {
-          0% { transform: scale(0.95); opacity: 1; }
-          100% { transform: scale(1); opacity: 0; }
-        }
-        @keyframes hover-lift {
-          0% { transform: translateY(0px); }
-          100% { transform: translateY(-2px); }
-        }
-        @keyframes glow-expand {
-          0% { box-shadow: 0 0 0 0 currentColor; }
-          100% { box-shadow: 0 0 0 8px rgba(0, 0, 0, 0); }
-        }
-        @keyframes spin-subtle {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        @keyframes shimmer {
-          0%, 100% { opacity: 0.6; }
-          50% { opacity: 1; }
-        }
-        
-        /* Easing curves for smooth feel */
-        :root {
-          --ease-smooth: cubic-bezier(0.4, 0.0, 0.2, 1);
-          --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
-          --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-        
-        /* Button smooth transitions */
-        button, a, input, textarea, select {
-          transition: all 0.3s var(--ease-smooth);
-        }
-        
-        /* Smooth hover scale for interactive elements */
-        button:hover:not(:disabled), 
-        .interactive:hover {
-          transform: translateY(-1px);
-        }
-        
-        button:active:not(:disabled) {
-          transform: scale(0.98) translateY(0px);
-          transition: all 0.15s var(--ease-bounce);
-        }
-        
-        /* Input focus smoothness */
-        input:focus, textarea:focus, select:focus {
-          transition: all 0.4s var(--ease-smooth);
-        }
-        
-        /* Smooth page animations */
-        .fade-in {
-          animation: smooth-scale 0.5s var(--ease-smooth) forwards;
-        }
-        
-        /* Global smooth properties */
-        * {
-          -webkit-font-smoothing: antialiased;
-          -moz-osx-font-smoothing: grayscale;
-        }
-        
-        /* Pulse animations for stats */
         @keyframes pulse-glow {
-                0%, 100% { filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.25)) drop-shadow(0 0 12px rgba(236, 72, 153, 0.12)); }
-                50% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.4)) drop-shadow(0 0 18px rgba(236, 72, 153, 0.2)); }
-              }
-              @keyframes sparkline-draw {
-                0% { stroke-dashoffset: 100; opacity: 0; }
-                100% { stroke-dashoffset: 0; opacity: 1; }
-              }
-              @keyframes dot-pulse {
-                0%, 100% { r: 1.8; opacity: 0.6; }
-                50% { r: 2.6; opacity: 1; }
-              }
-              @keyframes spark-glow {
-                0%, 100% { filter: drop-shadow(0 0 3px rgba(6, 182, 212, 0.3)); }
-                50% { filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.7)); }
-              }
-              .logo-glow { animation: pulse-glow 3s ease-in-out infinite; }
-              .sparkline-line { animation: sparkline-draw 2s ease-out forwards; stroke-dasharray: 100; }
-              .data-dot { animation: dot-pulse 2s ease-in-out infinite; }
-              .spark-accent { animation: spark-glow 2s ease-in-out infinite; }
-              
-              /* Rizzly brand animations - dopamine hit on every interaction */
-              @keyframes rizz-bounce {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.12); }
-              }
-              @keyframes sparkle-pulse {
-                0%, 100% { r: 3px; opacity: 0.75; filter: drop-shadow(0 0 4px rgba(251, 191, 36, 0.3)); }
-                50% { r: 4.2px; opacity: 1; filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.7)); }
-              }
-              @keyframes sparkle-pop {
-                0% { transform: scale(0.6) rotate(0deg) translateY(0); opacity: 1; }
-                100% { transform: scale(1.4) rotate(180deg) translateY(-3px); opacity: 0.3; }
-              }
-              .rizz-center { animation: rizz-bounce 2.2s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; }
-              .sparkle-ray { animation: sparkle-pulse 1.6s ease-in-out infinite; }
-              .sparkle-ray-1 { animation-delay: 0s; }
-              .sparkle-ray-2 { animation-delay: 0.1s; }
-              .sparkle-ray-3 { animation-delay: 0.2s; }
-              .sparkle-ray-4 { animation-delay: 0.3s; }
-              .sparkle-ray-diag { animation-delay: 0.4s; }
-              
-              /* Typing indicator animation */
-              @keyframes typing-bounce {
-                0%, 100% { transform: translateY(0); opacity: 0.4; }
-                50% { transform: translateY(-2px); opacity: 1; }
-              }
-              .typing-dot { animation: typing-bounce 1.4s ease-in-out infinite; }
-            `}</style>
-            <header className="flex items-center justify-center gap-4 mb-8 md:mb-10 md:justify-between">
-            <div className="flex items-center gap-5">
+          0%, 100% { filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.25)) drop-shadow(0 0 12px rgba(236, 72, 153, 0.12)); }
+          50% { filter: drop-shadow(0 0 10px rgba(236, 72, 153, 0.4)) drop-shadow(0 0 18px rgba(236, 72, 153, 0.2)); }
+        }
+        @keyframes typing-bounce {
+          0%, 100% { transform: translateY(0); opacity: 0.4; }
+          50% { transform: translateY(-2px); opacity: 1; }
+        }
+        .logo-glow { animation: pulse-glow 3s ease-in-out infinite; }
+        .typing-dot { animation: typing-bounce 1.4s ease-in-out infinite; }
+      `}</style>
+
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(217,70,239,0.08),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(168,85,247,0.06),transparent_45%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(236,72,153,0.04),transparent_60%)]" />
+      <div className="absolute top-10 left-10 h-96 w-96 rounded-full bg-gradient-to-br from-rose-500/12 to-pink-600/6 blur-3xl float-1" style={{ filter: "blur(80px)" }} />
+      <div className="absolute top-1/3 right-20 h-80 w-80 rounded-full bg-gradient-to-br from-fuchsia-500/10 to-violet-600/6 blur-3xl float-2" style={{ filter: "blur(70px)" }} />
+      <div className="absolute bottom-20 left-1/3 h-72 w-72 rounded-full bg-gradient-to-br from-violet-500/8 to-purple-600/4 blur-3xl float-3 drift" style={{ filter: "blur(75px)" }} />
+      <div className="absolute top-1/2 left-1/2 h-96 w-96 rounded-full bg-gradient-to-br from-pink-500/5 to-rose-600/3 blur-3xl float-1" style={{ filter: "blur(85px)" }} />
+      <div className="absolute inset-0 opacity-[0.015] [background-image:linear-gradient(rgba(236,72,153,0.4)_1px,transparent_1px),linear-gradient(90deg,rgba(217,70,239,0.4)_1px,transparent_1px)] [background-size:40px_40px]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-rose-500/3 via-pink-500/1 to-transparent" />
+      <div className="pointer-events-none absolute -top-1/2 -right-1/4 h-1/2 w-1/2 rounded-full bg-gradient-to-bl from-fuchsia-400/5 to-transparent blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-1/4 -left-1/2 h-1/2 w-1/2 rounded-full bg-gradient-to-tr from-violet-400/4 to-transparent blur-3xl" />
+
+      <div className="relative z-10 mx-auto max-w-6xl px-4 py-8 md:px-8">
+        <header className="mb-8 flex items-center justify-center gap-4 md:mb-10 md:justify-between">
+          <div className="flex items-center gap-5">
             <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500/20 to-rose-500/12 rounded-2xl blur-lg animate-pulse" style={{ animationDuration: '4s' }} />
-              <div className="relative rounded-2xl border border-fuchsia-400/30 bg-gradient-to-br from-black/80 to-black/60 p-2 backdrop-blur-md shadow-[0_8px_24px_rgba(236,72,153,0.15)]">
+              <div className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-br from-fuchsia-500/20 to-rose-500/12 blur-lg" style={{ animationDuration: "4s" }} />
+              <div className="relative rounded-2xl border border-fuchsia-400/30 bg-gradient-to-br from-black/80 to-black/60 p-2 shadow-[0_8px_24px_rgba(236,72,153,0.15)] backdrop-blur-md">
                 <svg width="64" height="64" viewBox="0 0 64 64" className="logo-glow" fill="none">
-                  <defs>
-                    <filter id="subtleGlow">
-                      <feGaussianBlur stdDeviation="0.5" result="coloredBlur"/>
-                      <feMerge>
-                        <feMergeNode in="coloredBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
-                      </feMerge>
-                    </filter>
-                  </defs>
-                  
-                  {/* Primary rounded square bubble - magenta */}
                   <rect x="10" y="14" width="24" height="22" rx="5" ry="5" stroke="#d946a6" strokeWidth="2.5" fill="none" />
-                  
-                  {/* Bubble pointer - magenta */}
                   <polygon points="18,36 14,42 22,36" fill="#d946a6" />
-                  
-                  {/* Secondary rounded square bubble - cyan (overlapping) */}
                   <rect x="28" y="22" width="26" height="22" rx="5" ry="5" stroke="#06b6d4" strokeWidth="2.5" fill="none" />
-                  
-                  {/* Bubble pointer - cyan */}
                   <polygon points="46,44 50,50 42,44" fill="#06b6d4" />
-                  
-                  {/* Typing indicator dots in primary magenta bubble */}
-                  <circle cx="16" cy="25" r="1.8" fill="#d946a6" opacity="0.9" className="typing-dot" style={{ animationDelay: '0s' }} />
-                  <circle cx="22" cy="25" r="1.8" fill="#d946a6" opacity="0.9" className="typing-dot" style={{ animationDelay: '0.2s' }} />
-                  <circle cx="28" cy="25" r="1.8" fill="#d946a6" opacity="0.9" className="typing-dot" style={{ animationDelay: '0.4s' }} />
-                  
-                  {/* Typing indicator dots in secondary cyan bubble */}
-                  <circle cx="35" cy="33" r="1.8" fill="#06b6d4" opacity="0.9" className="typing-dot" style={{ animationDelay: '0s' }} />
-                  <circle cx="41" cy="33" r="1.8" fill="#06b6d4" opacity="0.9" className="typing-dot" style={{ animationDelay: '0.2s' }} />
-                  <circle cx="47" cy="33" r="1.8" fill="#06b6d4" opacity="0.9" className="typing-dot" style={{ animationDelay: '0.4s' }} />
+                  <circle cx="16" cy="25" r="1.8" fill="#d946a6" opacity="0.9" className="typing-dot" style={{ animationDelay: "0s" }} />
+                  <circle cx="22" cy="25" r="1.8" fill="#d946a6" opacity="0.9" className="typing-dot" style={{ animationDelay: "0.2s" }} />
+                  <circle cx="28" cy="25" r="1.8" fill="#d946a6" opacity="0.9" className="typing-dot" style={{ animationDelay: "0.4s" }} />
+                  <circle cx="35" cy="33" r="1.8" fill="#06b6d4" opacity="0.9" className="typing-dot" style={{ animationDelay: "0s" }} />
+                  <circle cx="41" cy="33" r="1.8" fill="#06b6d4" opacity="0.9" className="typing-dot" style={{ animationDelay: "0.2s" }} />
+                  <circle cx="47" cy="33" r="1.8" fill="#06b6d4" opacity="0.9" className="typing-dot" style={{ animationDelay: "0.4s" }} />
                 </svg>
               </div>
             </div>
 
             <div>
-              <div className="text-xs uppercase tracking-[0.3em] bg-gradient-to-r from-rose-300 via-pink-300 to-fuchsia-300 bg-clip-text text-transparent font-bold opacity-80">
+              <div className="bg-gradient-to-r from-rose-300 via-pink-300 to-fuchsia-300 bg-clip-text text-xs font-bold uppercase tracking-[0.3em] text-transparent opacity-80">
                 Rizzly
               </div>
-              <div className="mt-1 text-lg font-black md:text-xl bg-gradient-to-r from-white via-rose-100 to-cyan-200 bg-clip-text text-transparent shine" style={{ animationDuration: '4s' }}>
+              <div className="shine mt-1 bg-gradient-to-r from-white via-rose-100 to-cyan-200 bg-clip-text text-lg font-black text-transparent md:text-xl" style={{ animationDuration: "4s" }}>
                 Reply smarter
               </div>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-gradient-to-r from-emerald-500/8 to-emerald-500/3 px-3.5 py-2 text-xs text-emerald-300 backdrop-blur-md font-medium hover:border-emerald-400/30 hover:from-emerald-500/12 transition-all duration-300" style={{ opacity: 0.7 }}>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-gradient-to-r from-emerald-500/8 to-emerald-500/3 px-3.5 py-2 text-xs font-medium text-emerald-300 backdrop-blur-md" style={{ opacity: 0.7 }}>
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               Live
             </div>
           </div>
         </header>
 
-        {/* MVP Header with streak and achievements */}
         <MVPHeader
           streak={mvpFeatures.streak}
           achievements={mvpFeatures.achievements}
@@ -1331,7 +1255,6 @@ export default function Home() {
           onToggleDashboard={mvpFeatures.toggleDashboard}
         />
 
-        {/* Dashboard Modal */}
         {mvpFeatures.showDashboard && (
           <Dashboard
             threads={threads}
@@ -1346,11 +1269,11 @@ export default function Home() {
 
         <section className="mb-10 grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_320px] xl:items-end">
           <div className="max-w-4xl">
-            <div className="mb-6 inline-flex rounded-full border border-cyan-500/30 bg-gradient-to-r from-cyan-500/15 to-transparent px-3.5 py-2 text-xs font-semibold text-cyan-200 backdrop-blur-sm tracking-[0.5px]" style={{ textShadow: '0 0 12px rgba(6, 182, 212, 0.2)' }}>
-              ✨ Smart context-aware replies
+            <div className="mb-6 inline-flex rounded-full border border-cyan-500/30 bg-gradient-to-r from-cyan-500/15 to-transparent px-3.5 py-2 text-xs font-semibold tracking-[0.5px] text-cyan-200 backdrop-blur-sm" style={{ textShadow: "0 0 12px rgba(6, 182, 212, 0.2)" }}>
+              Smart context-aware replies
             </div>
 
-            <h1 className="mb-4 text-4xl font-black leading-tight tracking-[-0.02em] md:text-5xl xl:text-6xl" style={{ textShadow: '0 8px 32px rgba(236, 72, 153, 0.15)' }}>
+            <h1 className="mb-4 text-4xl font-black leading-tight tracking-[-0.02em] md:text-5xl xl:text-6xl" style={{ textShadow: "0 8px 32px rgba(236, 72, 153, 0.15)" }}>
               <span className="block bg-gradient-to-r from-white via-white to-cyan-100 bg-clip-text text-transparent">
                 Better replies.
               </span>
@@ -1359,53 +1282,43 @@ export default function Home() {
               </span>
             </h1>
 
-            <p className="max-w-2xl text-base leading-relaxed text-white/60 md:text-lg font-[450] tracking-[0.3px]" style={{ letterSpacing: '0.3px' }}>
-              Rizzly reads the vibe, scores your interest level, and crafts replies that feel <span className="text-white/90 font-semibold">genuinely you</span>. Built for real texting, not templates.
+            <p className="max-w-2xl text-base font-[450] leading-relaxed tracking-[0.3px] text-white/60 md:text-lg" style={{ letterSpacing: "0.3px" }}>
+              Rizzly reads the vibe, scores your interest level, and crafts replies that feel <span className="font-semibold text-white/90">genuinely you</span>. Built for real texting, not templates.
             </p>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <div className="text-xs uppercase tracking-[0.2em] text-white/35">
-                  Status
+          <div className="mx-auto w-full max-w-xs rounded-2xl border border-white/15 bg-gradient-to-br from-purple-950/40 via-slate-900/35 to-gray-900/30 p-6 shadow-[0_12px_36px_rgba(190,103,154,0.13)] backdrop-blur-xl">
+            <div className="mb-4 flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-widest text-white/40">Status</div>
+                  <div className="mt-0.5 text-base font-bold text-white/90">{liveStatus.label}</div>
                 </div>
-                <div className="mt-1 text-sm font-medium text-white">
-                  {liveStatus.label}
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/60">
+                  <span className={`h-1.5 w-1.5 rounded-full ${liveStatus.dot}`} />
+                  {liveStatus.detail}
                 </div>
-              </div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/50">
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${liveStatus.dot}`}
-                />
-                {liveStatus.detail}
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-lg border border-white/10 bg-white/4 p-3">
-                <div className="text-lg font-semibold text-white">
+              <div className="flex flex-col items-center justify-center p-2 text-center">
+                <div className="bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-lg font-extrabold text-transparent drop-shadow-sm">
                   {pulseMetrics.toneLabel}
                 </div>
-                <div className="mt-2 text-xs text-white/40">
-                  Tone
-                </div>
+                <div className="mt-1 text-xs font-semibold uppercase tracking-widest text-white/50">Tone</div>
               </div>
-              <div className="rounded-lg border border-white/10 bg-white/4 p-3">
-                <div className="text-lg font-semibold text-white">
+              <div className="flex flex-col items-center justify-center p-2 text-center">
+                <div className="bg-gradient-to-r from-emerald-200 to-green-100 bg-clip-text text-lg font-extrabold text-transparent drop-shadow-sm">
                   {pulseMetrics.confidenceLabel}
                 </div>
-                <div className="mt-2 text-xs text-white/40">
-                  Confidence
-                </div>
+                <div className="mt-1 text-xs font-semibold uppercase tracking-widest text-white/50">Confidence</div>
               </div>
-              <div className="rounded-lg border border-white/10 bg-white/4 p-3">
-                <div className="text-lg font-semibold text-white">
+              <div className="flex flex-col items-center justify-center p-2 text-center">
+                <div className="bg-gradient-to-r from-yellow-200 via-amber-100 to-white bg-clip-text text-lg font-extrabold text-transparent drop-shadow-sm">
                   {pulseMetrics.energyLabel}
                 </div>
-                <div className="mt-2 text-xs text-white/40">
-                  Interest
-                </div>
+                <div className="mt-1 text-xs font-semibold uppercase tracking-widest text-white/50">Interest</div>
               </div>
             </div>
           </div>
@@ -1421,11 +1334,11 @@ export default function Home() {
                       Active Thread
                     </div>
                     <div className="mt-1 truncate text-sm font-semibold text-white">
-                      {currentThread!.name}
+                      {currentThread.name}
                     </div>
-                    {currentThread!.turns.length > 0 && (
+                    {currentThread.turns.length > 0 && (
                       <div className="mt-1 text-xs text-white/40">
-                        {currentThread!.turns.length} turn{currentThread!.turns.length !== 1 ? "s" : ""} — {new Date(currentThread!.updatedAt).toLocaleString()}
+                        {currentThread.turns.length} turn{currentThread.turns.length !== 1 ? "s" : ""} - {new Date(currentThread.updatedAt).toLocaleString()}
                       </div>
                     )}
                   </div>
@@ -1449,11 +1362,11 @@ export default function Home() {
             <section className="overflow-visible rounded-xl border border-white/10 bg-white/3 backdrop-blur-sm before:hidden">
               <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
                 <div>
-                  <p className="text-sm font-semibold text-white tracking-[0.3px]" style={{ textShadow: '0 2px 8px rgba(255, 255, 255, 0.08)' }}>
-                    💬 Paste the conversation
+                  <p className="text-sm font-semibold tracking-[0.3px] text-white" style={{ textShadow: "0 2px 8px rgba(255, 255, 255, 0.08)" }}>
+                    Paste the conversation
                   </p>
                   <p className="mt-1 text-xs text-white/50">
-                    Copy the last few messages, pick a vibe, get smarter replies in seconds
+                    Copy the last few messages, pick a vibe, get smarter replies in seconds.
                   </p>
                 </div>
 
@@ -1465,140 +1378,147 @@ export default function Home() {
               <div className="p-5">
                 <textarea
                   value={conversation}
-                  onChange={(event) => setConversation(event.target.value)}
-                  placeholder={`Them: hey sorry ive been busy
-You: no worries
-Them: how have you been`}
-                  className={`h-40 w-full resize-none rounded-[24px] border border-white/10 bg-black/40 px-4 py-4 text-white outline-none placeholder:text-white/30 focus:ring-2 md:h-48 focus:border-white/30 focus:bg-black/50 transition-all duration-400 ease-smooth ${selectedTone.ring}`}
+                  onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setConversation(event.target.value)}
+                  placeholder={`Them: hey sorry ive been busy\nYou: no worries\nThem: how have you been`}
+                  className={`h-40 w-full resize-none rounded-[24px] border border-white/10 bg-black/40 px-4 py-4 text-white outline-none transition-all duration-400 placeholder:text-white/30 focus:border-white/30 focus:bg-black/50 focus:ring-2 md:h-48 ${selectedTone.ring}`}
                 />
 
-
-                <div className="mt-4 grid items-start gap-3 sm:grid-cols-[1fr_auto]">
+                <div className="mt-4 grid items-start gap-3 sm:grid-cols-[1fr_auto_auto]">
                   <ToneDropdown value={tone} onChange={setTone} />
 
-                  {/* Image upload for reply */}
                   <input
                     id="reply-image-upload"
                     type="file"
                     accept="image/*"
                     className="hidden"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
+                    onChange={async (event) => {
+                      const file = event.target.files?.[0];
                       if (!file) return;
+
                       setPhotoModalLoading(true);
                       const reader = new FileReader();
-                      reader.onload = (event) => {
-                        setPhotoModalImage(event.target?.result as string);
+                      reader.onload = (loadEvent) => {
+                        setPhotoModalImage(loadEvent.target?.result as string);
                         setPhotoModalText("");
                         setPhotoModalOpen(true);
                         setPhotoModalLoading(false);
                       };
                       reader.readAsDataURL(file);
-                      e.target.value = "";
+                      event.target.value = "";
                     }}
                   />
+
                   <button
                     type="button"
-                    onClick={() => document.getElementById('reply-image-upload')?.click()}
+                    onClick={() => document.getElementById("reply-image-upload")?.click()}
                     className="rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80 transition hover:border-white/20"
                   >
-                    📷 Add Photo Reply
+                    Add Photo Reply
                   </button>
 
-                  {/* Photo reply modal */}
-                  {photoModalOpen && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-                      <div className="bg-[#181926] rounded-2xl shadow-2xl p-6 w-full max-w-xs relative border border-white/10">
+                  <button
+                    onClick={() => void handleGenerate()}
+                    disabled={loading || !conversation.trim()}
+                    className={`rounded-full bg-gradient-to-r px-8 py-3 font-bold text-white transition-all duration-[400ms] transform hover:scale-110 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 ${selectedTone.button}`}
+                  >
+                    {loading ? "Analyzing..." : "Generate Replies"}
+                  </button>
+                </div>
+
+                {photoModalOpen && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+                    <div className="relative w-full max-w-xs rounded-2xl border border-white/10 bg-[#181926] p-6 shadow-2xl">
+                      <button
+                        className="absolute top-3 right-3 text-xl text-white/60 hover:text-white"
+                        onClick={() => {
+                          setPhotoModalOpen(false);
+                          setPhotoModalImage(null);
+                          setPhotoModalText("");
+                        }}
+                        aria-label="Close photo reply modal"
+                      >
+                        x
+                      </button>
+
+                      <div className="mb-4 text-sm font-semibold text-white">Photo Reply</div>
+
+                      {photoModalImage && (
+                        <img
+                          src={photoModalImage}
+                          alt="Preview"
+                          className="mx-auto mb-3 max-h-48 rounded-lg border border-white/10 object-contain shadow"
+                        />
+                      )}
+
+                      <textarea
+                        className="mb-2 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 transition-all focus:border-white/20 focus:bg-white/10 focus:ring-2"
+                        placeholder="Add a message (optional)"
+                        value={photoModalText}
+                        onChange={(event) => setPhotoModalText(event.target.value)}
+                        rows={3}
+                      />
+
+                      <div className="flex justify-end gap-2">
                         <button
-                          className="absolute top-3 right-3 text-white/60 hover:text-white text-xl"
+                          className="rounded-lg border border-white/10 bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
                           onClick={() => {
                             setPhotoModalOpen(false);
                             setPhotoModalImage(null);
                             setPhotoModalText("");
                           }}
-                          aria-label="Close photo reply modal"
                         >
-                          ×
+                          Cancel
                         </button>
-                        <div className="mb-4">
-                          <div className="text-sm font-semibold text-white mb-2">Photo Reply</div>
-                          {photoModalImage && (
-                            <img
-                              src={photoModalImage}
-                              alt="Preview"
-                              className="max-h-48 rounded-lg border border-white/10 shadow object-contain mx-auto mb-3"
-                            />
-                          )}
-                          <textarea
-                            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/30 focus:ring-2 focus:border-white/20 focus:bg-white/10 transition-all mb-2"
-                            placeholder="Add a message (optional)"
-                            value={photoModalText}
-                            onChange={e => setPhotoModalText(e.target.value)}
-                            rows={3}
-                          />
-                        </div>
-                        <div className="flex gap-2 justify-end">
-                          <button
-                            className="rounded-lg px-4 py-2 text-sm bg-white/10 text-white hover:bg-white/20 border border-white/10"
-                            onClick={() => {
-                              setPhotoModalOpen(false);
-                              setPhotoModalImage(null);
-                              setPhotoModalText("");
-                            }}
-                          >Cancel</button>
-                          <button
-                            className="rounded-lg px-4 py-2 text-sm bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold shadow hover:from-blue-600 hover:to-cyan-600 border border-white/10"
-                            disabled={photoModalLoading || !photoModalImage}
-                            onClick={() => {
-                              setReplies(prev => [
-                                ...prev,
-                                {
-                                  text: photoModalText || "[Photo reply]",
-                                  scores: { confidence: 1, engagement: 1, responseChance: 1 },
-                                  image: photoModalImage!,
-                                  rating: 0,
-                                  isFavorite: false,
-                                },
-                              ]);
-                              setPhotoModalOpen(false);
-                              setPhotoModalImage(null);
-                              setPhotoModalText("");
-                            }}
-                          >Send</button>
-                        </div>
-                        {photoModalLoading && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-2xl">
-                            <div className="text-white/80 text-sm">Loading...</div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                        <button
+                          className="rounded-lg border border-white/10 bg-gradient-to-r from-blue-500 to-cyan-500 px-4 py-2 text-sm font-semibold text-white shadow hover:from-blue-600 hover:to-cyan-600"
+                          disabled={photoModalLoading || !photoModalImage}
+                          onClick={() => {
+                            if (!photoModalImage) return;
 
-                  <button
-                    onClick={handleGenerate}
-                    disabled={loading}
-                    className={`rounded-full bg-gradient-to-r px-8 py-3 font-bold text-white transition-all duration-[400ms] ease-spring transform hover:scale-110 active:scale-[0.96] hover:shadow-[0_12px_32px_rgba(236,72,153,0.3)] disabled:opacity-50 disabled:hover:scale-100 disabled:cursor-not-allowed ${selectedTone.button}`}
-                  >
-                    {loading ? "✨ Analyzing..." : "🚀 Generate Replies"}
-                  </button>
-                </div>
+                            setReplies((prev) => [
+                              ...prev,
+                              {
+                                text: photoModalText || "[Photo reply]",
+                                scores: { confidence: 1, engagement: 1, responseChance: 1 },
+                                image: photoModalImage,
+                                rating: 0,
+                                isFavorite: false,
+                              },
+                            ]);
+                            setBestIndex((current) => current ?? 0);
+                            setPhotoModalOpen(false);
+                            setPhotoModalImage(null);
+                            setPhotoModalText("");
+                          }}
+                        >
+                          Send
+                        </button>
+                      </div>
+
+                      {photoModalLoading && (
+                        <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40">
+                          <div className="text-sm text-white/80">Loading...</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="mt-4">
                   <div className="mb-2 flex items-center gap-2">
-                    <span className="text-xs font-semibold text-white">What's your goal?</span>
-                    <span className="text-[10px] text-white/40">(optional)</span>
+                    <span className="text-xs font-semibold text-white">What&apos;s your goal?</span>
+                    <span className="text-[10px] text-white/40">optional</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {goals.map((item: (typeof goals)[number]) => (
+                    {goals.map((item) => (
                       <button
                         key={item.value}
                         type="button"
                         onClick={() => setGoal(item.value)}
-                        className={`rounded-full border px-4 py-2 text-xs font-bold transition-all duration-[350ms] ease-spring transform hover:scale-110 active:scale-95 ${
+                        className={`rounded-full border px-4 py-2 text-xs font-bold transition-all duration-[350ms] transform hover:scale-110 active:scale-95 ${
                           goal === item.value
                             ? `bg-gradient-to-r text-white ${selectedTone.button} border-white/20 shadow-[0_6px_20px_rgba(236,72,153,0.25)]`
-                            : "border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:text-white/90 hover:bg-white/15"
+                            : "border-white/15 bg-white/5 text-white/70 hover:border-white/30 hover:bg-white/15 hover:text-white/90"
                         }`}
                       >
                         {item.label}
@@ -1610,25 +1530,21 @@ Them: how have you been`}
                 <div className="mt-4">
                   <div className="mb-2 flex items-center gap-2">
                     <span className="text-xs font-semibold text-white">Who are they?</span>
-                    <span className="text-[10px] text-white/40">(optional context)</span>
+                    <span className="text-[10px] text-white/40">optional context</span>
                   </div>
                   <textarea
                     value={userContext}
                     onChange={(event) => setUserContext(event.target.value)}
-                    placeholder="e.g., 'they're standoffish but warm when they open up' or 'first date energy'"
-                    className={`h-20 w-full resize-none rounded-lg border border-white/10 bg-white/3 px-4 py-3 text-sm text-white outline-none placeholder:text-white/30 focus:ring-2 focus:border-white/20 focus:bg-white/5 transition-all duration-400 ease-smooth ${selectedTone.ring}`}
+                    placeholder="e.g. they're standoffish but warm when they open up"
+                    className={`h-20 w-full resize-none rounded-lg border border-white/10 bg-white/3 px-4 py-3 text-sm text-white outline-none transition-all duration-400 placeholder:text-white/30 focus:border-white/20 focus:bg-white/5 focus:ring-2 ${selectedTone.ring}`}
                   />
                 </div>
 
                 <div className="mt-4 rounded-lg border border-white/10 bg-white/3 p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
-                      <div className="text-xs font-semibold text-white">
-                        🎤 Faster input
-                      </div>
-                      <div className="mt-1 text-sm text-white/60">
-                        Voice dictation + transcribe voice notes
-                      </div>
+                      <div className="text-xs font-semibold text-white">Faster input</div>
+                      <div className="mt-1 text-sm text-white/60">Voice dictation and transcribed voice notes.</div>
                     </div>
                     <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-medium text-white/50">
                       {voiceSupported ? "Ready" : "Upload"}
@@ -1646,11 +1562,8 @@ Them: how have you been`}
                           : "border-white/10 bg-white/5 text-white/70 hover:border-white/20"
                       } disabled:cursor-not-allowed disabled:opacity-45`}
                     >
-                      {dictationTarget === "conversation"
-                        ? "Stop convo dictation"
-                        : "Dictate convo"}
+                      {dictationTarget === "conversation" ? "Stop convo dictation" : "Dictate convo"}
                     </button>
-
                     <button
                       type="button"
                       onClick={() => startDictation("context")}
@@ -1661,23 +1574,19 @@ Them: how have you been`}
                           : "border-white/10 bg-white/5 text-white/70 hover:border-white/20"
                       } disabled:cursor-not-allowed disabled:opacity-45`}
                     >
-                      {dictationTarget === "context"
-                        ? "Stop context dictation"
-                        : "Dictate context"}
+                      {dictationTarget === "context" ? "Stop context dictation" : "Dictate context"}
                     </button>
                   </div>
 
                   <div className="mt-3 flex flex-wrap items-center gap-2">
                     <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1">
-                      {(["Them", "You"] as const).map((speaker: "Them" | "You") => (
+                      {(["Them", "You"] as const).map((speaker) => (
                         <button
                           key={speaker}
                           type="button"
                           onClick={() => setVoiceNoteSpeaker(speaker)}
                           className={`rounded-full px-3 py-1.5 text-xs transition ${
-                            voiceNoteSpeaker === speaker
-                              ? `bg-gradient-to-r text-white ${selectedTone.button}`
-                              : "text-white/55"
+                            voiceNoteSpeaker === speaker ? `bg-gradient-to-r text-white ${selectedTone.button}` : "text-white/55"
                           }`}
                         >
                           {speaker === "Them" ? "Their voice note" : "Your voice note"}
@@ -1699,23 +1608,15 @@ Them: how have you been`}
                       disabled={transcribingVoiceNote}
                       className="rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/75 transition hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      {transcribingVoiceNote
-                        ? "Transcribing voice note..."
-                        : "Upload voice note"}
+                      {transcribingVoiceNote ? "Transcribing voice note..." : "Upload voice note"}
                     </button>
                   </div>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">
-                    Screenshot ready
-                  </div>
-                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">
-                    Tone calibrated
-                  </div>
-                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">
-                    Viral-friendly output
-                  </div>
+                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Screenshot ready</div>
+                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Tone calibrated</div>
+                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Viral-friendly output</div>
                   {isDeepConversation && (
                     <div className={`rounded-full border px-3 py-1.5 text-xs text-white ${selectedTone.panel}`}>
                       Deep thread mode
@@ -1727,12 +1628,8 @@ Them: how have you been`}
                   <div className="mt-4 rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-4 backdrop-blur-xl">
                     <div className="mb-3 flex items-center justify-between">
                       <div>
-                        <div className="text-[11px] uppercase tracking-[0.22em] text-white/35">
-                          Generating
-                        </div>
-                        <div className="mt-1 text-sm font-medium text-white/80">
-                          Reading tone, scoring options, shaping replies
-                        </div>
+                        <div className="text-[11px] uppercase tracking-[0.22em] text-white/35">Generating</div>
+                        <div className="mt-1 text-sm font-medium text-white/80">Reading tone, scoring options, shaping replies.</div>
                       </div>
                       <div className="flex gap-1.5">
                         <span className={`h-2.5 w-2.5 rounded-full ${selectedTone.bubble} animate-[pulse_1s_ease-in-out_infinite]`} />
@@ -1740,17 +1637,10 @@ Them: how have you been`}
                         <span className={`h-2.5 w-2.5 rounded-full ${selectedTone.bubble} animate-[pulse_1s_ease-in-out_360ms_infinite]`} />
                       </div>
                     </div>
-
                     <div className="space-y-2">
-                      <div className="h-2 rounded-full bg-white/8">
-                        <div className={`h-full w-2/3 rounded-full bg-gradient-to-r ${selectedTone.button} animate-[pulse_1.8s_ease-in-out_infinite] opacity-80`} />
-                      </div>
-                      <div className="h-2 rounded-full bg-white/8">
-                        <div className={`h-full w-1/2 rounded-full bg-gradient-to-r ${selectedTone.button} animate-[pulse_1.8s_ease-in-out_150ms_infinite] opacity-70`} />
-                      </div>
-                      <div className="h-2 rounded-full bg-white/8">
-                        <div className={`h-full w-3/4 rounded-full bg-gradient-to-r ${selectedTone.button} animate-[pulse_1.8s_ease-in-out_300ms_infinite] opacity-60`} />
-                      </div>
+                      <div className="h-2 rounded-full bg-white/8"><div className={`h-full w-2/3 rounded-full bg-gradient-to-r ${selectedTone.button} opacity-80 animate-[pulse_1.8s_ease-in-out_infinite]`} /></div>
+                      <div className="h-2 rounded-full bg-white/8"><div className={`h-full w-1/2 rounded-full bg-gradient-to-r ${selectedTone.button} opacity-70 animate-[pulse_1.8s_ease-in-out_150ms_infinite]`} /></div>
+                      <div className="h-2 rounded-full bg-white/8"><div className={`h-full w-3/4 rounded-full bg-gradient-to-r ${selectedTone.button} opacity-60 animate-[pulse_1.8s_ease-in-out_300ms_infinite]`} /></div>
                     </div>
                   </div>
                 )}
@@ -1766,12 +1656,9 @@ Them: how have you been`}
             {interestLabel && (
               <section className="rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm">
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-lg font-bold">🔥 Interest Level</h2>
-                  <span className={`font-semibold text-sm ${interestLabel!.color}`}>
-                    {interestLabel!.text}
-                  </span>
+                  <h2 className="text-lg font-bold">Interest Level</h2>
+                  <span className={`text-sm font-semibold ${interestLabel.color}`}>{interestLabel.text}</span>
                 </div>
-
                 <div className="h-4 w-full overflow-hidden rounded-full bg-white/10">
                   <div
                     className={`h-full rounded-full bg-gradient-to-r shadow-[0_0_25px_rgba(255,255,255,0.18)] transition-all duration-700 ${selectedTone.meter}`}
@@ -1780,115 +1667,80 @@ Them: how have you been`}
                     <div className="h-full w-full animate-[pulse_2.4s_ease-in-out_infinite] bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.35),transparent)] opacity-60" />
                   </div>
                 </div>
-
-                <p className="mt-3 text-xs text-white/40">
-                  Estimated response likelihood based on best reply
-                </p>
+                <p className="mt-3 text-xs text-white/40">Estimated response likelihood based on the best reply.</p>
               </section>
             )}
 
             {analysis && (
-              <section
-                className={`space-y-3 rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm transition-all duration-300 ${
-                  analysisVisible
-                    ? "translate-y-0 opacity-100"
-                    : "translate-y-4 opacity-0"
-                }`}
-              >
-                <h2 className="text-xl font-bold bg-gradient-to-r from-white to-fuchsia-300 bg-clip-text text-transparent">📊 What's Happening</h2>
+              <section className={`space-y-3 rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm transition-all duration-300 ${analysisVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}>
+                <h2 className="bg-gradient-to-r from-white to-fuchsia-300 bg-clip-text text-xl font-bold text-transparent">What&apos;s Happening</h2>
 
-                {analysis!.summary && (
+                {analysis.summary && (
                   <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">
-                      Summary
-                    </div>
-                    <p>{analysis!.summary}</p>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Summary</div>
+                    <p>{analysis.summary}</p>
                   </div>
                 )}
-
-                {analysis!.toneUsed && (
+                {analysis.toneUsed && (
                   <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">
-                      Tone applied
-                    </div>
-                    <p>{analysis!.toneUsed}</p>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Tone applied</div>
+                    <p>{analysis.toneUsed}</p>
                   </div>
                 )}
-
-                {analysis!.depthMode && (
+                {analysis.strategy && (
                   <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">
-                      Thread mode
-                    </div>
-                    <p>{analysis!.depthMode}</p>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Strategy</div>
+                    <p>{analysis.strategy}</p>
                   </div>
                 )}
-
-                {analysis!.strategy && (
+                {analysis.depthMode && (
                   <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">
-                      Strategy
-                    </div>
-                    <p>{analysis!.strategy}</p>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Thread mode</div>
+                    <p>{analysis.depthMode}</p>
                   </div>
                 )}
-
-                {analysis!.userPattern && (
+                {analysis.userPattern && (
                   <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">
-                      Your pattern
-                    </div>
-                    <p>{analysis!.userPattern}</p>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Your pattern</div>
+                    <p>{analysis.userPattern}</p>
                   </div>
                 )}
-
-                {analysis!.receiverPattern && (
+                {analysis.receiverPattern && (
                   <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">
-                      Receiver pattern
-                    </div>
-                    <p>{analysis!.receiverPattern}</p>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Receiver pattern</div>
+                    <p>{analysis.receiverPattern}</p>
                   </div>
                 )}
-
-                {analysis!.languageStyle && (
+                {analysis.languageStyle && (
                   <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">
-                      Language style
-                    </div>
-                    <p>{analysis!.languageStyle}</p>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Language style</div>
+                    <p>{analysis.languageStyle}</p>
                   </div>
                 )}
-
-                {analysis!.adaptationNote && (
+                {analysis.adaptationNote && (
                   <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">
-                      Adaptation note
-                    </div>
-                    <p>{analysis!.adaptationNote}</p>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Adaptation note</div>
+                    <p>{analysis.adaptationNote}</p>
                   </div>
                 )}
-
-                <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                  <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">
-                    Current vibe
+                {analysis.vibe && (
+                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Current vibe</div>
+                    <p>{analysis.vibe}</p>
                   </div>
-                  <p>{analysis!.vibe}</p>
-                </div>
-
-                <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                  <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">
-                    Strength
+                )}
+                {analysis.strength && (
+                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Strength</div>
+                    <p>{analysis.strength}</p>
                   </div>
-                  <p>{analysis!.strength}</p>
-                </div>
-
-                <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                  <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">
-                    Risk
+                )}
+                {analysis.risk && (
+                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
+                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Risk</div>
+                    <p>{analysis.risk}</p>
                   </div>
-                  <p>{analysis!.risk}</p>
-                </div>
+                )}
               </section>
             )}
 
@@ -1896,20 +1748,14 @@ Them: how have you been`}
               <section className="rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-bold text-white">
-                      📚 Your Conversations
-                    </h3>
-                    <p className="mt-1 text-xs text-white/50">
-                      Pick up where you left off
-                    </p>
+                    <h3 className="text-lg font-bold text-white">Your Conversations</h3>
+                    <p className="mt-1 text-xs text-white/50">Pick up where you left off.</p>
                   </div>
-                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/50">
-                    {threads.length}
-                  </div>
+                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/50">{threads.length}</div>
                 </div>
 
                 <div className="space-y-3">
-                  {threads.map((thread: Thread) => (
+                  {threads.map((thread) => (
                     <button
                       key={thread.id}
                       type="button"
@@ -1923,23 +1769,15 @@ Them: how have you been`}
                       <div className="flex items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <div className="truncate text-sm font-semibold text-white">
-                              {thread.name}
-                            </div>
+                            <div className="truncate text-sm font-semibold text-white">{thread.name}</div>
                             <span className="whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/55">
                               {thread.turns.length} turns
                             </span>
                           </div>
-                          {thread.summary && (
-                            <div className="mt-2 text-xs text-white/40 line-clamp-2">
-                              {thread.summary}
-                            </div>
-                          )}
-                          <div className="mt-1 text-xs text-white/35">
-                            Updated {new Date(thread.updatedAt).toLocaleString()}
-                          </div>
+                          {thread.summary && <div className="mt-2 line-clamp-2 text-xs text-white/40">{thread.summary}</div>}
+                          <div className="mt-1 text-xs text-white/35">Updated {new Date(thread.updatedAt).toLocaleString()}</div>
                         </div>
-                        <div className="shrink-0 text-lg">{"→"}</div>
+                        <div className="shrink-0 text-lg">-&gt;</div>
                       </div>
                     </button>
                   ))}
@@ -1959,11 +1797,11 @@ Them: how have you been`}
                   <div className="mt-4 space-y-3">
                     <input
                       type="text"
-                      placeholder="Thread name (e.g., 'First dates with Alex')"
+                      placeholder="Thread name"
                       value={threadName}
-                      onChange={(e) => setThreadName(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
+                      onChange={(event) => setThreadName(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
                           createThread(threadName);
                         }
                       }}
@@ -1992,67 +1830,42 @@ Them: how have you been`}
                 )}
               </section>
             )}
-
           </div>
 
           <div className="space-y-6">
             <section className="rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-white">💬 How it'll look</h2>
-                <div className="text-xs font-medium text-white/40">
-                  iMessage preview
-                </div>
+                <h2 className="text-lg font-bold text-white">How it&apos;ll look</h2>
+                <div className="text-xs font-medium text-white/40">iMessage preview</div>
               </div>
 
               <div className="rounded-[28px] border border-white/10 bg-[#0b0c10] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
                 <div className="mb-4 flex items-center justify-center">
-                  <div className="rounded-full bg-white/10 px-4 py-1 text-sm text-white/60">
-                    Today
-                  </div>
+                  <div className="rounded-full bg-white/10 px-4 py-1 text-sm text-white/60">Today</div>
                 </div>
 
                 <div className="space-y-3">
                   {fakeChatPreview.length > 0 ? (
                     fakeChatPreview.map((line: string, index: number) => {
                       const isYou = line.toLowerCase().startsWith("you:");
-                      const content = line
-                        .replace(/^them:\s*/i, "")
-                        .replace(/^her:\s*/i, "")
-                        .replace(/^you:\s*/i, "");
+                      const content = line.replace(/^them:\s*/i, "").replace(/^her:\s*/i, "").replace(/^you:\s*/i, "");
 
                       return (
-                        <div
-                          key={`${line}-${index}`}
-                          className={`flex ${isYou ? "justify-end" : "justify-start"}`}
-                        >
-                          <div
-                            className={`max-w-[80%] rounded-[22px] px-4 py-3 text-sm leading-6 ${
-                              isYou
-                                ? "bg-[#0A84FF] text-white"
-                                : "bg-[#2c2c2e] text-white"
-                            }`}
-                          >
+                        <div key={`${line}-${index}`} className={`flex ${isYou ? "justify-end" : "justify-start"}`}>
+                          <div className={`max-w-[80%] rounded-[22px] px-4 py-3 text-sm leading-6 ${isYou ? "bg-[#0A84FF] text-white" : "bg-[#2c2c2e] text-white"}`}>
                             {content}
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <div className="text-sm text-white/35">
-                      Paste a conversation to preview it here.
-                    </div>
+                    <div className="text-sm text-white/35">Paste a conversation to preview it here.</div>
                   )}
 
-                  {bestIndex !== null && replies[bestIndex!] && (
+                  {bestIndex !== null && replies[bestIndex] && (
                     <div className="flex justify-end pt-2">
-                      <div
-                        className={`max-w-[80%] rounded-[22px] px-4 py-3 text-sm font-medium leading-6 text-black shadow-[0_0_20px_rgba(52,199,89,0.35)] transition-all duration-500 ${
-                          previewVisible
-                            ? "translate-y-0 scale-100 opacity-100"
-                            : "translate-y-3 scale-[0.97] opacity-0"
-                        } ${selectedTone.bubble}`}
-                      >
-                        {replies[bestIndex!].text}
+                      <div className={`max-w-[80%] rounded-[22px] px-4 py-3 text-sm font-medium leading-6 text-black shadow-[0_0_20px_rgba(52,199,89,0.35)] transition-all duration-500 ${previewVisible ? "translate-y-0 scale-100 opacity-100" : "translate-y-3 scale-[0.97] opacity-0"} ${selectedTone.bubble}`}>
+                        {replies[bestIndex].text}
                       </div>
                     </div>
                   )}
@@ -2063,28 +1876,15 @@ Them: how have you been`}
             {replies.length > 0 && (
               <section className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent">✨ Your Replies</h2>
-                  <div className="text-xs font-medium text-white/40">
-                    Pick your vibe
-                  </div>
+                  <h2 className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-2xl font-bold text-transparent">Your Replies</h2>
+                  <div className="text-xs font-medium text-white/40">Pick your vibe</div>
                 </div>
 
-                {replies.map((reply: Reply, index: number) => (
+                {replies.map((reply, index) => (
                   <div
                     key={`${reply.text}-${index}`}
-                    className={`rounded-[30px] border p-5 transition ${
-                      bestIndex === index
-                        ? selectedTone.panel
-                        : "border-white/10 bg-white/[0.05] backdrop-blur-xl hover:border-white/15 hover:bg-white/[0.07]"
-                    } ${
-                      visibleReplyCount > index
-                        ? "translate-y-0 scale-100 opacity-100"
-                        : "translate-y-4 scale-[0.985] opacity-0"
-                    }`}
-                    style={{
-                      transitionDuration: "420ms",
-                      transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
-                    }}
+                    className={`rounded-[30px] border p-5 transition ${bestIndex === index ? selectedTone.panel : "border-white/10 bg-white/[0.05] backdrop-blur-xl hover:border-white/15 hover:bg-white/[0.07]"} ${visibleReplyCount > index ? "translate-y-0 scale-100 opacity-100" : "translate-y-4 scale-[0.985] opacity-0"}`}
+                    style={{ transitionDuration: "420ms", transitionTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)" }}
                   >
                     {bestIndex === index && (
                       <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/8 px-3 py-1 text-xs font-semibold text-white">
@@ -2092,121 +1892,71 @@ Them: how have you been`}
                       </div>
                     )}
 
-                    <p className="mb-4 text-base leading-8 md:text-lg">
-                      {reply.text}
-                    </p>
+                    {reply.image && (
+                      <img
+                        src={reply.image}
+                        alt="Reply attachment"
+                        className="mb-4 max-h-52 rounded-2xl border border-white/10 object-contain shadow"
+                      />
+                    )}
+
+                    <p className="mb-4 text-base leading-8 md:text-lg">{reply.text}</p>
 
                     <div className="mb-4 grid grid-cols-3 gap-2 text-xs">
                       <div className={`rounded-2xl border p-3 text-center ${selectedTone.panel}`}>
-                        <div className="text-lg font-bold">
-                          {reply.scores.confidence}/10
-                        </div>
+                        <div className="text-lg font-bold">{reply.scores.confidence}/10</div>
                         <div className="mt-1 text-white/45">Confidence</div>
                       </div>
-
                       <div className={`rounded-2xl border p-3 text-center ${selectedTone.panel}`}>
-                        <div className="text-lg font-bold">
-                          {reply.scores.engagement}/10
-                        </div>
+                        <div className="text-lg font-bold">{reply.scores.engagement}/10</div>
                         <div className="mt-1 text-white/45">Engagement</div>
                       </div>
-
                       <div className={`rounded-2xl border p-3 text-center ${selectedTone.panel}`}>
-                        <div className="text-lg font-bold">
-                          {reply.scores.responseChance}/10
-                        </div>
+                        <div className="text-lg font-bold">{reply.scores.responseChance}/10</div>
                         <div className="mt-1 text-white/45">Reply Rate</div>
                       </div>
                     </div>
 
                     <div className="flex flex-wrap gap-2">
-                      {sentReplyIndex !== index && (
+                      {sentReplyIndex !== index ? (
                         <button
-                          onClick={() => {
-                            setSentReplyIndex(index);
-                            // Append turn with chosen reply
-                            if (currentThreadId) {
-                              const turn: ThreadTurn = {
-                                id: `turn-${Date.now()}`,
-                                createdAt: Date.now(),
-                                userMessage: conversation,
-                                tone,
-                                goal,
-                                userContext,
-                                analysis,
-                                replies,
-                                bestIndex,
-                                chosenReply: reply.text,
-                              };
-
-                              appendTurn(turn);
-                            }
-
-                            // Reset for next turn
-                            setConversation("");
-                            setReplies([]);
-                            setBestIndex(null);
-                            setAnalysis(null);
-                            setVisibleReplyCount(0);
-                            setAnalysisVisible(false);
-                            setPreviewVisible(false);
-                          }}
-                          className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-[350ms] ease-spring transform hover:scale-105 active:scale-95 hover:shadow-[0_6px_18px_rgba(5,150,105,0.4)] disabled:opacity-50 disabled:hover:scale-100"
+                          onClick={() => markReplySent(index, reply)}
+                          className="flex-1 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-all duration-[350ms] transform hover:scale-105 active:scale-95 hover:shadow-[0_6px_18px_rgba(5,150,105,0.4)]"
                         >
-                          ✓ Mark as Sent
+                          Mark as Sent
                         </button>
-                      )}
-
-                      {sentReplyIndex === index && (
-                        <div className="flex-1 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-sm font-semibold text-emerald-300 text-center">
-                          ✓ Sent & Saved
+                      ) : (
+                        <div className="flex-1 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2 text-center text-sm font-semibold text-emerald-300">
+                          Sent and Saved
                         </div>
                       )}
 
                       <button
-                        onClick={() => copyToClipboard(reply.text, index)}
-                        className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-[350ms] ease-spring transform hover:scale-110 active:scale-[0.97] ${
-                          copiedIndex === index
-                            ? "bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-[0_8px_24px_rgba(34,197,94,0.5)]"
-                            : "bg-white text-black hover:shadow-[0_8px_24px_rgba(255,255,255,0.3)]"
-                        }`}
+                        onClick={() => void copyToClipboard(reply.text, index)}
+                        className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all duration-[350ms] transform hover:scale-110 active:scale-[0.97] ${copiedIndex === index ? "bg-gradient-to-r from-green-400 to-emerald-500 text-white shadow-[0_8px_24px_rgba(34,197,94,0.5)]" : "bg-white text-black hover:shadow-[0_8px_24px_rgba(255,255,255,0.3)]"}`}
                       >
-                        {copiedIndex === index ? "✓ Copied!" : "Copy"}
+                        {copiedIndex === index ? "Copied" : "Copy"}
                       </button>
 
-                      {/* MVP Features: Rate Reply */}
                       <button
                         onClick={() => mvpFeatures.rateReply(reply.text, 1)}
-                        className={`rounded-xl px-3 py-2 text-sm font-bold transition-all duration-300 transform hover:scale-110 active:scale-95 ${
-                          mvpFeatures.replyRatings[reply.text] === 1
-                            ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-[0_4px_15px_rgba(34,197,94,0.4)]"
-                            : "border border-green-400/30 bg-green-500/10 text-green-100 hover:border-green-400/50 hover:bg-green-500/20"
-                        }`}
-                        title="This helped!"
+                        className={`rounded-xl px-3 py-2 text-sm font-bold transition-all duration-300 transform hover:scale-110 active:scale-95 ${mvpFeatures.replyRatings[reply.text] === 1 ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-[0_4px_15px_rgba(34,197,94,0.4)]" : "border border-green-400/30 bg-green-500/10 text-green-100 hover:border-green-400/50 hover:bg-green-500/20"}`}
+                        title="This helped"
                       >
                         👍
                       </button>
 
                       <button
                         onClick={() => mvpFeatures.rateReply(reply.text, -1)}
-                        className={`rounded-xl px-3 py-2 text-sm font-bold transition-all duration-[350ms] ease-spring transform hover:scale-120 active:scale-[0.95] ${
-                          mvpFeatures.replyRatings[reply.text] === -1
-                            ? "bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-[0_6px_18px_rgba(239,68,68,0.5)]"
-                            : "border border-red-400/30 bg-red-500/10 text-red-100 hover:border-red-400/50 hover:bg-red-500/20 hover:shadow-[0_4px_12px_rgba(239,68,68,0.3)]"
-                        }`}
-                        title="Didn't help"
+                        className={`rounded-xl px-3 py-2 text-sm font-bold transition-all duration-[350ms] transform hover:scale-110 active:scale-[0.95] ${mvpFeatures.replyRatings[reply.text] === -1 ? "bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-[0_6px_18px_rgba(239,68,68,0.5)]" : "border border-red-400/30 bg-red-500/10 text-red-100 hover:border-red-400/50 hover:bg-red-500/20"}`}
+                        title="Did not help"
                       >
                         👎
                       </button>
 
-                      {/* MVP Features: Favorite Reply */}
                       <button
                         onClick={() => mvpFeatures.toggleFavorite(reply.text)}
-                        className={`rounded-xl px-3 py-2 text-sm font-bold transition-all duration-[350ms] ease-spring transform hover:scale-120 active:scale-[0.95] ${
-                          mvpFeatures.favorites.includes(reply.text)
-                            ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-white shadow-[0_6px_18px_rgba(234,179,8,0.5)]"
-                            : "border border-yellow-400/30 bg-yellow-500/10 text-yellow-100 hover:border-yellow-400/50 hover:bg-yellow-500/20 hover:shadow-[0_4px_12px_rgba(234,179,8,0.3)]"
-                        }`}
+                        className={`rounded-xl px-3 py-2 text-sm font-bold transition-all duration-[350ms] transform hover:scale-110 active:scale-[0.95] ${mvpFeatures.favorites.includes(reply.text) ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-white shadow-[0_6px_18px_rgba(234,179,8,0.5)]" : "border border-yellow-400/30 bg-yellow-500/10 text-yellow-100 hover:border-yellow-400/50 hover:bg-yellow-500/20"}`}
                         title="Save this reply"
                       >
                         {mvpFeatures.favorites.includes(reply.text) ? "⭐" : "☆"}
@@ -2214,21 +1964,19 @@ Them: how have you been`}
 
                       <button
                         onClick={() => setTone("flirty")}
-                        className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/15 px-4 py-2 text-sm font-bold text-fuchsia-100 transition-all duration-[350ms] ease-spring transform hover:scale-105 active:scale-95 hover:border-fuchsia-400/50 hover:bg-fuchsia-500/25 hover:shadow-[0_6px_18px_rgba(232,121,249,0.4)]"
+                        className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/15 px-4 py-2 text-sm font-bold text-fuchsia-100 transition-all duration-[350ms] transform hover:scale-105 active:scale-95 hover:border-fuchsia-400/50 hover:bg-fuchsia-500/25"
                       >
                         Make Flirty
                       </button>
-
                       <button
                         onClick={() => setTone("confident")}
-                        className="rounded-xl border border-cyan-400/30 bg-cyan-500/15 px-4 py-2 text-sm font-bold text-cyan-100 transition-all duration-[350ms] ease-spring transform hover:scale-105 active:scale-95 hover:border-cyan-400/50 hover:bg-cyan-500/25 hover:shadow-[0_6px_18px_rgba(34,211,238,0.4)]"
+                        className="rounded-xl border border-cyan-400/30 bg-cyan-500/15 px-4 py-2 text-sm font-bold text-cyan-100 transition-all duration-[350ms] transform hover:scale-105 active:scale-95 hover:border-cyan-400/50 hover:bg-cyan-500/25"
                       >
                         Make Bolder
                       </button>
-
                       <button
                         onClick={() => setTone("funny")}
-                        className="rounded-xl border border-amber-400/30 bg-amber-500/15 px-4 py-2 text-sm font-bold text-amber-100 transition-all duration-[350ms] ease-spring transform hover:scale-105 active:scale-95 hover:border-amber-400/50 hover:bg-amber-500/25 hover:shadow-[0_6px_18px_rgba(245,158,11,0.4)]"
+                        className="rounded-xl border border-amber-400/30 bg-amber-500/15 px-4 py-2 text-sm font-bold text-amber-100 transition-all duration-[350ms] transform hover:scale-105 active:scale-95 hover:border-amber-400/50 hover:bg-amber-500/25"
                       >
                         Make Funny
                       </button>
