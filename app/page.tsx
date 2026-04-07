@@ -1651,7 +1651,7 @@ export default function Home() {
                   className={`h-40 w-full resize-none rounded-[24px] border border-white/10 bg-black/40 px-4 py-4 text-white outline-none transition-all duration-400 placeholder:text-white/30 focus:border-white/30 focus:bg-black/50 focus:ring-2 md:h-48 ${selectedTone.ring}`}
                 />
 
-                <div className="mt-4 grid items-start gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
+                <div className="mt-4 space-y-3">
                   <ToneDropdown value={tone} onChange={setTone} />
 
                   <input
@@ -1662,14 +1662,15 @@ export default function Home() {
                     onChange={handleScreenshotUpload}
                   />
 
-                  <button
-                    type="button"
-                    onClick={() => screenshotInputRef.current?.click()}
-                    disabled={screenshotParsing}
-                    className="rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80 transition hover:border-white/20 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {screenshotParsing ? "Reading Screenshot..." : "Import Screenshot"}
-                  </button>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.15fr)]">
+                    <button
+                      type="button"
+                      onClick={() => screenshotInputRef.current?.click()}
+                      disabled={screenshotParsing}
+                      className="flex min-h-[56px] items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white/78 transition hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {screenshotParsing ? "Reading Screenshot..." : "Import Screenshot"}
+                    </button>
 
                   <input
                     id="reply-image-upload"
@@ -1693,21 +1694,22 @@ export default function Home() {
                     }}
                   />
 
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById("reply-image-upload")?.click()}
-                    className="rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/80 transition hover:border-white/20"
-                  >
-                    Add Photo Reply
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById("reply-image-upload")?.click()}
+                      className="flex min-h-[56px] items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm font-semibold text-white/78 transition hover:border-white/20 hover:bg-white/10"
+                    >
+                      Add Photo Reply
+                    </button>
 
-                  <button
-                    onClick={() => void handleGenerate()}
-                    disabled={loading || !conversation.trim()}
-                    className={`rounded-full bg-gradient-to-r px-8 py-3 font-bold text-white transition-all duration-[400ms] transform hover:scale-110 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100 ${selectedTone.button}`}
-                  >
-                    {loading ? "Analyzing..." : "Generate Replies"}
-                  </button>
+                    <button
+                      onClick={() => void handleGenerate()}
+                      disabled={loading || !conversation.trim()}
+                      className={`flex min-h-[56px] items-center justify-center rounded-2xl bg-gradient-to-r px-6 py-3 text-center text-sm font-bold text-white transition-all duration-300 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100 ${selectedTone.button}`}
+                    >
+                      <span className="whitespace-nowrap">{loading ? "Analyzing..." : "Generate Replies"}</span>
+                    </button>
+                  </div>
                 </div>
 
                 {photoModalOpen && (
