@@ -49,4 +49,42 @@ body {
   background: linear-gradient(180deg, #9d5a75, #7e97a3);
 }
 
+body .cl-header,
+body .cl-formFieldLabelRow,
+body .cl-footer,
+body .cl-socialButtons {
+  opacity: 1 !important;
+}
+
+body .cl-headerTitle,
+body .cl-headerSubtitle,
+body .cl-formFieldLabel,
+body .cl-dividerText,
+body .cl-footerActionText,
+body .cl-footer,
+body .cl-footer *,
+body .cl-identityPreviewText,
+body .cl-formFieldLabelRow label {
+  color: rgba(255, 255, 255, 0.96) !important;
+  opacity: 1 !important;
+}
+
+body .cl-socialButtonsBlockButton,
+body .cl-socialButtonsBlockButtonText {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+body .cl-socialButtonsProviderIcon__apple {
+  color: #ffffff !important;
+}
+
+body .cl-socialButtonsProviderIcon__discord {
+  color: #5865f2 !important;
+}
+
+body .cl-socialButtonsProviderIcon__google {
+  color: #4285f4 !important;
+}
+
 

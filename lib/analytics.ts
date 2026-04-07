@@ -3,6 +3,8 @@
  * Handles pattern recognition, achievements, streaks, and insights
  */
 
+import type { Analysis, Reply } from "@/lib/types";
+
 export type ToneKey = "confident" | "flirty" | "funny" | "chill" | "apologetic";
 export type GoalKey = "restart" | "flirt" | "clarify" | "plan" | "repair";
 export type CategoryKey = "dating" | "friendship" | "work" | "family" | "exes" | "other";
@@ -45,9 +47,9 @@ export interface ThreadTurn {
   screenshotSummary?: string;
   relationshipNotesSnapshot?: string;
   personaCalibrationSnapshot?: string;
-  replies: any[];
+  replies: Reply[];
   bestIndex: number | null;
-  analysis: any;
+  analysis: Analysis | null;
 }
 
 export interface Thread {

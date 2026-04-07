@@ -61,7 +61,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const body = await req.json();
+    const body: { imageDataUrl?: string } = await req.json();
     const imageDataUrl =
       typeof body.imageDataUrl === "string" ? body.imageDataUrl.trim() : "";
 
@@ -88,10 +88,11 @@ export async function POST(req: Request) {
             {
               type: "input_image",
               image_url: imageDataUrl,
+              detail: "auto",
             },
           ],
         },
-      ] as any,
+      ],
       max_output_tokens: 700,
       text: {
         verbosity: "low",

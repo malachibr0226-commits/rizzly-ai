@@ -5,13 +5,11 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type {
   Thread,
-  ThreadTurn,
   Achievement,
   ToneKey,
-  GoalKey,
   CategoryKey,
   TonePattern,
   ConversationStats,
@@ -26,6 +24,19 @@ import {
   calculateStats,
   type StreakData,
 } from "@/lib/analytics";
+
+function readStoredJson<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") {
+    return fallback;
+  }
+
+  try {
+    const rawValue = window.localStorage.getItem(key);
+    return rawValue ? (JSON.parse(rawValue) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export interface MVPFeaturesState {
   // Feature states
@@ -67,29 +78,28 @@ export function useMVPFeatures(threads: Thread[]): MVPFeaturesState {
   const [bulkCount, setBulkCount] = useState(1);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [replyRatings, setReplyRatings] = useState<Record<string, number>>({});
-  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [achievementState, setAchievementState] = useState<Achievement[]>(
+    getDefaultAchievements()
+  );
   const [streak, setStreak] = useState<StreakData>({ count: 0, lastDate: "" });
   const [showDashboard, setShowDashboard] = useState(false);
   const [usedTones, setUsedTones] = useState<Set<ToneKey>>(new Set());
 
-  // Initialize from localStorage
   useEffect(() => {
-    const savedFavorites = localStorage.getItem("sparkline-favorites");
-    const savedRatings = localStorage.getItem("sparkline-ratings");
-    const savedAchievements = localStorage.getItem("sparkline-achievements");
-    const savedTones = localStorage.getItem("sparkline-tones");
-
-    if (savedFavorites) setFavorites(JSON.parse(savedFavorites));
-    if (savedRatings) setReplyRatings(JSON.parse(savedRatings));
-    if (savedAchievements) {
-      setAchievements(JSON.parse(savedAchievements));
-    } else {
-      setAchievements(getDefaultAchievements());
-    }
-    if (savedTones) setUsedTones(new Set(JSON.parse(savedTones)));
-
-    const newStreak = updateStreak();
-    setStreak(newStreak);
+    queueMicrotask(() => {
+      setFavorites(readStoredJson<string[]>("sparkline-favorites", []));
+      setReplyRatings(
+        readStoredJson<Record<string, number>>("sparkline-ratings", {})
+      );
+      setAchievementState(
+        readStoredJson<Achievement[]>(
+          "sparkline-achievements",
+          getDefaultAchievements()
+        )
+      );
+      setUsedTones(new Set(readStoredJson<ToneKey[]>("sparkline-tones", [])));
+      setStreak(updateStreak());
+    });
   }, []);
 
   // Persist favorites
@@ -105,6 +115,36 @@ export function useMVPFeatures(threads: Thread[]): MVPFeaturesState {
       localStorage.setItem("sparkline-ratings", JSON.stringify(replyRatings));
     }
   }, [replyRatings]);
+
+  const achievements = useMemo(() => {
+    if (achievementState.length === 0) {
+      return [];
+    }
+
+    const earnedIds = new Set(
+      checkAchievements(threads, favorites, usedTones, streak.count)
+    );
+
+    return achievementState.map((achievement) => {
+      if (!achievement.unlocked && earnedIds.has(achievement.id)) {
+        return {
+          ...achievement,
+          unlocked: true,
+          unlockedAt:
+            achievement.unlockedAt ?? Date.parse(streak.lastDate || "1970-01-01"),
+        };
+      }
+
+      return achievement;
+    });
+  }, [
+    achievementState,
+    threads,
+    favorites,
+    usedTones,
+    streak.count,
+    streak.lastDate,
+  ]);
 
   // Persist achievements
   useEffect(() => {
@@ -126,21 +166,6 @@ export function useMVPFeatures(threads: Thread[]): MVPFeaturesState {
     }
   }, [usedTones]);
 
-  // Auto-check achievements when relevant state changes
-  useEffect(() => {
-    if (achievements.length === 0) return;
-    const earned = checkAchievements(threads, favorites, usedTones, streak.count);
-    let changed = false;
-    const updated = achievements.map((ach) => {
-      if (!ach.unlocked && earned.includes(ach.id)) {
-        changed = true;
-        return { ...ach, unlocked: true, unlockedAt: Date.now() };
-      }
-      return ach;
-    });
-    if (changed) setAchievements(updated);
-  }, [threads, favorites, usedTones, streak]);
-
   // Handler: Rate reply
   const rateReply = useCallback((replyId: string, rating: number) => {
     setReplyRatings((prev) => ({
@@ -160,7 +185,7 @@ export function useMVPFeatures(threads: Thread[]): MVPFeaturesState {
 
   // Handler: Update achievement
   const updateAchievement = useCallback((achievementId: string) => {
-    setAchievements((prev) =>
+    setAchievementState((prev) =>
       prev.map((ach) =>
         ach.id === achievementId
           ? { ...ach, unlocked: true, unlockedAt: Date.now() }

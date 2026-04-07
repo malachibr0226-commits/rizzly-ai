@@ -6,6 +6,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { SignOutButton, UserButton, useAuth, useUser } from "@clerk/nextjs";
 import type { Achievement, StreakData } from "@/lib/analytics";
 
@@ -89,18 +90,18 @@ export function MVPHeader({
           {/* Auth */}
           {!isSignedIn ? (
             <>
-              <a
+              <Link
                 href="/sign-up"
-                className="relative z-40 cursor-pointer pointer-events-auto px-4 py-2.5 rounded-full text-sm font-semibold border border-white/15 bg-white/5 text-white/85 transition hover:border-white/25 hover:bg-white/10"
+                className="relative z-40 cursor-pointer pointer-events-auto rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/85 transition hover:border-white/25 hover:bg-white/10"
               >
                 Sign Up
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/sign-in"
-                className="relative z-40 cursor-pointer pointer-events-auto px-5 py-2.5 rounded-full text-sm font-semibold bg-gradient-to-r from-pink-500 to-cyan-500 text-white shadow-[0_0_12px_rgba(236,72,153,0.3)] hover:shadow-[0_0_20px_rgba(236,72,153,0.5)] transition-all duration-200 transform hover:scale-105 active:scale-95"
+                className="relative z-40 cursor-pointer pointer-events-auto rounded-full bg-gradient-to-r from-pink-500 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_12px_rgba(236,72,153,0.3)] transition-all duration-200 transform hover:scale-105 active:scale-95 hover:shadow-[0_0_20px_rgba(236,72,153,0.5)]"
               >
                 Sign In
-              </a>
+              </Link>
             </>
           ) : (
             <>
