@@ -1651,24 +1651,24 @@ export default function Home() {
                   Live Read
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:gap-3">
-                  <div className="col-span-2 flex min-h-[112px] min-w-0 flex-col justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-2.5 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:col-span-1 sm:px-3 md:px-4 md:py-5">
-                    <div className="flex min-h-[2.75rem] items-center justify-center px-1 text-center bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-[clamp(0.58rem,0.78vw,0.82rem)] font-extrabold leading-none tracking-[-0.03em] text-transparent drop-shadow-sm whitespace-nowrap overflow-hidden">
-                      <span className="block max-w-full truncate">{pulseMetrics.toneLabel}</span>
+                <div className="grid grid-cols-2 gap-2.5 md:gap-3">
+                  <div className="col-span-2 flex min-h-[96px] min-w-0 flex-col justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] md:px-4 md:py-5">
+                    <div className="flex flex-1 items-center justify-center px-2 text-center bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-[clamp(0.9rem,1.15vw,1.08rem)] font-extrabold leading-tight tracking-[-0.03em] text-transparent drop-shadow-sm">
+                      <span className="max-w-full whitespace-nowrap">{pulseMetrics.toneLabel}</span>
                     </div>
-                    <div className="mt-2 flex min-h-[1.75rem] items-center justify-center text-[9px] font-semibold uppercase tracking-[0.14em] leading-relaxed text-white/46 sm:text-[10px]">Tone</div>
+                    <div className="mt-2 flex min-h-[1.5rem] items-center justify-center text-[9px] font-semibold uppercase tracking-[0.14em] leading-relaxed text-white/46 sm:text-[10px]">Tone</div>
                   </div>
-                  <div className="flex min-h-[112px] min-w-0 flex-col justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-2.5 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:px-3 md:px-4 md:py-5">
+                  <div className="flex min-h-[112px] min-w-0 flex-col justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] md:px-4 md:py-5">
                     <div className="flex min-h-[2.75rem] items-center justify-center bg-gradient-to-r from-emerald-200 to-green-100 bg-clip-text text-[clamp(1rem,1.6vw,1.45rem)] font-bold leading-tight text-transparent drop-shadow-sm">
                       {pulseMetrics.confidenceLabel}
                     </div>
-                    <div className="mt-2 flex min-h-[1.75rem] items-center justify-center text-[9px] font-semibold uppercase tracking-[0.14em] leading-relaxed text-white/46 sm:text-[10px]">Confidence</div>
+                    <div className="mt-2 flex min-h-[1.75rem] items-center justify-center text-[9px] font-semibold uppercase tracking-[0.12em] leading-relaxed text-white/46 sm:text-[10px]">Confidence</div>
                   </div>
-                  <div className="flex min-h-[112px] min-w-0 flex-col justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-2.5 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:px-3 md:px-4 md:py-5">
+                  <div className="flex min-h-[112px] min-w-0 flex-col justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] md:px-4 md:py-5">
                     <div className="flex min-h-[2.75rem] items-center justify-center bg-gradient-to-r from-yellow-200 via-amber-100 to-white bg-clip-text text-[clamp(1rem,1.6vw,1.45rem)] font-bold leading-tight text-transparent drop-shadow-sm">
                       {pulseMetrics.energyLabel}
                     </div>
-                    <div className="mt-2 flex min-h-[1.75rem] items-center justify-center text-[9px] font-semibold uppercase tracking-[0.14em] leading-relaxed text-white/46 sm:text-[10px]">Interest</div>
+                    <div className="mt-2 flex min-h-[1.75rem] items-center justify-center text-[9px] font-semibold uppercase tracking-[0.12em] leading-relaxed text-white/46 sm:text-[10px]">Interest</div>
                   </div>
                 </div>
               </div>
