@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAuth, useClerk } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { useMVPFeatures } from "@/app/hooks/useMVPFeatures";
 import { Dashboard } from "@/app/components/Dashboard";
 import { MVPHeader } from "@/app/components/MVPHeader";
@@ -626,7 +626,6 @@ function ToneDropdown({
 
 export default function Home() {
   const { isSignedIn } = useAuth();
-  const { openSignIn } = useClerk();
 
   // Photo reply modal state (must be inside the component)
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
@@ -980,7 +979,9 @@ export default function Home() {
 
   const promptSignIn = (message: string) => {
     setError(message);
-    void openSignIn();
+    if (typeof window !== "undefined") {
+      window.location.href = "/sign-in";
+    }
   };
 
   const handleVoiceNoteUpload = async (
