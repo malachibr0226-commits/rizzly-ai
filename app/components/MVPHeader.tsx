@@ -32,7 +32,7 @@ export function MVPHeader({
         }
         @keyframes badge-float {
           0%, 100% { transform: translateY(0px); }
-          3s { transform: translateY(-2px); }
+          50% { transform: translateY(-2px); }
         }
         @keyframes pulse-soft {
           0%, 100% { opacity: 0.8; }

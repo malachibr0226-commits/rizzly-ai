@@ -4,6 +4,23 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMVPFeatures } from "@/app/hooks/useMVPFeatures";
 import { Dashboard } from "@/app/components/Dashboard";
 import { MVPHeader } from "@/app/components/MVPHeader";
+import { ThreadList } from "@/app/components/ThreadList";
+import { AnalysisPanel } from "@/app/components/AnalysisPanel";
+import { ChatPreview } from "@/app/components/ChatPreview";
+import {
+  trackGenerate,
+  trackCopy,
+  trackSend,
+  trackRate,
+  trackFavorite,
+  trackOutcome,
+  trackToneChange,
+  trackScreenshotUpload,
+  trackThreadCreated,
+  trackThreadDeleted,
+  trackVoiceNote,
+  trackError,
+} from "@/lib/analytics-events";
 import type {
   ToneKey,
   GoalKey,
@@ -760,7 +777,19 @@ export default function Home() {
       return;
     }
 
-    window.localStorage.setItem(THREADS_KEY, JSON.stringify(threads));
+    try {
+      const data = JSON.stringify(threads);
+      // Warn and prune if approaching 4MB (localStorage limit is ~5MB)
+      if (data.length > 4_000_000 && threads.length > 5) {
+        const pruned = threads.slice(0, Math.max(5, Math.floor(threads.length * 0.75)));
+        window.localStorage.setItem(THREADS_KEY, JSON.stringify(pruned));
+        console.warn(`[Rizzly] Pruned threads from ${threads.length} to ${pruned.length} to stay under localStorage quota.`);
+      } else {
+        window.localStorage.setItem(THREADS_KEY, data);
+      }
+    } catch (e) {
+      console.error("[Rizzly] Failed to save threads to localStorage:", e);
+    }
   }, [threads]);
 
   useEffect(() => {
@@ -1035,6 +1064,7 @@ export default function Home() {
 
       if (Array.isArray(data.transcriptLines) && data.transcriptLines.length > 0) {
         setConversation(data.transcriptLines.join("\n"));
+        trackScreenshotUpload(data.transcriptLines.length);
       }
 
       if (data.suggestedGoal) {
@@ -1076,6 +1106,7 @@ export default function Home() {
     if (!currentThreadId) {
       return;
     }
+    trackOutcome(outcome);
 
     setThreads((prev) =>
       prev.map((thread) => {
@@ -1104,6 +1135,7 @@ export default function Home() {
   };
 
   const createThread = (name: string) => {
+    trackThreadCreated();
     const newThread: Thread = {
       id: `thread-${Date.now()}`,
       name: name.trim() || "Untitled",
@@ -1232,6 +1264,9 @@ export default function Home() {
           screenshotSummary,
           recentOutcome: currentThread?.lastOutcome || "",
           threadSummary,
+          category: mvpFeatures.category,
+          toneIntensity: mvpFeatures.toneIntensity,
+          bulkCount: mvpFeatures.bulkCount,
         }),
       });
 
@@ -1245,6 +1280,7 @@ export default function Home() {
       setBestIndex(data.bestIndex ?? null);
       setAnalysis(data.analysis || null);
       mvpFeatures.trackToneUsage(tone);
+      trackGenerate(tone, goal, mvpFeatures.category, mvpFeatures.bulkCount);
 
       // Create new thread if none is selected
       if (!currentThreadId) {
@@ -1327,6 +1363,7 @@ export default function Home() {
       setBestIndex(null);
       setAnalysis(null);
       setError(message);
+      trackError("generate", message);
     } finally {
       setLoading(false);
     }
@@ -1346,6 +1383,7 @@ export default function Home() {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedIndex(index);
+      trackCopy(index);
       setTimeout(() => setCopiedIndex(null), 1400);
     } catch (caughtError) {
       console.error("Copy failed:", caughtError);
@@ -1354,6 +1392,7 @@ export default function Home() {
 
   const markReplySent = (index: number, reply: Reply) => {
     setSentReplyIndex(index);
+    trackSend(index);
 
     if (currentThreadId) {
       setThreads((prev) =>
@@ -1417,6 +1456,7 @@ export default function Home() {
   };
 
   const deleteThread = (threadId: string) => {
+    trackThreadDeleted();
     setThreads((prev) => prev.filter((t) => t.id !== threadId));
     if (currentThreadId === threadId) {
       setCurrentThreadId(null);
@@ -1678,7 +1718,7 @@ export default function Home() {
                 />
 
                 <div className="mt-4 space-y-3">
-                  <ToneDropdown value={tone} onChange={setTone} />
+                  <ToneDropdown value={tone} onChange={(newTone: ToneKey) => { trackToneChange(tone, newTone); setTone(newTone); }} />
 
                   <input
                     ref={screenshotInputRef}
@@ -1837,6 +1877,72 @@ export default function Home() {
                         {item.label}
                       </button>
                     ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                  <div>
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="text-xs font-semibold text-white">Category</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {(["dating", "friendship", "work", "family", "exes", "other"] as const).map((cat) => (
+                        <button
+                          key={cat}
+                          type="button"
+                          onClick={() => mvpFeatures.setCategory(cat)}
+                          className={`rounded-full border px-3 py-1.5 text-[11px] font-bold capitalize transition-all duration-300 transform hover:scale-105 active:scale-95 ${
+                            mvpFeatures.category === cat
+                              ? `bg-gradient-to-r text-white ${selectedTone.button} border-white/20`
+                              : "border-white/15 bg-white/5 text-white/60 hover:border-white/30 hover:text-white/80"
+                          }`}
+                        >
+                          {cat}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="text-xs font-semibold text-white">Intensity</span>
+                      <span className="text-[10px] text-white/40">{mvpFeatures.toneIntensity}/10</span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={10}
+                      value={mvpFeatures.toneIntensity}
+                      onChange={(e) => mvpFeatures.setToneIntensity(Number(e.target.value))}
+                      className="w-full accent-fuchsia-500"
+                    />
+                    <div className="mt-1 flex justify-between text-[10px] text-white/30">
+                      <span>Subtle</span>
+                      <span>Strong</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-2 flex items-center gap-2">
+                      <span className="text-xs font-semibold text-white">Replies</span>
+                      <span className="text-[10px] text-white/40">how many</span>
+                    </div>
+                    <div className="flex gap-1.5">
+                      {[1, 2, 3, 5].map((n) => (
+                        <button
+                          key={n}
+                          type="button"
+                          onClick={() => mvpFeatures.setBulkCount(n)}
+                          className={`flex-1 rounded-lg border px-2 py-2 text-xs font-bold transition-all duration-300 ${
+                            mvpFeatures.bulkCount === n
+                              ? `bg-gradient-to-r text-white ${selectedTone.button} border-white/20`
+                              : "border-white/15 bg-white/5 text-white/60 hover:border-white/30"
+                          }`}
+                        >
+                          {n}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -2097,273 +2203,29 @@ export default function Home() {
             )}
 
             {analysis && (
-              <section className={`space-y-3 rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm transition-all duration-300 ${analysisVisible ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}>
-                <h2 className="bg-gradient-to-r from-white to-fuchsia-300 bg-clip-text text-xl font-bold text-transparent">What&apos;s Happening</h2>
-
-                {analysis.summary && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Summary</div>
-                    <p>{analysis.summary}</p>
-                  </div>
-                )}
-                {analysis.toneUsed && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Tone applied</div>
-                    <p>{analysis.toneUsed}</p>
-                  </div>
-                )}
-                {analysis.strategy && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Strategy</div>
-                    <p>{analysis.strategy}</p>
-                  </div>
-                )}
-                {analysis.depthMode && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Thread mode</div>
-                    <p>{analysis.depthMode}</p>
-                  </div>
-                )}
-                {analysis.userPattern && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Your pattern</div>
-                    <p>{analysis.userPattern}</p>
-                  </div>
-                )}
-                {analysis.receiverPattern && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Receiver pattern</div>
-                    <p>{analysis.receiverPattern}</p>
-                  </div>
-                )}
-                {analysis.languageStyle && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Language style</div>
-                    <p>{analysis.languageStyle}</p>
-                  </div>
-                )}
-                {analysis.adaptationNote && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Adaptation note</div>
-                    <p>{analysis.adaptationNote}</p>
-                  </div>
-                )}
-                {analysis.coachNotes && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Coach notes</div>
-                    <p>{analysis.coachNotes}</p>
-                  </div>
-                )}
-                {analysis.timingWindow && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Timing window</div>
-                    <p>{analysis.timingWindow}</p>
-                  </div>
-                )}
-                {analysis.avoid && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Avoid</div>
-                    <p>{analysis.avoid}</p>
-                  </div>
-                )}
-                {analysis.vibe && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Current vibe</div>
-                    <p>{analysis.vibe}</p>
-                  </div>
-                )}
-                {analysis.strength && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Strength</div>
-                    <p>{analysis.strength}</p>
-                  </div>
-                )}
-                {analysis.risk && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-2 text-xs uppercase tracking-[0.2em] text-white/40">Risk</div>
-                    <p>{analysis.risk}</p>
-                  </div>
-                )}
-                {analysis.nextMoves && analysis.nextMoves.length > 0 && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-3 text-xs uppercase tracking-[0.2em] text-white/40">Next 3 moves</div>
-                    <div className="space-y-2">
-                      {analysis.nextMoves.map((move, index) => (
-                        <div key={`${move}-${index}`} className="rounded-xl border border-white/8 bg-white/[0.03] px-3 py-3 text-sm text-white/80">
-                          <span className="mr-2 text-white/40">0{index + 1}</span>
-                          {move}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {analysis.replyBranches && analysis.replyBranches.length > 0 && (
-                  <div className={`rounded-2xl border bg-black/30 p-4 ${selectedTone.panel}`}>
-                    <div className="mb-3 text-xs uppercase tracking-[0.2em] text-white/40">Branch planner</div>
-                    <div className="grid gap-3 md:grid-cols-3">
-                      {analysis.replyBranches.map((branch, index) => (
-                        <div key={`${branch.scenario}-${index}`} className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
-                          <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">{branch.scenario}</div>
-                          <div className="mt-2 text-sm font-semibold text-white/85">{branch.move}</div>
-                          <div className="mt-2 text-xs leading-5 text-white/55">{branch.note}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </section>
+              <AnalysisPanel analysis={analysis} analysisVisible={analysisVisible} panelClass={selectedTone.panel} />
             )}
 
-            {threads.length > 0 && (
-              <section className="rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm">
-                <div className="mb-4 flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-white">Your Conversations</h3>
-                    <p className="mt-1 text-xs text-white/50">Pick up where you left off.</p>
-                  </div>
-                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-white/50">{threads.length}</div>
-                </div>
-
-                <div className="space-y-3">
-                  {threads.map((thread) => (
-                    <div
-                      key={thread.id}
-                      className={`group relative w-full rounded-2xl border p-4 text-left transition ${
-                        currentThreadId === thread.id
-                          ? "border-fuchsia-400/30 bg-fuchsia-500/10"
-                          : "border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.05]"
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => loadThread(thread.id)}
-                        className="w-full text-left"
-                      >
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <div className="truncate text-sm font-semibold text-white">{thread.name}</div>
-                            <span className="whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] text-white/55">
-                              {thread.turns.length} turns
-                            </span>
-                            {thread.lastOutcome && (
-                              <span className="whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.16em] text-white/45">
-                                {thread.lastOutcome.replace("-", " ")}
-                              </span>
-                            )}
-                          </div>
-                          {thread.profileName && (
-                            <div className="mt-1 text-[11px] uppercase tracking-[0.16em] text-white/35">
-                              {thread.profileName}
-                            </div>
-                          )}
-                          {thread.summary && <div className="mt-2 line-clamp-2 text-xs text-white/40">{thread.summary}</div>}
-                          <div className="mt-1 text-xs text-white/35">Updated {new Date(thread.updatedAt).toLocaleString()}</div>
-                        </div>
-                        <div className="shrink-0 text-lg">-&gt;</div>
-                      </div>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); deleteThread(thread.id); }}
-                        className="absolute right-2 top-2 hidden rounded-lg border border-red-400/20 bg-red-500/10 px-2 py-1 text-[10px] font-semibold text-red-300 transition hover:bg-red-500/20 group-hover:block"
-                        title="Delete thread"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                {!showThreadForm && (
-                  <button
-                    type="button"
-                    onClick={() => setShowThreadForm(true)}
-                    className="mt-4 w-full rounded-2xl border border-dashed border-white/20 bg-white/[0.02] px-4 py-3 text-sm text-white/50 transition hover:border-white/40 hover:text-white/70"
-                  >
-                    + Start new thread
-                  </button>
-                )}
-
-                {showThreadForm && (
-                  <div className="mt-4 space-y-3">
-                    <input
-                      type="text"
-                      placeholder="Thread name"
-                      value={threadName}
-                      onChange={(event) => setThreadName(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === "Enter") {
-                          createThread(threadName);
-                        }
-                      }}
-                      className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-2 text-white outline-none transition placeholder:text-white/35 focus:border-fuchsia-400/40 focus:ring-2 focus:ring-fuchsia-500/20"
-                    />
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => createThread(threadName)}
-                        className="flex-1 rounded-lg border border-fuchsia-400/30 bg-fuchsia-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-fuchsia-700"
-                      >
-                        Create
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShowThreadForm(false);
-                          setThreadName("");
-                        }}
-                        className="flex-1 rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-sm font-semibold text-white/70 transition hover:bg-white/10"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </section>
-            )}
+            <ThreadList
+              threads={threads}
+              currentThreadId={currentThreadId}
+              onLoadThread={loadThread}
+              onDeleteThread={deleteThread}
+              showThreadForm={showThreadForm}
+              onShowThreadForm={setShowThreadForm}
+              threadName={threadName}
+              onThreadNameChange={setThreadName}
+              onCreateThread={createThread}
+            />
           </div>
 
           <div className="space-y-6">
-            <section className="rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm">
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-bold text-white">How it&apos;ll look</h2>
-                <div className="text-xs font-medium text-white/40">iMessage preview</div>
-              </div>
-
-              <div className="rounded-[28px] border border-white/10 bg-[#0b0c10] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]">
-                <div className="mb-4 flex items-center justify-center">
-                  <div className="rounded-full bg-white/10 px-4 py-1 text-sm text-white/60">Today</div>
-                </div>
-
-                <div className="space-y-3">
-                  {fakeChatPreview.length > 0 ? (
-                    fakeChatPreview.map((line: string, index: number) => {
-                      const isYou = line.toLowerCase().startsWith("you:");
-                      const content = line.replace(/^them:\s*/i, "").replace(/^her:\s*/i, "").replace(/^you:\s*/i, "");
-
-                      return (
-                        <div key={`${line}-${index}`} className={`flex ${isYou ? "justify-end" : "justify-start"}`}>
-                          <div className={`max-w-[80%] rounded-[22px] px-4 py-3 text-sm leading-6 ${isYou ? "bg-[#0A84FF] text-white" : "bg-[#2c2c2e] text-white"}`}>
-                            {content}
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="text-sm text-white/35">Paste a conversation to preview it here.</div>
-                  )}
-
-                  {bestIndex !== null && replies[bestIndex] && (
-                    <div className="flex justify-end pt-2">
-                      <div className={`max-w-[80%] rounded-[22px] px-4 py-3 text-sm font-medium leading-6 text-black shadow-[0_0_20px_rgba(52,199,89,0.35)] transition-all duration-500 ${previewVisible ? "translate-y-0 scale-100 opacity-100" : "translate-y-3 scale-[0.97] opacity-0"} ${selectedTone.bubble}`}>
-                        {replies[bestIndex].text}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </section>
+            <ChatPreview
+              chatLines={fakeChatPreview}
+              bestReplyText={bestIndex !== null && replies[bestIndex] ? replies[bestIndex].text : null}
+              previewVisible={previewVisible}
+              bubbleClass={selectedTone.bubble}
+            />
 
             {replies.length > 0 && (
               <section className="space-y-4">
@@ -2431,7 +2293,7 @@ export default function Home() {
                       </button>
 
                       <button
-                        onClick={() => mvpFeatures.rateReply(reply.text, 1)}
+                        onClick={() => { mvpFeatures.rateReply(reply.text, 1); trackRate(reply.text, 1); }}
                         className={`rounded-xl px-3 py-2 text-sm font-bold transition-all duration-300 transform hover:scale-110 active:scale-95 ${mvpFeatures.replyRatings[reply.text] === 1 ? "bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-[0_4px_15px_rgba(34,197,94,0.4)]" : "border border-green-400/30 bg-green-500/10 text-green-100 hover:border-green-400/50 hover:bg-green-500/20"}`}
                         title="This helped"
                       >
@@ -2439,7 +2301,7 @@ export default function Home() {
                       </button>
 
                       <button
-                        onClick={() => mvpFeatures.rateReply(reply.text, -1)}
+                        onClick={() => { mvpFeatures.rateReply(reply.text, -1); trackRate(reply.text, -1); }}
                         className={`rounded-xl px-3 py-2 text-sm font-bold transition-all duration-[350ms] transform hover:scale-110 active:scale-[0.95] ${mvpFeatures.replyRatings[reply.text] === -1 ? "bg-gradient-to-r from-red-500 to-rose-500 text-white shadow-[0_6px_18px_rgba(239,68,68,0.5)]" : "border border-red-400/30 bg-red-500/10 text-red-100 hover:border-red-400/50 hover:bg-red-500/20"}`}
                         title="Did not help"
                       >
@@ -2447,7 +2309,7 @@ export default function Home() {
                       </button>
 
                       <button
-                        onClick={() => mvpFeatures.toggleFavorite(reply.text)}
+                        onClick={() => { const wasFav = mvpFeatures.favorites.includes(reply.text); mvpFeatures.toggleFavorite(reply.text); trackFavorite(wasFav ? 'remove' : 'add'); }}
                         className={`rounded-xl px-3 py-2 text-sm font-bold transition-all duration-[350ms] transform hover:scale-110 active:scale-[0.95] ${mvpFeatures.favorites.includes(reply.text) ? "bg-gradient-to-r from-yellow-400 to-amber-500 text-white shadow-[0_6px_18px_rgba(234,179,8,0.5)]" : "border border-yellow-400/30 bg-yellow-500/10 text-yellow-100 hover:border-yellow-400/50 hover:bg-yellow-500/20"}`}
                         title="Save this reply"
                       >

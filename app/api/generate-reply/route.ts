@@ -137,8 +137,8 @@ const responseSchema = {
     },
     replies: {
       type: "array",
-      minItems: 3,
-      maxItems: 3,
+      minItems: 1,
+      maxItems: 5,
       items: {
         type: "object",
         additionalProperties: false,
@@ -158,7 +158,7 @@ const responseSchema = {
         },
       },
     },
-    bestIndex: { type: "integer", minimum: 0, maximum: 2 },
+    bestIndex: { type: "integer", minimum: 0, maximum: 4 },
   },
 } as const;
 
@@ -441,11 +441,12 @@ function clampScore(value: unknown) {
 function sanitizeModelPayload(
   payload: Partial<SparklineResponse> | null | undefined,
   tone: ToneKey,
+  replyCount = 3,
 ): SparklineResponse {
   const fallback = fallbackResponse(tone);
   const incomingReplies = Array.isArray(payload?.replies) ? payload.replies : [];
   const replies = dedupeReplies(
-    incomingReplies.slice(0, 5).map((reply) => {
+    incomingReplies.slice(0, replyCount).map((reply) => {
       const text =
         typeof reply?.text === "string" && reply.text.trim().length > 0
           ? reply.text.trim()
@@ -476,16 +477,16 @@ function sanitizeModelPayload(
         },
       };
     }),
-  ).slice(0, 3);
+  ).slice(0, replyCount);
 
-  while (replies.length < 3) {
-    replies.push(fallback.replies[replies.length]);
+  while (replies.length < Math.min(replyCount, 3)) {
+    replies.push(fallback.replies[replies.length % fallback.replies.length]);
   }
 
   const bestIndex =
     typeof payload?.bestIndex === "number" &&
     payload.bestIndex >= 0 &&
-    payload.bestIndex <= 2
+    payload.bestIndex < replies.length
       ? Math.round(payload.bestIndex)
       : replies.reduce((best, current, index, items) => {
           return current.scores.responseChance >
@@ -654,6 +655,12 @@ export async function POST(req: Request) {
       typeof body.profileName === "string" ? body.profileName.trim() : "";
     const recentOutcome =
       typeof body.recentOutcome === "string" ? body.recentOutcome.trim() : "";
+    const category =
+      typeof body.category === "string" ? body.category.trim() : "other";
+    const toneIntensity =
+      typeof body.toneIntensity === "number" ? Math.max(1, Math.min(10, body.toneIntensity)) : 5;
+    const bulkCount =
+      typeof body.bulkCount === "number" ? Math.max(1, Math.min(5, body.bulkCount)) : 3;
     const tone: ToneKey = (
       allowedTones.includes(rawTone as ToneKey) ? rawTone : "confident"
     ) as ToneKey;
@@ -700,11 +707,15 @@ export async function POST(req: Request) {
     const styleSignals = buildStyleSignals(transcriptLines);
     const threadPatterns = threadSummary ? extractThreadPatterns(threadSummary) : "";
 
+    const replyCount = Math.max(1, Math.min(5, bulkCount));
+
     const prompt = [
       "Analyze the conversation and help the user send the next message.",
-      "Return exactly 3 replies with noticeably different phrasing and energy.",
+      `Return exactly ${replyCount} replies with noticeably different phrasing and energy.`,
       `Tone target: ${tone}. ${toneMap[tone]}`,
+      `Tone intensity: ${toneIntensity}/10 (${toneIntensity <= 3 ? "very subtle" : toneIntensity <= 6 ? "moderate" : "strong"}).`,
       `Goal target: ${goal}. ${goalMap[goal]}`,
+      category !== "other" ? `Relationship category: ${category}. Tailor formality and playfulness to this context.` : "",
       "Be concise, natural, and respectful.",
       "Do not encourage manipulation, harassment, guilt-tripping, or pressure.",
       "Keep each reply to 1 or 2 sentences max.",
@@ -766,7 +777,7 @@ export async function POST(req: Request) {
     });
 
     const parsed = JSON.parse(response.output_text) as SparklineResponse;
-    const safePayload = sanitizeModelPayload(parsed, tone);
+    const safePayload = sanitizeModelPayload(parsed, tone, replyCount);
 
     return NextResponse.json(safePayload);
   } catch (error) {
