@@ -1541,14 +1541,14 @@ export default function Home() {
         .typing-dot { animation: typing-bounce 1.4s ease-in-out infinite; }
       `}</style>
 
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(217,70,239,0.08),transparent_50%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(168,85,247,0.06),transparent_45%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(236,72,153,0.04),transparent_60%)]" />
-      <div className="absolute top-10 left-10 h-96 w-96 rounded-full bg-gradient-to-br from-rose-500/12 to-pink-600/6 blur-3xl float-1" style={{ filter: "blur(80px)" }} />
-      <div className="absolute top-1/3 right-20 h-80 w-80 rounded-full bg-gradient-to-br from-fuchsia-500/10 to-violet-600/6 blur-3xl float-2" style={{ filter: "blur(70px)" }} />
-      <div className="absolute bottom-20 left-1/3 h-72 w-72 rounded-full bg-gradient-to-br from-violet-500/8 to-purple-600/4 blur-3xl float-3 drift" style={{ filter: "blur(75px)" }} />
-      <div className="absolute top-1/2 left-1/2 h-96 w-96 rounded-full bg-gradient-to-br from-pink-500/5 to-rose-600/3 blur-3xl float-1" style={{ filter: "blur(85px)" }} />
-      <div className="absolute inset-0 opacity-[0.015] [background-image:linear-gradient(rgba(236,72,153,0.4)_1px,transparent_1px),linear-gradient(90deg,rgba(217,70,239,0.4)_1px,transparent_1px)] [background-size:40px_40px]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(217,70,239,0.08),transparent_50%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(168,85,247,0.06),transparent_45%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(236,72,153,0.04),transparent_60%)]" />
+      <div className="pointer-events-none absolute top-10 left-10 h-96 w-96 rounded-full bg-gradient-to-br from-rose-500/12 to-pink-600/6 blur-3xl float-1" style={{ filter: "blur(80px)" }} />
+      <div className="pointer-events-none absolute top-1/3 right-20 h-80 w-80 rounded-full bg-gradient-to-br from-fuchsia-500/10 to-violet-600/6 blur-3xl float-2" style={{ filter: "blur(70px)" }} />
+      <div className="pointer-events-none absolute bottom-20 left-1/3 h-72 w-72 rounded-full bg-gradient-to-br from-violet-500/8 to-purple-600/4 blur-3xl float-3 drift" style={{ filter: "blur(75px)" }} />
+      <div className="pointer-events-none absolute top-1/2 left-1/2 h-96 w-96 rounded-full bg-gradient-to-br from-pink-500/5 to-rose-600/3 blur-3xl float-1" style={{ filter: "blur(85px)" }} />
+      <div className="pointer-events-none absolute inset-0 opacity-[0.015] [background-image:linear-gradient(rgba(236,72,153,0.4)_1px,transparent_1px),linear-gradient(90deg,rgba(217,70,239,0.4)_1px,transparent_1px)] [background-size:40px_40px]" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-rose-500/3 via-pink-500/1 to-transparent" />
       <div className="pointer-events-none absolute -top-1/2 -right-1/4 h-1/2 w-1/2 rounded-full bg-gradient-to-bl from-fuchsia-400/5 to-transparent blur-3xl" />
       <div className="pointer-events-none absolute -bottom-1/4 -left-1/2 h-1/2 w-1/2 rounded-full bg-gradient-to-tr from-violet-400/4 to-transparent blur-3xl" />
