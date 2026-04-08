@@ -7,21 +7,23 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/api(.*)",
 ]);
-const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
 const CANONICAL_APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://www.rizzlyai.com";
 
 export default clerkMiddleware(async (auth, req) => {
   const host = req.headers.get("host") || "";
   const isPreviewHost = host.endsWith(".vercel.app");
+  const isApiRoute = req.nextUrl.pathname.startsWith("/api") || req.nextUrl.pathname.startsWith("/trpc");
 
-  if (isPreviewHost && isAuthRoute(req)) {
+  if (isPreviewHost && !isApiRoute && ["GET", "HEAD"].includes(req.method)) {
     const redirectUrl = new URL(req.url);
     const canonicalUrl = new URL(CANONICAL_APP_URL);
 
-    redirectUrl.protocol = canonicalUrl.protocol;
-    redirectUrl.host = canonicalUrl.host;
+    if (redirectUrl.host !== canonicalUrl.host) {
+      redirectUrl.protocol = canonicalUrl.protocol;
+      redirectUrl.host = canonicalUrl.host;
 
-    return NextResponse.redirect(redirectUrl, 307);
+      return NextResponse.redirect(redirectUrl, 307);
+    }
   }
 
   if (!isPublicRoute(req)) {
