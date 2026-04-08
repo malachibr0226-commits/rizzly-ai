@@ -115,7 +115,14 @@ export function GrowthPanel({
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="text-sm font-semibold text-white">{plan.name}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-sm font-semibold text-white">{plan.name}</div>
+                    {plan.tier === "pro" && (
+                      <span className="rounded-full border border-fuchsia-300/30 bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-100">
+                        Most popular
+                      </span>
+                    )}
+                  </div>
                   <div className="mt-1 text-xs text-white/60">{plan.description}</div>
                 </div>
                 <div className="text-right">

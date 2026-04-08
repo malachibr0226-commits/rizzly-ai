@@ -2034,6 +2034,29 @@ export default function Home() {
             <p className="max-w-2xl text-base font-[450] leading-relaxed tracking-[0.3px] text-white/60 md:text-lg" style={{ letterSpacing: "0.3px" }}>
               Rizzly reads the vibe, scores your interest level, and crafts replies that feel <span className="font-semibold text-white/90">genuinely you</span>. Built for real texting, not templates.
             </p>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <button
+                type="button"
+                onClick={() => document.getElementById("message-studio")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_28px_rgba(236,72,153,0.24)] transition hover:scale-[1.01]"
+              >
+                Try it free
+              </button>
+
+              <a
+                href={isSignedIn ? "#message-studio" : "/sign-up"}
+                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/85 transition hover:border-white/25 hover:bg-white/10"
+              >
+                {isSignedIn ? "Open your thread" : "Create account"}
+              </a>
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/58">
+              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">⚡ Replies in seconds</div>
+              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">💬 Guest mode live</div>
+              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">🔒 No card required</div>
+            </div>
           </div>
 
           <div className="mx-auto w-full max-w-md overflow-hidden rounded-[30px] border border-white/12 bg-gradient-to-br from-purple-950/38 via-slate-900/32 to-gray-900/26 p-4 shadow-[0_10px_28px_rgba(190,103,154,0.1)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
@@ -2125,14 +2148,14 @@ export default function Home() {
               </div>
             )}
 
-            <section className="overflow-visible rounded-xl border border-white/10 bg-white/3 backdrop-blur-sm before:hidden">
+            <section id="message-studio" className="overflow-visible rounded-xl border border-white/10 bg-white/3 backdrop-blur-sm before:hidden">
               <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
                 <div>
                   <p className="text-sm font-semibold tracking-[0.3px] text-white" style={{ textShadow: "0 2px 8px rgba(255, 255, 255, 0.08)" }}>
-                    Paste the conversation
+                    Message Studio
                   </p>
                   <p className="mt-1 text-xs text-white/50">
-                    Copy the last few messages, pick a vibe, get smarter replies in seconds.
+                    Paste the last few messages, choose a vibe, and get a stronger next reply fast.
                   </p>
                 </div>
 
@@ -2150,6 +2173,12 @@ export default function Home() {
                 />
 
                 <div className="mt-4 space-y-3">
+                  <div className="flex flex-wrap gap-2 text-[11px] text-white/55">
+                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">1. Paste your chat</div>
+                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">2. Pick the vibe</div>
+                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">3. Copy the best reply</div>
+                  </div>
+
                   <ToneDropdown value={tone} onChange={(newTone: ToneKey) => { trackToneChange(tone, newTone); setTone(newTone); }} />
 
                   <input
@@ -2211,7 +2240,7 @@ export default function Home() {
                       disabled={loading || !conversation.trim()}
                       className={`flex min-h-[56px] items-center justify-center rounded-2xl bg-gradient-to-r px-6 py-3 text-center text-sm font-bold text-white transition-all duration-300 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100 ${selectedTone.button}`}
                     >
-                      <span className="whitespace-nowrap">{loading ? "Analyzing..." : "Generate Replies"}</span>
+                      <span className="whitespace-nowrap">{loading ? "Analyzing..." : "Get Replies"}</span>
                     </button>
                   </div>
 
