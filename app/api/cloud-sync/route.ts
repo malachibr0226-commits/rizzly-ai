@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireAuth } from "@/lib/auth";
+import { getServerUser, hasProEmailAccess, requireAuth } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { readCloudSnapshot, writeCloudSnapshot } from "@/lib/cloud-store";
 import type { Thread } from "@/lib/analytics";
@@ -23,7 +23,17 @@ export async function GET(req: Request) {
   }
 
   try {
-    const snapshot = await readCloudSnapshot(userId);
+    const user = await getServerUser();
+    const hasDirectPro = hasProEmailAccess(user?.email);
+    let snapshot = await readCloudSnapshot(userId);
+
+    if (hasDirectPro && snapshot.planTier !== "pro") {
+      snapshot = await writeCloudSnapshot(userId, {
+        threads: snapshot.threads,
+        personas: snapshot.personas,
+        planTier: "pro",
+      });
+    }
 
     return NextResponse.json(snapshot, {
       headers: {
@@ -57,6 +67,8 @@ export async function POST(req: Request) {
   }
 
   try {
+    const user = await getServerUser();
+    const hasDirectPro = hasProEmailAccess(user?.email);
     const body = (await req.json()) as {
       threads?: unknown[];
       personas?: unknown[];
@@ -67,6 +79,7 @@ export async function POST(req: Request) {
       personas: Array.isArray(body.personas)
         ? (body.personas as SavedPersona[])
         : [],
+      planTier: hasDirectPro ? "pro" : undefined,
     });
 
     return NextResponse.json(

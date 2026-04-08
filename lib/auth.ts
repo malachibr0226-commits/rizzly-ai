@@ -12,9 +12,23 @@ const clerkPublishableKey =
 const clerkEnvIsConfigured = Boolean(
   process.env.CLERK_SECRET_KEY && clerkPublishableKey,
 );
+const BUILT_IN_PRO_EMAILS = ["malachibr0226@gmail.com"];
 export const AUTH_DISABLED_REASON = !clerkEnvIsConfigured
   ? "Clerk environment variables are missing."
   : null;
+
+function normalizeEmail(email: string | null | undefined) {
+  return typeof email === "string" ? email.trim().toLowerCase() : "";
+}
+
+function getConfiguredProEmails() {
+  const configured = (process.env.RIZZLY_PRO_EMAIL_ALLOWLIST ?? "")
+    .split(",")
+    .map((email) => normalizeEmail(email))
+    .filter(Boolean);
+
+  return [...new Set([...BUILT_IN_PRO_EMAILS, ...configured])];
+}
 
 export interface User {
   id: string;
@@ -26,6 +40,11 @@ export interface User {
 
 export function isClerkConfigured() {
   return clerkEnvIsConfigured;
+}
+
+export function hasProEmailAccess(email: string | null | undefined) {
+  const normalized = normalizeEmail(email);
+  return Boolean(normalized && getConfiguredProEmails().includes(normalized));
 }
 
 /** Get the authenticated user's ID from an API route (server-side). */
