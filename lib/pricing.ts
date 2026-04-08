@@ -17,7 +17,7 @@ export const PLAN_CATALOG: PlanDefinition[] = [
     tier: "free",
     name: "Rizzly Free",
     priceLabel: "$0",
-    description: "Try the core texting tools and see what style works best.",
+    description: "Perfect for trying Rizzly on real chats with no card required.",
     ctaLabel: "Current plan",
     limits: {
       generate: 25,
@@ -25,17 +25,17 @@ export const PLAN_CATALOG: PlanDefinition[] = [
       voice: 8,
     },
     highlights: [
-      "AI reply generation",
-      "Screenshot and voice tools",
+      "25 reply runs each day",
+      "Screenshot and voice imports",
       "Local thread memory",
-      "Daily free usage budget",
+      "No-cost starter access",
     ],
   },
   {
     tier: "pro",
     name: "Rizzly Pro",
     priceLabel: "$19/mo",
-    description: "For power users who want more replies, cloud sync, and smarter thread tracking.",
+    description: "For daily texters who want more volume, synced history, and deeper thread intel.",
     ctaLabel: "Unlock Pro",
     limits: {
       generate: 200,
@@ -43,10 +43,10 @@ export const PLAN_CATALOG: PlanDefinition[] = [
       voice: 50,
     },
     highlights: [
+      "200 reply runs per day",
       "Cloud history across devices",
-      "Priority reply analysis",
       "Advanced thread intelligence",
-      "Higher daily limits",
+      "Faster, lower-friction workflow",
     ],
   },
 ];

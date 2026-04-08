@@ -34,6 +34,18 @@ export function GrowthPanel({
     : "Sign in to sync threads and personas across devices.";
 
   const nearingLimit = usageSnapshot.remaining.generate <= 5;
+  const replyBoost = Math.max(
+    1,
+    Math.round(proPlan.limits.generate / Math.max(freePlan.limits.generate, 1)),
+  );
+  const screenshotBoost = Math.max(
+    1,
+    Math.round(proPlan.limits.screenshot / Math.max(freePlan.limits.screenshot, 1)),
+  );
+  const voiceBoost = Math.max(
+    1,
+    Math.round(proPlan.limits.voice / Math.max(freePlan.limits.voice, 1)),
+  );
 
   return (
     <section className="grid gap-4 xl:grid-cols-2">
@@ -75,6 +87,10 @@ export function GrowthPanel({
           </div>
         </div>
 
+        <div className="mt-3 text-[11px] text-white/45">
+          Usage resets daily at {usageSnapshot.resetLabel}.
+        </div>
+
         <button
           type="button"
           onClick={onSyncNow}
@@ -87,9 +103,9 @@ export function GrowthPanel({
       <div className="rounded-xl border border-fuchsia-400/20 bg-[linear-gradient(180deg,rgba(168,85,247,0.10),rgba(255,255,255,0.03))] p-4 backdrop-blur-sm">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-white">Upgrade when you want more range</h2>
+            <h2 className="text-lg font-bold text-white">Upgrade when the free plan starts feeling tight</h2>
             <p className="mt-1 text-xs text-white/50">
-              Stay free as long as you want, or unlock deeper analysis and cross-device memory.
+              Keep using Free, or switch on more daily volume, synced memory, and deeper thread intel.
             </p>
           </div>
           <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-100">
@@ -102,6 +118,21 @@ export function GrowthPanel({
             You’re getting close to today’s free reply limit. Pro keeps the flow going.
           </div>
         )}
+
+        <div className="mb-3 grid grid-cols-3 gap-2 text-xs text-white/80">
+          <div className="rounded-xl border border-fuchsia-400/20 bg-black/20 p-3 text-center">
+            <div className="text-base font-bold text-white">{replyBoost}x</div>
+            <div className="mt-1 text-white/60">reply runs</div>
+          </div>
+          <div className="rounded-xl border border-fuchsia-400/20 bg-black/20 p-3 text-center">
+            <div className="text-base font-bold text-white">{screenshotBoost}x</div>
+            <div className="mt-1 text-white/60">screenshots</div>
+          </div>
+          <div className="rounded-xl border border-fuchsia-400/20 bg-black/20 p-3 text-center">
+            <div className="text-base font-bold text-white">{voiceBoost}x</div>
+            <div className="mt-1 text-white/60">voice notes</div>
+          </div>
+        </div>
 
         <div className="space-y-3">
           {[freePlan, proPlan].map((plan) => (
@@ -135,12 +166,17 @@ export function GrowthPanel({
                   <li key={item}>• {item}</li>
                 ))}
               </ul>
+              {plan.tier === "pro" && (
+                <div className="mt-3 rounded-lg border border-fuchsia-400/20 bg-black/20 px-3 py-2 text-[11px] text-fuchsia-50">
+                  Everything in Free, plus synced memory, higher limits, and stronger thread reads.
+                </div>
+              )}
             </div>
           ))}
         </div>
 
         <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white/75">
-          Best for users who want more daily runs, stronger memory, and less friction across devices.
+          Best for users who want more daily runs, faster reuse, and less friction across devices.
         </div>
 
         <a
@@ -152,7 +188,7 @@ export function GrowthPanel({
           {proPlan.ctaLabel}
         </a>
         <p className="mt-2 text-center text-[11px] text-white/45">
-          Upgrade only when you want more volume, sync, and advanced thread intel.
+          Upgrade only when you want more reply volume, sync, and advanced thread intel.
         </p>
       </div>
     </section>

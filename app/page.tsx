@@ -506,6 +506,35 @@ const goals: Array<{
   { value: "repair", label: "Repair" },
 ];
 
+const quickStartScenarios: Array<{
+  label: string;
+  tone: ToneKey;
+  goal: GoalKey;
+  conversation: string;
+}> = [
+  {
+    label: "Restart after silence",
+    tone: "chill",
+    goal: "restart",
+    conversation:
+      "Them: hey sorry ive been off my phone lately\nYou: all good haha\nThem: hows your week been",
+  },
+  {
+    label: "Turn it flirty",
+    tone: "flirty",
+    goal: "flirt",
+    conversation:
+      "Them: you always disappear when it gets interesting\nYou: maybe i like keeping you curious\nThem: is that so",
+  },
+  {
+    label: "Lock in a plan",
+    tone: "confident",
+    goal: "plan",
+    conversation:
+      "Them: we should do something this week\nYou: im down\nThem: what did you have in mind",
+  },
+];
+
 function ToneDropdown({
   value,
   onChange,
@@ -885,6 +914,22 @@ export default function Home() {
     }
 
     return true;
+  };
+
+  const applyQuickStart = (scenario: (typeof quickStartScenarios)[number]) => {
+    if (tone !== scenario.tone) {
+      trackToneChange(tone, scenario.tone);
+    }
+
+    setConversation(scenario.conversation);
+    setTone(scenario.tone);
+    setGoal(scenario.goal);
+    setReplies([]);
+    setBestIndex(null);
+    setAnalysis(null);
+    setSentReplyIndex(null);
+    setError(null);
+    setSystemNotice(`Loaded ${scenario.label.toLowerCase()} starter.`);
   };
 
   const saveCurrentPersona = () => {
@@ -2165,6 +2210,35 @@ export default function Home() {
               </div>
 
               <div className="p-5">
+                <div className="mb-4 rounded-[24px] border border-white/10 bg-black/20 p-3.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                        Quick start
+                      </div>
+                      <div className="mt-1 text-sm text-white/75">
+                        Tap a scenario, tweak the chat, then get a reply draft fast.
+                      </div>
+                    </div>
+                    <div className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
+                      30 sec setup
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {quickStartScenarios.map((scenario) => (
+                      <button
+                        key={scenario.label}
+                        type="button"
+                        onClick={() => applyQuickStart(scenario)}
+                        className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 transition hover:border-white/20 hover:bg-white/10"
+                      >
+                        {scenario.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <textarea
                   value={conversation}
                   onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setConversation(event.target.value)}
@@ -2178,6 +2252,10 @@ export default function Home() {
                     <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">2. Pick the vibe</div>
                     <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">3. Copy the best reply</div>
                   </div>
+
+                  <p className="text-[11px] text-white/45">
+                    Best results: paste 3-8 recent lines from both sides so the tone read stays accurate.
+                  </p>
 
                   <ToneDropdown value={tone} onChange={(newTone: ToneKey) => { trackToneChange(tone, newTone); setTone(newTone); }} />
 
