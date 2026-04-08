@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ClerkLoaded, ClerkLoading, SignUp } from "@clerk/nextjs";
+import {
+  ClerkDegraded,
+  ClerkFailed,
+  ClerkLoaded,
+  ClerkLoading,
+  SignUp,
+} from "@clerk/nextjs";
 import { AuthLoadingFallback } from "@/app/components/AuthLoadingFallback";
 
 export default function SignUpPage() {
@@ -23,6 +29,14 @@ export default function SignUpPage() {
         <ClerkLoading>
           <AuthLoadingFallback mode="sign-up" />
         </ClerkLoading>
+
+        <ClerkFailed>
+          <AuthLoadingFallback mode="sign-up" status="failed" />
+        </ClerkFailed>
+
+        <ClerkDegraded>
+          <AuthLoadingFallback mode="sign-up" status="failed" />
+        </ClerkDegraded>
 
         <ClerkLoaded>
           <SignUp

@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ClerkLoaded, ClerkLoading, SignIn } from "@clerk/nextjs";
+import {
+  ClerkDegraded,
+  ClerkFailed,
+  ClerkLoaded,
+  ClerkLoading,
+  SignIn,
+} from "@clerk/nextjs";
 import { AuthLoadingFallback } from "@/app/components/AuthLoadingFallback";
 
 export default function SignInPage() {
@@ -23,6 +29,14 @@ export default function SignInPage() {
         <ClerkLoading>
           <AuthLoadingFallback mode="sign-in" />
         </ClerkLoading>
+
+        <ClerkFailed>
+          <AuthLoadingFallback mode="sign-in" status="failed" />
+        </ClerkFailed>
+
+        <ClerkDegraded>
+          <AuthLoadingFallback mode="sign-in" status="failed" />
+        </ClerkDegraded>
 
         <ClerkLoaded>
           <SignIn
