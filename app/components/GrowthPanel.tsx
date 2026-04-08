@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { PLAN_CATALOG, getUpgradeUrl } from "@/lib/pricing";
 import type { UsageSnapshot } from "@/lib/product-features";
 
@@ -32,6 +33,8 @@ export function GrowthPanel({
   const visibleMessage = isSignedIn
     ? cloudSyncMessage
     : "Sign in to sync threads and personas across devices.";
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [upgradeError, setUpgradeError] = useState<string | null>(null);
 
   const nearingLimit = usageSnapshot.remaining.generate <= 5;
   const replyBoost = Math.max(
@@ -46,6 +49,37 @@ export function GrowthPanel({
     1,
     Math.round(proPlan.limits.voice / Math.max(freePlan.limits.voice, 1)),
   );
+
+  const handleUpgrade = async () => {
+    setUpgradeError(null);
+    setUpgradeLoading(true);
+
+    try {
+      const response = await fetch("/api/create-checkout-session", {
+        method: "POST",
+      });
+      const data = (await response.json()) as {
+        url?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || "Unable to start checkout.");
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error("Upgrade flow error:", error);
+
+      if (upgradeUrl) {
+        window.open(upgradeUrl, "_blank", "noopener,noreferrer");
+      } else {
+        setUpgradeError("Checkout is not ready yet. Please try again shortly.");
+      }
+    } finally {
+      setUpgradeLoading(false);
+    }
+  };
 
   return (
     <section className="grid gap-4 xl:grid-cols-2">
@@ -179,17 +213,20 @@ export function GrowthPanel({
           Best for users who want more daily runs, faster reuse, and less friction across devices.
         </div>
 
-        <a
-          href={upgradeUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-cyan-500 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95"
+        <button
+          type="button"
+          onClick={() => void handleUpgrade()}
+          disabled={upgradeLoading}
+          className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-cyan-500 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {proPlan.ctaLabel}
-        </a>
+          {upgradeLoading ? "Opening secure checkout..." : proPlan.ctaLabel}
+        </button>
         <p className="mt-2 text-center text-[11px] text-white/45">
-          Upgrade only when you want more reply volume, sync, and advanced thread intel.
+          Secure checkout opens instantly when Stripe is configured.
         </p>
+        {upgradeError && (
+          <p className="mt-2 text-center text-[11px] text-rose-200">{upgradeError}</p>
+        )}
       </div>
     </section>
   );
