@@ -123,4 +123,29 @@ body .cl-navbarButton:hover {
   background: rgba(255, 255, 255, 0.08) !important;
 }
 
+body .cl-userButtonPopoverCard *,
+body .cl-profilePage *,
+body .cl-pageScrollBox *,
+body .cl-scrollBox *,
+body .cl-accordionContent *,
+body .cl-profileSectionContent *,
+body .cl-userPreview * {
+  color: rgba(255, 255, 255, 0.96) !important;
+  opacity: 1 !important;
+}
+
+body .cl-badge,
+body .cl-tag,
+body .cl-menuButton,
+body .cl-navbarButton,
+body .cl-actionCard {
+  color: #ffffff !important;
+}
+
+body .cl-userButtonPopoverActionButtonIcon,
+body .cl-menuItemIcon,
+body .cl-navbarButtonIcon {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
 
