@@ -54,6 +54,12 @@ export function GrowthPanel({
 
         <p className="text-sm text-white/80">{visibleMessage}</p>
 
+        {!isSignedIn && (
+          <div className="mt-3 rounded-xl border border-cyan-400/20 bg-cyan-500/10 px-3 py-2 text-xs text-cyan-50">
+            Sign in once to keep your best threads and personas synced across devices.
+          </div>
+        )}
+
         <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-white/75">
           <div className="rounded-xl border border-white/10 bg-black/20 p-3 text-center">
             <div className="text-lg font-bold text-white">{usageSnapshot.remaining.generate}</div>
@@ -124,6 +130,10 @@ export function GrowthPanel({
               </ul>
             </div>
           ))}
+        </div>
+
+        <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white/75">
+          Best for users who want more daily runs, stronger memory, and less friction across devices.
         </div>
 
         <a

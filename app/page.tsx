@@ -2217,7 +2217,13 @@ export default function Home() {
 
                   {!isSignedIn && (
                     <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/8 px-4 py-3 text-sm text-cyan-100">
-                      Start in guest mode now. Sign in later for saved history, screenshots, and voice notes.
+                      Start in guest mode now. Sign in later for saved history, screenshots, voice notes, and cloud sync.
+                    </div>
+                  )}
+
+                  {usageSnapshot.remaining.generate <= 5 && (
+                    <div className="rounded-2xl border border-fuchsia-400/20 bg-fuchsia-500/10 px-4 py-3 text-sm text-fuchsia-50">
+                      You’re close to today’s free limit. Pro unlocks more reply runs and synced memory.
                     </div>
                   )}
                 </div>
