@@ -5,9 +5,10 @@
 
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { SignOutButton, UserButton, useAuth, useUser } from "@clerk/nextjs";
+import { SignOutButton, UserButton } from "@clerk/nextjs";
+import { useAppAuth } from "@/app/components/AppAuthProvider";
 import type { Achievement, StreakData } from "@/lib/analytics";
 
 interface MVPHeaderProps {
@@ -23,28 +24,20 @@ export function MVPHeader({
   showDashboard,
   onToggleDashboard,
 }: MVPHeaderProps) {
-  const { isSignedIn } = useAuth();
-  const { user } = useUser();
+  const { authEnabled, isSignedIn, userFirstName } = useAppAuth();
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
-  const [authLinks, setAuthLinks] = useState({
-    signIn: "/sign-in",
-    signUp: "/sign-up",
-  });
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const isNonCanonicalHost = window.location.hostname.endsWith(".vercel.app");
-
-    if (isNonCanonicalHost) {
-      setAuthLinks({
+  const isNonCanonicalHost =
+    typeof window !== "undefined" &&
+    window.location.hostname.endsWith(".vercel.app");
+  const authLinks = isNonCanonicalHost
+    ? {
         signIn: "https://rizzlyai.com/sign-in",
         signUp: "https://rizzlyai.com/sign-up",
-      });
-    }
-  }, []);
+      }
+    : {
+        signIn: "/sign-in",
+        signUp: "/sign-up",
+      };
 
   return (
     <div className="relative z-30 pb-6 pt-4">
@@ -107,13 +100,17 @@ export function MVPHeader({
           </button>
 
           {/* Auth */}
-          {!isSignedIn ? (
+          {!authEnabled ? (
+            <div className="max-w-full rounded-full border border-amber-400/20 bg-amber-500/8 px-3 py-2 text-xs font-semibold text-amber-100">
+              Guest mode
+            </div>
+          ) : !isSignedIn ? (
             <>
               <Link
                 href={authLinks.signUp}
                 className="relative z-40 cursor-pointer pointer-events-auto rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/85 transition hover:border-white/25 hover:bg-white/10"
               >
-                Sign Up
+                Create account
               </Link>
               <Link
                 href={authLinks.signIn}
@@ -125,7 +122,7 @@ export function MVPHeader({
           ) : (
             <>
               <div className="max-w-full rounded-full border border-emerald-400/20 bg-emerald-500/8 px-3 py-2 text-xs font-semibold text-emerald-200">
-                Signed in{user?.firstName ? ` as ${user.firstName}` : ""}
+                Signed in{userFirstName ? ` as ${userFirstName}` : ""}
               </div>
               <SignOutButton>
                 <button className="px-4 py-2.5 rounded-full text-sm font-semibold border border-white/15 bg-white/5 text-white/85 transition hover:border-white/25 hover:bg-white/10">

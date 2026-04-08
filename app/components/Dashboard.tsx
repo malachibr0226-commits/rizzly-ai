@@ -6,11 +6,12 @@
 "use client";
 
 import React from "react";
-import type {
-  Achievement,
-  TonePattern,
-  Thread,
-  ConversationStats,
+import {
+  rankThreadsForFollowUp,
+  type Achievement,
+  type TonePattern,
+  type Thread,
+  type ConversationStats,
 } from "@/lib/analytics";
 
 interface DashboardProps {
@@ -33,6 +34,7 @@ export function Dashboard({
   onClose,
 }: DashboardProps) {
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
+  const followUpQueue = rankThreadsForFollowUp(threads).slice(0, 3);
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -111,6 +113,34 @@ export function Dashboard({
           <div className="bg-gradient-to-r from-rose-200/15 via-rose-100/10 to-slate-200/10 rounded-xl p-4 border border-rose-200/20 backdrop-blur-sm">
             <p className="text-sm font-medium text-white/90 leading-relaxed">{suggestion}</p>
           </div>
+
+          {followUpQueue.length > 0 && (
+            <div className="rounded-xl border border-white/12 bg-white/6 p-4 backdrop-blur-sm">
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-white">
+                🚀 Follow-up Queue
+              </h3>
+              <div className="space-y-3">
+                {followUpQueue.map((item) => (
+                  <div
+                    key={item.threadId}
+                    className="rounded-xl border border-white/10 bg-black/20 p-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-white">{item.contactLabel}</p>
+                        <p className="mt-1 text-xs text-white/55">{item.summary}</p>
+                      </div>
+                      <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2.5 py-1 text-[10px] font-bold text-fuchsia-100">
+                        {item.readinessScore}% ready
+                      </span>
+                    </div>
+                    <p className="mt-2 text-xs text-cyan-100">⏱ {item.timingSuggestion}</p>
+                    <p className="mt-1 text-xs text-white/70">🎯 {item.nextAction}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {stats.outcomeBreakdown.tracked > 0 && (
             <div className="rounded-xl border border-white/12 bg-white/6 p-4 backdrop-blur-sm">

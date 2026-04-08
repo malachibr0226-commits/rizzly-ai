@@ -1,9 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-
-const isClerkConfigured = Boolean(
-  process.env.CLERK_SECRET_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-);
+import { isClerkConfigured } from "@/lib/auth";
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -18,7 +15,10 @@ const configuredProxy = clerkMiddleware(async (auth, req) => {
   }
 });
 
-export default isClerkConfigured
+const shouldUseClerkProxy =
+  process.env.NODE_ENV === "production" && isClerkConfigured();
+
+export default shouldUseClerkProxy
   ? configuredProxy
   : function proxy() {
       return NextResponse.next();

@@ -7,9 +7,14 @@
 
 import { auth, currentUser } from "@clerk/nextjs/server";
 
+const clerkPublishableKey =
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() ?? "";
 const clerkEnvIsConfigured = Boolean(
-  process.env.CLERK_SECRET_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  process.env.CLERK_SECRET_KEY && clerkPublishableKey,
 );
+export const AUTH_DISABLED_REASON = !clerkEnvIsConfigured
+  ? "Clerk environment variables are missing."
+  : null;
 
 export interface User {
   id: string;

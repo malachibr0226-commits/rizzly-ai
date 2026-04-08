@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useAppAuth } from "@/app/components/AppAuthProvider";
 import { useMVPFeatures } from "@/app/hooks/useMVPFeatures";
 import { Dashboard } from "@/app/components/Dashboard";
 import { MVPHeader } from "@/app/components/MVPHeader";
 import { ThreadList } from "@/app/components/ThreadList";
 import { AnalysisPanel } from "@/app/components/AnalysisPanel";
+import { RelationshipIntelPanel } from "@/app/components/RelationshipIntelPanel";
+import { GrowthPanel } from "@/app/components/GrowthPanel";
 import { ChatPreview } from "@/app/components/ChatPreview";
 import {
   trackGenerate,
@@ -23,6 +25,7 @@ import {
   trackVoiceNote,
   trackError,
 } from "@/lib/analytics-events";
+import { buildThreadStrategyInsight } from "@/lib/analytics";
 import type {
   ToneKey,
   GoalKey,
@@ -123,6 +126,37 @@ const DRAFT_KEY = "rizzly-draft-v1";
 const THREADS_KEY = "rizzly-threads-v2";
 const CURRENT_THREAD_KEY = "rizzly-current-thread-v1";
 
+const DEFAULT_DRAFT = {
+  conversation: "",
+  tone: "confident" as ToneKey,
+  goal: "restart" as GoalKey,
+  userContext: "",
+  profileName: "",
+  relationshipNotes: "",
+  personaCalibration: "",
+  screenshotSummary: "",
+};
+
+const DEFAULT_USAGE_SNAPSHOT: UsageSnapshot = {
+  dayKey: "",
+  resetLabel: "--",
+  limits: {
+    generate: 25,
+    screenshot: 10,
+    voice: 8,
+  },
+  used: {
+    generate: 0,
+    screenshot: 0,
+    voice: 0,
+  },
+  remaining: {
+    generate: 25,
+    screenshot: 10,
+    voice: 8,
+  },
+};
+
 async function fetchWithTimeout(
   input: RequestInfo | URL,
   init: RequestInit,
@@ -143,16 +177,7 @@ async function fetchWithTimeout(
 
 function loadDraft() {
   if (typeof window === "undefined") {
-    return {
-      conversation: "",
-      tone: "confident" as ToneKey,
-      goal: "restart" as GoalKey,
-      userContext: "",
-      profileName: "",
-      relationshipNotes: "",
-      personaCalibration: "",
-      screenshotSummary: "",
-    };
+    return DEFAULT_DRAFT;
   }
 
   try {
@@ -160,43 +185,40 @@ function loadDraft() {
 
     return {
       conversation:
-        typeof parsed?.conversation === "string" ? parsed.conversation : "",
+        typeof parsed?.conversation === "string"
+          ? parsed.conversation
+          : DEFAULT_DRAFT.conversation,
       tone:
         typeof parsed?.tone === "string"
           ? (parsed.tone as ToneKey)
-          : ("confident" as ToneKey),
+          : DEFAULT_DRAFT.tone,
       goal:
         typeof parsed?.goal === "string"
           ? (parsed.goal as GoalKey)
-          : ("restart" as GoalKey),
+          : DEFAULT_DRAFT.goal,
       userContext:
-        typeof parsed?.userContext === "string" ? parsed.userContext : "",
+        typeof parsed?.userContext === "string"
+          ? parsed.userContext
+          : DEFAULT_DRAFT.userContext,
       profileName:
-        typeof parsed?.profileName === "string" ? parsed.profileName : "",
+        typeof parsed?.profileName === "string"
+          ? parsed.profileName
+          : DEFAULT_DRAFT.profileName,
       relationshipNotes:
         typeof parsed?.relationshipNotes === "string"
           ? parsed.relationshipNotes
-          : "",
+          : DEFAULT_DRAFT.relationshipNotes,
       personaCalibration:
         typeof parsed?.personaCalibration === "string"
           ? parsed.personaCalibration
-          : "",
+          : DEFAULT_DRAFT.personaCalibration,
       screenshotSummary:
         typeof parsed?.screenshotSummary === "string"
           ? parsed.screenshotSummary
-          : "",
+          : DEFAULT_DRAFT.screenshotSummary,
     };
   } catch {
-    return {
-      conversation: "",
-      tone: "confident" as ToneKey,
-      goal: "restart" as GoalKey,
-      userContext: "",
-      profileName: "",
-      relationshipNotes: "",
-      personaCalibration: "",
-      screenshotSummary: "",
-    };
+    return DEFAULT_DRAFT;
   }
 }
 
@@ -223,6 +245,36 @@ function loadCurrentThreadId() {
   } catch {
     return null;
   }
+}
+
+function mergeThreads(localThreads: Thread[], remoteThreads: Thread[]) {
+  const merged = new Map<string, Thread>();
+
+  [...remoteThreads, ...localThreads].forEach((thread) => {
+    const existing = merged.get(thread.id);
+
+    if (!existing || thread.updatedAt > existing.updatedAt) {
+      merged.set(thread.id, thread);
+    }
+  });
+
+  return Array.from(merged.values()).sort((a, b) => b.updatedAt - a.updatedAt);
+}
+
+function mergeSavedPersonas(localPersonas: SavedPersona[], remotePersonas: SavedPersona[]) {
+  const merged = new Map<string, SavedPersona>();
+
+  [...remotePersonas, ...localPersonas].forEach((persona) => {
+    const existing = merged.get(persona.id);
+
+    if (!existing || persona.lastUsedAt > existing.lastUsedAt) {
+      merged.set(persona.id, persona);
+    }
+  });
+
+  return Array.from(merged.values())
+    .sort((a, b) => b.lastUsedAt - a.lastUsedAt)
+    .slice(0, 8);
 }
 
 function generateThreadSummary(turns: ThreadTurn[]): string {
@@ -665,7 +717,7 @@ function ToneDropdown({
 }
 
 export default function Home() {
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, authEnabled } = useAppAuth();
 
   // Photo reply modal state (must be inside the component)
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
@@ -673,14 +725,20 @@ export default function Home() {
   const [photoModalText, setPhotoModalText] = useState("");
   const [photoModalLoading, setPhotoModalLoading] = useState(false);
   const [screenshotParsing, setScreenshotParsing] = useState(false);
-  const [conversation, setConversation] = useState(() => loadDraft().conversation);
-  const [tone, setTone] = useState<ToneKey>(() => loadDraft().tone);
-  const [goal, setGoal] = useState<GoalKey>(() => loadDraft().goal);
-  const [userContext, setUserContext] = useState(() => loadDraft().userContext);
-  const [profileName, setProfileName] = useState(() => loadDraft().profileName);
-  const [relationshipNotes, setRelationshipNotes] = useState(() => loadDraft().relationshipNotes);
-  const [personaCalibration, setPersonaCalibration] = useState(() => loadDraft().personaCalibration);
-  const [screenshotSummary, setScreenshotSummary] = useState(() => loadDraft().screenshotSummary);
+  const [conversation, setConversation] = useState(DEFAULT_DRAFT.conversation);
+  const [tone, setTone] = useState<ToneKey>(DEFAULT_DRAFT.tone);
+  const [goal, setGoal] = useState<GoalKey>(DEFAULT_DRAFT.goal);
+  const [userContext, setUserContext] = useState(DEFAULT_DRAFT.userContext);
+  const [profileName, setProfileName] = useState(DEFAULT_DRAFT.profileName);
+  const [relationshipNotes, setRelationshipNotes] = useState(
+    DEFAULT_DRAFT.relationshipNotes,
+  );
+  const [personaCalibration, setPersonaCalibration] = useState(
+    DEFAULT_DRAFT.personaCalibration,
+  );
+  const [screenshotSummary, setScreenshotSummary] = useState(
+    DEFAULT_DRAFT.screenshotSummary,
+  );
   const [replies, setReplies] = useState<Reply[]>([]);
   const [bestIndex, setBestIndex] = useState<number | null>(null);
   const [sentReplyIndex, setSentReplyIndex] = useState<number | null>(null);
@@ -692,8 +750,8 @@ export default function Home() {
   const [visibleReplyCount, setVisibleReplyCount] = useState(0);
   const [analysisVisible, setAnalysisVisible] = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
-  const [threads, setThreads] = useState<Thread[]>(() => loadThreads());
-  const [currentThreadId, setCurrentThreadId] = useState<string | null>(() => loadCurrentThreadId());
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [showThreadForm, setShowThreadForm] = useState(false);
   const [threadName, setThreadName] = useState("");
   const [dictationTarget, setDictationTarget] =
@@ -704,8 +762,14 @@ export default function Home() {
     "Them",
   );
   const [savedPersonas, setSavedPersonas] = useState<SavedPersona[]>([]);
-  const [usageSnapshot, setUsageSnapshot] = useState<UsageSnapshot>(() =>
-    getUsageSnapshot(),
+  const [usageSnapshot, setUsageSnapshot] = useState<UsageSnapshot>(
+    DEFAULT_USAGE_SNAPSHOT,
+  );
+  const [cloudSyncState, setCloudSyncState] = useState<
+    "idle" | "syncing" | "synced" | "error"
+  >("idle");
+  const [cloudSyncMessage, setCloudSyncMessage] = useState(
+    "Sign in to sync threads and personas across devices.",
   );
 
   // MVP Features - using custom hook
@@ -717,12 +781,17 @@ export default function Home() {
   const selectedTone = tones.find((item) => item.value === tone) ?? tones[0];
   const bestReply = bestIndex !== null ? replies[bestIndex] : null;
   const currentThread = threads.find((t) => t.id === currentThreadId);
+  const currentThreadInsight = useMemo(
+    () => (currentThread ? buildThreadStrategyInsight(currentThread) : null),
+    [currentThread],
+  );
   const isDeepConversation =
     conversation.split("\n").filter((line: string) => line.trim()).length > 16 ||
     conversation.length > 2200;
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const voiceInputRef = useRef<HTMLInputElement | null>(null);
   const screenshotInputRef = useRef<HTMLInputElement | null>(null);
+  const cloudRestoreAttemptedRef = useRef(false);
 
   const interestLabel = useMemo(() => {
     if (!replies.length || bestIndex === null) return null;
@@ -847,6 +916,156 @@ export default function Home() {
     setSystemNotice(`Loaded ${persona.name} into your memory fields.`);
   };
 
+  const syncCloudHistory = async () => {
+    if (!isSignedIn) {
+      setCloudSyncState("error");
+      setCloudSyncMessage("Sign in to unlock cloud sync across devices.");
+      setSystemNotice("Sign in to sync threads across devices.");
+      return;
+    }
+
+    setCloudSyncState("syncing");
+    setCloudSyncMessage("Syncing your threads and saved personas...");
+
+    try {
+      const pullRes = await fetchWithTimeout(
+        "/api/cloud-sync",
+        {
+          method: "GET",
+        },
+        12_000,
+      );
+
+      const pullData = (await pullRes.json()) as {
+        threads?: Thread[];
+        personas?: SavedPersona[];
+        error?: string;
+      };
+
+      if (!pullRes.ok) {
+        throw new Error(pullData.error || "Failed to load cloud history.");
+      }
+
+      const mergedThreads = mergeThreads(
+        threads,
+        Array.isArray(pullData.threads) ? pullData.threads : [],
+      );
+      const mergedPersonas = mergeSavedPersonas(
+        savedPersonas,
+        Array.isArray(pullData.personas) ? pullData.personas : [],
+      );
+
+      setThreads(mergedThreads);
+      setSavedPersonas(mergedPersonas);
+
+      const pushRes = await fetchWithTimeout(
+        "/api/cloud-sync",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            threads: mergedThreads,
+            personas: mergedPersonas,
+          }),
+        },
+        15_000,
+      );
+
+      const pushData = (await pushRes.json()) as {
+        error?: string;
+        threadCount?: number;
+        personaCount?: number;
+        storageMode?: string;
+      };
+
+      if (!pushRes.ok) {
+        throw new Error(pushData.error || "Failed to save cloud history.");
+      }
+
+      setCloudSyncState("synced");
+      setCloudSyncMessage(
+        `Synced ${pushData.threadCount ?? mergedThreads.length} threads and ${pushData.personaCount ?? mergedPersonas.length} personas (${pushData.storageMode ?? "ready"}).`,
+      );
+    } catch (caughtError) {
+      setCloudSyncState("error");
+      setCloudSyncMessage(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Cloud sync failed.",
+      );
+    }
+  };
+
+  useEffect(() => {
+    if (!isSignedIn) {
+      cloudRestoreAttemptedRef.current = false;
+      return;
+    }
+
+    if (cloudRestoreAttemptedRef.current) {
+      return;
+    }
+
+    cloudRestoreAttemptedRef.current = true;
+
+    let isCancelled = false;
+
+    void (async () => {
+      try {
+        const res = await fetchWithTimeout(
+          "/api/cloud-sync",
+          {
+            method: "GET",
+          },
+          10_000,
+        );
+
+        const data = (await res.json()) as {
+          threads?: Thread[];
+          personas?: SavedPersona[];
+          error?: string;
+        };
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to load cloud history.");
+        }
+
+        if (isCancelled) {
+          return;
+        }
+
+        const remoteThreads = Array.isArray(data.threads) ? data.threads : [];
+        const remotePersonas = Array.isArray(data.personas) ? data.personas : [];
+
+        setThreads((current) => mergeThreads(current, remoteThreads));
+        setSavedPersonas((current) => mergeSavedPersonas(current, remotePersonas));
+        setCloudSyncState(remoteThreads.length || remotePersonas.length ? "synced" : "idle");
+        setCloudSyncMessage(
+          remoteThreads.length || remotePersonas.length
+            ? `Loaded ${remoteThreads.length} cloud thread${remoteThreads.length === 1 ? "" : "s"} for this account.`
+            : "Cloud sync is ready for this account.",
+        );
+      } catch (caughtError) {
+        if (isCancelled) {
+          return;
+        }
+
+        setCloudSyncState("error");
+        setCloudSyncMessage(
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Cloud sync is unavailable right now.",
+        );
+      }
+    })();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [isSignedIn]);
+
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
@@ -934,9 +1153,23 @@ export default function Home() {
   ]);
 
   useEffect(() => {
-    setVoiceSupported(detectVoiceSupport());
-    setSavedPersonas(readSavedPersonas());
-    setUsageSnapshot(getUsageSnapshot());
+    const draft = loadDraft();
+
+    queueMicrotask(() => {
+      setConversation(draft.conversation);
+      setTone(draft.tone);
+      setGoal(draft.goal);
+      setUserContext(draft.userContext);
+      setProfileName(draft.profileName);
+      setRelationshipNotes(draft.relationshipNotes);
+      setPersonaCalibration(draft.personaCalibration);
+      setScreenshotSummary(draft.screenshotSummary);
+      setThreads(loadThreads());
+      setCurrentThreadId(loadCurrentThreadId());
+      setVoiceSupported(detectVoiceSupport());
+      setSavedPersonas(readSavedPersonas());
+      setUsageSnapshot(getUsageSnapshot());
+    });
   }, []);
 
   // Keyboard shortcuts (1-5 for tones, Ctrl+Enter to generate, etc.)
@@ -1412,7 +1645,9 @@ export default function Home() {
     setError(null);
     setSystemNotice(
       !isSignedIn
-        ? "Guest mode is active. You can generate replies now, but sign in is still needed for saved history, screenshots, and voice notes."
+        ? authEnabled
+          ? "Guest mode is active. Core replies are ready now — sign in later for saved history and media tools."
+          : "Local guest mode is active. Core reply features still work while auth is unavailable here."
         : null,
     );
     setVisibleReplyCount(0);
@@ -1982,7 +2217,7 @@ export default function Home() {
 
                   {!isSignedIn && (
                     <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/8 px-4 py-3 text-sm text-cyan-100">
-                      Guest mode is live: you can generate replies now. Sign in is only needed for saved history, screenshot import, and voice-note transcription.
+                      Start in guest mode now. Sign in later for saved history, screenshots, and voice notes.
                     </div>
                   )}
                 </div>
@@ -2517,6 +2752,20 @@ export default function Home() {
                 </div>
               </section>
             )}
+
+            {currentThreadInsight && currentThread && currentThread.turns.length > 0 && (
+              <RelationshipIntelPanel insight={currentThreadInsight} />
+            )}
+
+            <GrowthPanel
+              isSignedIn={Boolean(isSignedIn)}
+              usageSnapshot={usageSnapshot}
+              cloudSyncState={cloudSyncState}
+              cloudSyncMessage={cloudSyncMessage}
+              onSyncNow={() => {
+                void syncCloudHistory();
+              }}
+            />
 
             {analysis && (
               <AnalysisPanel analysis={analysis} analysisVisible={analysisVisible} panelClass={selectedTone.panel} />
