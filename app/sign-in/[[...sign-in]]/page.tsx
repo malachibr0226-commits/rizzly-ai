@@ -1,25 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect } from "react";
-import { ClerkLoaded, ClerkLoading, SignIn, useAuth } from "@clerk/nextjs";
+import { ClerkLoaded, ClerkLoading, SignIn } from "@clerk/nextjs";
 import { AuthLoadingFallback } from "@/app/components/AuthLoadingFallback";
 
 export default function SignInPage() {
-  const { isLoaded } = useAuth();
-
-  useEffect(() => {
-    if (isLoaded) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => {
-      window.location.replace("/?guest=1&auth=stalled");
-    }, 6000);
-
-    return () => window.clearTimeout(timer);
-  }, [isLoaded]);
-
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0612] px-4">
       {/* Glow blobs */}
@@ -93,7 +78,7 @@ export default function SignInPage() {
         </ClerkLoaded>
 
         <div className="mt-4 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center text-sm text-white/70">
-          If auth hangs, you can still <Link href="/?guest=1&auth=stalled" className="font-semibold text-pink-300 hover:text-pink-200">continue in guest mode</Link> and use the core reply generator. You&apos;ll be redirected automatically in a few seconds if the auth form never loads.
+          If auth hangs, you can still <Link href="/?guest=1&auth=stalled" className="font-semibold text-pink-300 hover:text-pink-200">continue in guest mode</Link> and use the core reply generator.
         </div>
       </div>
     </div>
