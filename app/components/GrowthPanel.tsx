@@ -139,18 +139,27 @@ export function GrowthPanel({
           </div>
         )}
 
-        <div className="mt-4 grid grid-cols-3 gap-2 text-xs text-white/75">
-          <div className="min-h-[112px] rounded-xl border border-white/10 bg-black/20 px-2 py-3 text-center sm:px-3">
+        <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-white/75 lg:grid-cols-3">
+          <div className="min-h-[120px] rounded-xl border border-white/10 bg-black/20 px-3 py-3.5 text-center">
             <div className="text-lg font-bold leading-none text-white">{usageSnapshot.remaining.generate}</div>
-            <div className="mt-2 text-[10px] leading-tight text-white/70 sm:text-[11px]">reply runs left</div>
+            <div className="mt-2 text-[10px] leading-tight text-white/70 sm:text-[11px]">
+              <span className="block">reply runs</span>
+              <span className="block">left</span>
+            </div>
           </div>
-          <div className="min-h-[112px] rounded-xl border border-white/10 bg-black/20 px-2 py-3 text-center sm:px-3">
+          <div className="min-h-[120px] rounded-xl border border-white/10 bg-black/20 px-3 py-3.5 text-center">
             <div className="text-lg font-bold leading-none text-white">{usageSnapshot.remaining.screenshot}</div>
-            <div className="mt-2 text-[10px] leading-tight text-white/70 sm:text-[11px]">screenshots left</div>
+            <div className="mt-2 text-[10px] leading-tight text-white/70 sm:text-[11px]">
+              <span className="block">screenshots</span>
+              <span className="block">left</span>
+            </div>
           </div>
-          <div className="min-h-[112px] rounded-xl border border-white/10 bg-black/20 px-2 py-3 text-center sm:px-3">
+          <div className="col-span-2 min-h-[120px] rounded-xl border border-white/10 bg-black/20 px-3 py-3.5 text-center lg:col-span-1">
             <div className="text-lg font-bold leading-none text-white">{usageSnapshot.remaining.voice}</div>
-            <div className="mt-2 text-[10px] leading-tight text-white/70 sm:text-[11px]">voice notes left</div>
+            <div className="mt-2 text-[10px] leading-tight text-white/70 sm:text-[11px]">
+              <span className="block">voice notes</span>
+              <span className="block">left</span>
+            </div>
           </div>
         </div>
 
@@ -190,18 +199,27 @@ export function GrowthPanel({
           </div>
         )}
 
-        <div className="mb-3 grid grid-cols-3 gap-2 text-xs text-white/80">
-          <div className="min-h-[104px] rounded-xl border border-fuchsia-400/20 bg-black/20 px-2 py-3 text-center sm:px-3">
+        <div className="mb-3 grid grid-cols-2 gap-2 text-xs text-white/80 lg:grid-cols-3">
+          <div className="min-h-[112px] rounded-xl border border-fuchsia-400/20 bg-black/20 px-3 py-3.5 text-center">
             <div className="text-base font-bold leading-none text-white">{replyBoost}x</div>
-            <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">reply runs</div>
+            <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
+              <span className="block">reply</span>
+              <span className="block">runs</span>
+            </div>
           </div>
-          <div className="min-h-[104px] rounded-xl border border-fuchsia-400/20 bg-black/20 px-2 py-3 text-center sm:px-3">
+          <div className="min-h-[112px] rounded-xl border border-fuchsia-400/20 bg-black/20 px-3 py-3.5 text-center">
             <div className="text-base font-bold leading-none text-white">{screenshotBoost}x</div>
-            <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">screenshots</div>
+            <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
+              <span className="block">screen-</span>
+              <span className="block">shots</span>
+            </div>
           </div>
-          <div className="min-h-[104px] rounded-xl border border-fuchsia-400/20 bg-black/20 px-2 py-3 text-center sm:px-3">
+          <div className="col-span-2 min-h-[112px] rounded-xl border border-fuchsia-400/20 bg-black/20 px-3 py-3.5 text-center lg:col-span-1">
             <div className="text-base font-bold leading-none text-white">{voiceBoost}x</div>
-            <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">voice notes</div>
+            <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
+              <span className="block">voice</span>
+              <span className="block">notes</span>
+            </div>
           </div>
         </div>
 
