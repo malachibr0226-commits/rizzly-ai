@@ -150,7 +150,7 @@ export function GrowthPanel({
           <div className="min-h-[120px] rounded-xl border border-white/10 bg-black/20 px-3 py-3.5 text-center">
             <div className="text-lg font-bold leading-none text-white">{usageSnapshot.remaining.screenshot}</div>
             <div className="mt-2 text-[10px] leading-tight text-white/70 sm:text-[11px]">
-              <span className="block">screenshots</span>
+              <span className="block">shots</span>
               <span className="block">left</span>
             </div>
           </div>
@@ -210,8 +210,8 @@ export function GrowthPanel({
           <div className="min-h-[112px] rounded-xl border border-fuchsia-400/20 bg-black/20 px-3 py-3.5 text-center">
             <div className="text-base font-bold leading-none text-white">{screenshotBoost}x</div>
             <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
-              <span className="block">screen-</span>
               <span className="block">shots</span>
+              <span className="block">boost</span>
             </div>
           </div>
           <div className="col-span-2 min-h-[112px] rounded-xl border border-fuchsia-400/20 bg-black/20 px-3 py-3.5 text-center lg:col-span-1">
