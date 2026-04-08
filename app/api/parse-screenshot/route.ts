@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { auth } from "@clerk/nextjs/server";
+import { requireAuth } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 
 const openai = new OpenAI({
@@ -37,7 +37,7 @@ const screenshotSchema = {
 } as const;
 
 export async function POST(req: Request) {
-  const { userId } = await auth();
+  const userId = await requireAuth();
   if (!userId) {
     return NextResponse.json(
       { error: "Sign in to parse screenshots." },

@@ -1085,7 +1085,13 @@ export default function Home() {
   const promptSignIn = (message: string) => {
     setError(message);
     if (typeof window !== "undefined") {
-      window.location.href = "/sign-in";
+      const isNonCanonicalHost =
+        window.location.hostname.endsWith(".vercel.app") ||
+        window.location.hostname === "www.rizzlyai.com";
+
+      window.location.href = isNonCanonicalHost
+        ? "https://rizzlyai.com/sign-in"
+        : "/sign-in";
     }
   };
 

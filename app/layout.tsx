@@ -2,16 +2,43 @@ import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
-const metadataBaseUrl =
-  process.env.NEXT_PUBLIC_APP_URL ||
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "https://www.rizzlyai.com");
+function normalizeUrl(candidate: string) {
+  const parsed = new URL(candidate);
+
+  if (parsed.hostname === "www.rizzlyai.com") {
+    parsed.hostname = "rizzlyai.com";
+  }
+
+  return parsed;
+}
+
+function resolveMetadataBase() {
+  const candidates = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : undefined,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
+    "http://localhost:3000",
+  ];
+
+  for (const candidate of candidates) {
+    if (!candidate) {
+      continue;
+    }
+
+    try {
+      return normalizeUrl(candidate);
+    } catch {
+      continue;
+    }
+  }
+
+  return new URL("http://localhost:3000");
+}
 
 export const metadata: Metadata = {
-  metadataBase: new URL(metadataBaseUrl),
+  metadataBase: resolveMetadataBase(),
   title: "Rizzly AI",
   description: "Paste a conversation and get sharper reply suggestions.",
   alternates: {

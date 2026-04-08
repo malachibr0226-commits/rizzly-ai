@@ -1,6 +1,3 @@
-"use client";
-
-import Link from "next/link";
 import {
   ClerkDegraded,
   ClerkFailed,
@@ -8,22 +5,38 @@ import {
   ClerkLoading,
   SignIn,
 } from "@clerk/nextjs";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { AuthLoadingFallback } from "@/app/components/AuthLoadingFallback";
 
-export default function SignInPage() {
+const CANONICAL_APP_URL = (
+  process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://rizzlyai.com"
+).replace("https://www.rizzlyai.com", "https://rizzlyai.com");
+
+async function redirectToCanonicalSignIn() {
+  const headerStore = await headers();
+  const host =
+    headerStore.get("x-forwarded-host") ?? headerStore.get("host") ?? "";
+
+  if (host.endsWith(".vercel.app") || host === "www.rizzlyai.com") {
+    redirect(new URL("/sign-in", CANONICAL_APP_URL).toString());
+  }
+}
+
+export default async function SignInPage() {
+  await redirectToCanonicalSignIn();
+
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0612] px-4">
-      {/* Glow blobs */}
       <div className="pointer-events-none absolute left-1/4 top-1/4 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-600/20 blur-[80px]" />
       <div className="pointer-events-none absolute bottom-1/4 right-1/4 h-72 w-72 translate-x-1/2 translate-y-1/2 rounded-full bg-purple-600/20 blur-[80px]" />
 
       <div className="relative z-10 mx-auto flex w-full max-w-[420px] flex-col items-center">
-        {/* Branding */}
         <div className="mb-4 w-full text-center">
           <span className="block bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-3xl font-black tracking-tight text-transparent">
             Rizzly AI
           </span>
-          <p className="mt-2 text-sm text-white/85">Welcome back — sign in to continue</p>
+          <p className="mt-2 text-sm text-white/80">Sign in</p>
         </div>
 
         <ClerkLoading>
@@ -90,10 +103,6 @@ export default function SignInPage() {
             }}
           />
         </ClerkLoaded>
-
-        <div className="mt-4 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center text-sm text-white/70">
-          If auth hangs, you can still <Link href="/?guest=1&auth=stalled" className="font-semibold text-pink-300 hover:text-pink-200">continue in guest mode</Link> and use the core reply generator.
-        </div>
       </div>
     </div>
   );

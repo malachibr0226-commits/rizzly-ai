@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
-import { auth } from "@clerk/nextjs/server";
 import { rateLimit } from "@/lib/rate-limit";
 
 type ToneKey = "confident" | "flirty" | "funny" | "chill" | "apologetic";
@@ -622,8 +621,6 @@ function extractThreadPatterns(threadSummary: string): string {
 }
 
 export async function POST(req: Request) {
-  await auth();
-
   const { limited, remaining } = rateLimit(req);
   if (limited) {
     return NextResponse.json(

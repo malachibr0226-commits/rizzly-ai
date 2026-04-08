@@ -51,9 +51,10 @@ function getResetLabel() {
   const tomorrow = new Date();
   tomorrow.setHours(24, 0, 0, 0);
 
-  return tomorrow.toLocaleTimeString([], {
+  return tomorrow.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
+    hour12: true,
   });
 }
 

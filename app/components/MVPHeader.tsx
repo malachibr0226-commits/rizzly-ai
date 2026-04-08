@@ -5,7 +5,7 @@
 
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { SignOutButton, UserButton, useAuth, useUser } from "@clerk/nextjs";
 import type { Achievement, StreakData } from "@/lib/analytics";
@@ -26,11 +26,27 @@ export function MVPHeader({
   const { isSignedIn } = useAuth();
   const { user } = useUser();
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
-  const shouldUseCanonicalAuthHost =
-    typeof window !== "undefined" && window.location.hostname.endsWith(".vercel.app");
-  const authBaseUrl = shouldUseCanonicalAuthHost
-    ? process.env.NEXT_PUBLIC_APP_URL || "https://www.rizzlyai.com"
-    : "";
+  const [authLinks, setAuthLinks] = useState({
+    signIn: "/sign-in",
+    signUp: "/sign-up",
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const isNonCanonicalHost =
+      window.location.hostname.endsWith(".vercel.app") ||
+      window.location.hostname === "www.rizzlyai.com";
+
+    if (isNonCanonicalHost) {
+      setAuthLinks({
+        signIn: "https://rizzlyai.com/sign-in",
+        signUp: "https://rizzlyai.com/sign-up",
+      });
+    }
+  }, []);
 
   return (
     <div className="relative z-30 pb-6 pt-4">
@@ -96,13 +112,13 @@ export function MVPHeader({
           {!isSignedIn ? (
             <>
               <Link
-                href={`${authBaseUrl}/sign-up`}
+                href={authLinks.signUp}
                 className="relative z-40 cursor-pointer pointer-events-auto rounded-full border border-white/15 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white/85 transition hover:border-white/25 hover:bg-white/10"
               >
                 Sign Up
               </Link>
               <Link
-                href={`${authBaseUrl}/sign-in`}
+                href={authLinks.signIn}
                 className="relative z-40 cursor-pointer pointer-events-auto rounded-full bg-gradient-to-r from-pink-500 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_12px_rgba(236,72,153,0.3)] transition-all duration-200 transform hover:scale-105 active:scale-95 hover:shadow-[0_0_20px_rgba(236,72,153,0.5)]"
               >
                 Sign In
