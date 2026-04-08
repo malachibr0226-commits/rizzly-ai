@@ -87,4 +87,40 @@ body .cl-socialButtonsProviderIcon__google {
   color: #4285f4 !important;
 }
 
+body .cl-card,
+body .cl-navbar,
+body .cl-navbarButton,
+body .cl-navbarMobileMenuRow,
+body .cl-profileSectionTitleText,
+body .cl-profileSectionContent,
+body .cl-userPreviewMainIdentifier,
+body .cl-userPreviewSecondaryIdentifier,
+body .cl-accordionTriggerButton,
+body .cl-accordionContent,
+body .cl-badge,
+body .cl-formFieldInputShowPasswordButton,
+body .cl-menuItem,
+body .cl-menuItem__manageAccount,
+body .cl-menuItem__signOut,
+body .cl-internal-1dauvpw,
+body .cl-internal-1hp5nqm,
+body .cl-internal-1ho4xv,
+body .cl-internal-b3fm6y {
+  color: #ffffff !important;
+}
+
+body .cl-userButtonPopoverCard,
+body .cl-profilePage,
+body .cl-navbar,
+body .cl-scrollBox,
+body .cl-pageScrollBox {
+  background: rgba(24, 10, 44, 0.96) !important;
+  color: #ffffff !important;
+}
+
+body .cl-menuItem:hover,
+body .cl-navbarButton:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
 
