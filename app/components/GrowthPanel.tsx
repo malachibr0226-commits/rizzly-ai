@@ -82,7 +82,7 @@ export function GrowthPanel({
   };
 
   return (
-    <section className="grid gap-4 xl:grid-cols-2">
+    <section id="upgrade" className="grid gap-4 xl:grid-cols-2 scroll-mt-24">
       <div className="rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>

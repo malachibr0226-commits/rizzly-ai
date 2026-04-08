@@ -38,6 +38,9 @@ export function MVPHeader({
         signIn: "/sign-in",
         signUp: "/sign-up",
       };
+  const upgradeHref = isNonCanonicalHost
+    ? "https://rizzlyai.com/#upgrade"
+    : "#upgrade";
 
   return (
     <div className="relative z-30 pb-6 pt-4">
@@ -98,6 +101,13 @@ export function MVPHeader({
           >
             📊 Stats
           </button>
+
+          <Link
+            href={upgradeHref}
+            className="relative z-40 cursor-pointer pointer-events-auto rounded-full border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-2.5 text-sm font-semibold text-fuchsia-100 transition hover:border-fuchsia-300/40 hover:bg-fuchsia-500/20"
+          >
+            Upgrade
+          </Link>
 
           {/* Auth */}
           {!authEnabled ? (
