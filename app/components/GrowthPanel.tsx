@@ -34,7 +34,9 @@ export function GrowthPanel({
     ? cloudSyncMessage
     : "Sign in to sync threads and personas across devices.";
   const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [billingLoading, setBillingLoading] = useState(false);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
+  const [billingError, setBillingError] = useState<string | null>(null);
   const isPro = usageSnapshot.planTier === "pro";
 
   const nearingLimit = !isPro && usageSnapshot.remaining.generate <= 5;
@@ -79,6 +81,36 @@ export function GrowthPanel({
       }
     } finally {
       setUpgradeLoading(false);
+    }
+  };
+
+  const handleManageBilling = async () => {
+    setBillingError(null);
+    setBillingLoading(true);
+
+    try {
+      const response = await fetch("/api/create-customer-portal", {
+        method: "POST",
+      });
+      const data = (await response.json()) as {
+        url?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !data.url) {
+        throw new Error(data.error || "Unable to open billing settings.");
+      }
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error("Billing portal error:", error);
+      setBillingError(
+        error instanceof Error
+          ? error.message
+          : "Unable to open billing settings right now.",
+      );
+    } finally {
+      setBillingLoading(false);
     }
   };
 
@@ -235,8 +267,25 @@ export function GrowthPanel({
             ? "Thanks for upgrading — your higher limits are already live."
             : "Secure checkout opens instantly when Stripe is configured."}
         </p>
+        {isPro && (
+          <button
+            type="button"
+            onClick={() => void handleManageBilling()}
+            disabled={billingLoading}
+            className="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/85 transition hover:border-white/25 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
+          >
+            {billingLoading
+              ? "Opening billing settings..."
+              : isSignedIn
+                ? "Manage subscription"
+                : "Sign in to manage billing"}
+          </button>
+        )}
         {upgradeError && (
           <p className="mt-2 text-center text-[11px] text-rose-200">{upgradeError}</p>
+        )}
+        {billingError && (
+          <p className="mt-2 text-center text-[11px] text-rose-200">{billingError}</p>
         )}
       </div>
     </section>

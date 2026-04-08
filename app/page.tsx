@@ -1225,6 +1225,20 @@ export default function Home() {
       return;
     }
 
+    const params = new URLSearchParams(window.location.search);
+    const billingState = params.get("billing");
+
+    if (billingState === "portal") {
+      setSystemNotice("Billing settings updated. Your Rizzly Pro access is still active.");
+      window.history.replaceState({}, "", `${window.location.pathname}${window.location.hash}` || "/");
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
     window.localStorage.setItem(
       DRAFT_KEY,
       JSON.stringify({
