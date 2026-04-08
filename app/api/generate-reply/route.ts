@@ -622,13 +622,7 @@ function extractThreadPatterns(threadSummary: string): string {
 }
 
 export async function POST(req: Request) {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json(
-      { error: "Sign in to generate replies." },
-      { status: 401 },
-    );
-  }
+  await auth();
 
   const { limited, remaining } = rateLimit(req);
   if (limited) {

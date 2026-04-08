@@ -1400,18 +1400,17 @@ export default function Home() {
   const handleGenerate = async () => {
     if (!conversation.trim()) return;
 
-    if (!isSignedIn) {
-      promptSignIn("Sign in to generate replies.");
-      return;
-    }
-
     if (!consumeProductAction("generate")) {
       return;
     }
 
     setLoading(true);
     setError(null);
-    setSystemNotice(null);
+    setSystemNotice(
+      !isSignedIn
+        ? "Guest mode is active. You can generate replies now, but sign in is still needed for saved history, screenshots, and voice notes."
+        : null,
+    );
     setVisibleReplyCount(0);
     setAnalysisVisible(false);
     setPreviewVisible(false);
@@ -1979,7 +1978,7 @@ export default function Home() {
 
                   {!isSignedIn && (
                     <div className="rounded-2xl border border-cyan-400/20 bg-cyan-500/8 px-4 py-3 text-sm text-cyan-100">
-                      Sign in to generate replies, import screenshots, and use AI voice-note transcription.
+                      Guest mode is live: you can generate replies now. Sign in is only needed for saved history, screenshot import, and voice-note transcription.
                     </div>
                   )}
                 </div>

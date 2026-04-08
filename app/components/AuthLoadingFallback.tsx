@@ -13,7 +13,7 @@ export function AuthLoadingFallback({
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setShowExtendedHelp(true);
-    }, 4500);
+    }, 1800);
 
     return () => window.clearTimeout(timer);
   }, []);
@@ -59,7 +59,7 @@ export function AuthLoadingFallback({
               href="/"
               className="rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-semibold text-white/85 transition hover:bg-white/10"
             >
-              Back home
+              Continue as guest
             </Link>
           </div>
         </div>

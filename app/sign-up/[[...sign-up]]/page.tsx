@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ClerkLoaded, ClerkLoading, SignUp } from "@clerk/nextjs";
 import { AuthLoadingFallback } from "@/app/components/AuthLoadingFallback";
 
@@ -73,6 +74,10 @@ export default function SignUpPage() {
             }}
           />
         </ClerkLoaded>
+
+        <div className="mt-4 w-full rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center text-sm text-white/70">
+          If sign-up stalls, you can still <Link href="/" className="font-semibold text-pink-300 hover:text-pink-200">continue in guest mode</Link> and try the reply generator first.
+        </div>
       </div>
     </div>
   );
