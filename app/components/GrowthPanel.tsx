@@ -33,6 +33,8 @@ export function GrowthPanel({
     ? cloudSyncMessage
     : "Sign in to sync threads and personas across devices.";
 
+  const nearingLimit = usageSnapshot.remaining.generate <= 5;
+
   return (
     <section className="grid gap-4 xl:grid-cols-2">
       <div className="rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm">
@@ -76,18 +78,24 @@ export function GrowthPanel({
         </button>
       </div>
 
-      <div className="rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm">
+      <div className="rounded-xl border border-fuchsia-400/20 bg-[linear-gradient(180deg,rgba(168,85,247,0.10),rgba(255,255,255,0.03))] p-4 backdrop-blur-sm">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-white">Billing-Ready Plans</h2>
-            <p className="mt-1 text-xs text-white/45">
-              Free is live now. Pro is ready for a Stripe payment link.
+            <h2 className="text-lg font-bold text-white">Upgrade when you want more range</h2>
+            <p className="mt-1 text-xs text-white/50">
+              Stay free as long as you want, or unlock deeper analysis and cross-device memory.
             </p>
           </div>
           <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-100">
-            monetization
+            pro ready
           </span>
         </div>
+
+        {nearingLimit && (
+          <div className="mb-3 rounded-xl border border-amber-400/20 bg-amber-500/10 px-3 py-2 text-xs text-amber-50">
+            You’re getting close to today’s free reply limit. Pro keeps the flow going.
+          </div>
+        )}
 
         <div className="space-y-3">
           {[freePlan, proPlan].map((plan) => (
@@ -104,7 +112,10 @@ export function GrowthPanel({
                   <div className="text-sm font-semibold text-white">{plan.name}</div>
                   <div className="mt-1 text-xs text-white/60">{plan.description}</div>
                 </div>
-                <div className="text-sm font-bold text-white">{plan.priceLabel}</div>
+                <div className="text-right">
+                  <div className="text-sm font-bold text-white">{plan.priceLabel}</div>
+                  <div className="text-[10px] text-white/45">{plan.tier === "pro" ? "monthly" : "starter"}</div>
+                </div>
               </div>
               <ul className="mt-3 space-y-1 text-xs text-white/75">
                 {plan.highlights.map((item) => (
@@ -123,6 +134,9 @@ export function GrowthPanel({
         >
           {proPlan.ctaLabel}
         </a>
+        <p className="mt-2 text-center text-[11px] text-white/45">
+          Upgrade only when you want more volume, sync, and advanced thread intel.
+        </p>
       </div>
     </section>
   );

@@ -17,7 +17,7 @@ export const PLAN_CATALOG: PlanDefinition[] = [
     tier: "free",
     name: "Rizzly Free",
     priceLabel: "$0",
-    description: "Best for trying the app and building early momentum.",
+    description: "Try the core texting tools and see what style works best.",
     ctaLabel: "Current plan",
     limits: {
       generate: 25,
@@ -28,14 +28,15 @@ export const PLAN_CATALOG: PlanDefinition[] = [
       "AI reply generation",
       "Screenshot and voice tools",
       "Local thread memory",
+      "Daily free usage budget",
     ],
   },
   {
     tier: "pro",
     name: "Rizzly Pro",
     priceLabel: "$19/mo",
-    description: "Built for serious users who want cloud sync and higher limits.",
-    ctaLabel: "Upgrade to Pro",
+    description: "For power users who want more replies, cloud sync, and smarter thread tracking.",
+    ctaLabel: "Unlock Pro",
     limits: {
       generate: 200,
       screenshot: 60,
