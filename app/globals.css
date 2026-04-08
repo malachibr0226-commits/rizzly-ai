@@ -148,4 +148,20 @@ body .cl-navbarButtonIcon {
   color: rgba(255, 255, 255, 0.85) !important;
 }
 
+body .cl-userButtonPopoverCard h1,
+body .cl-userButtonPopoverCard h2,
+body .cl-userButtonPopoverCard h3,
+body .cl-userButtonPopoverCard p,
+body .cl-userButtonPopoverCard span,
+body .cl-profilePage h1,
+body .cl-profilePage h2,
+body .cl-profilePage h3,
+body .cl-profilePage p,
+body .cl-profilePage span,
+body .cl-profilePage div {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 1 !important;
+}
+
 

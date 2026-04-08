@@ -141,8 +141,33 @@ export function MVPHeader({
               </SignOutButton>
               <UserButton
                 appearance={{
+                  variables: {
+                    colorPrimary: "#ec4899",
+                    colorBackground: "#180a2c",
+                    colorInputBackground: "rgba(255,255,255,0.06)",
+                    colorText: "#ffffff",
+                    colorTextSecondary: "rgba(255,255,255,0.92)",
+                    colorTextOnPrimaryBackground: "#ffffff",
+                    colorNeutral: "#ffffff",
+                  },
                   elements: {
                     avatarBox: "w-9 h-9 ring-2 ring-pink-500/40",
+                    userButtonPopoverCard: "bg-[#180a2c]/95 text-white border border-fuchsia-400/20",
+                    userButtonPopoverActionButton: "text-white hover:bg-white/10",
+                    userButtonPopoverActionButtonText: "text-white",
+                    userButtonPopoverActionButtonIcon: "text-white/80",
+                    userPreviewMainIdentifier: "text-white",
+                    userPreviewSecondaryIdentifier: "text-white/80",
+                    card: "bg-[#180a2c] text-white",
+                    navbar: "bg-[#180a2c]/95 text-white",
+                    navbarButton: "text-white/85 hover:bg-white/10",
+                    pageScrollBox: "bg-[#180a2c] text-white",
+                    profileSectionTitleText: "text-white",
+                    formFieldLabel: "text-white/90",
+                    formFieldInput: "text-white bg-white/5",
+                    badge: "text-white bg-white/10",
+                    accordionTriggerButton: "text-white",
+                    accordionContent: "text-white/85",
                   },
                 }}
               />
