@@ -164,11 +164,19 @@ body .cl-userButtonPopoverCard [class*="Subtitle"],
 body .cl-profilePage [class*="Title"],
 body .cl-profilePage [class*="Subtitle"],
 body .cl-profilePage [class*="title"],
-body .cl-profilePage [class*="subtitle"] {
+body .cl-profilePage [class*="subtitle"],
+body .cl-pageHeaderTitle,
+body .cl-pageHeaderSubtitle,
+body .cl-pageHeader,
+body .cl-pageHeader *,
+body .cl-navbar h1,
+body .cl-navbar p,
+body .cl-navbar span:first-child {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   opacity: 1 !important;
   filter: none !important;
+  text-shadow: 0 0 0 #ffffff !important;
 }
 
 

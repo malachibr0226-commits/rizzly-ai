@@ -112,6 +112,8 @@ export default function RootLayout({
                 profileSectionTitleText: "text-white",
                 headerTitle: "text-white",
                 headerSubtitle: "text-white/90",
+                pageHeaderTitle: "!text-white !opacity-100",
+                pageHeaderSubtitle: "!text-white !opacity-100",
                 formFieldLabel: "text-white/90",
                 userPreviewMainIdentifier: "text-white",
                 userPreviewSecondaryIdentifier: "text-white/85",
