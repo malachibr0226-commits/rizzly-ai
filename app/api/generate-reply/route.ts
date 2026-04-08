@@ -664,6 +664,8 @@ export async function POST(req: Request) {
       typeof body.profileName === "string" ? body.profileName.trim() : "";
     const recentOutcome =
       typeof body.recentOutcome === "string" ? body.recentOutcome.trim() : "";
+    const memoryPrimer =
+      typeof body.memoryPrimer === "string" ? body.memoryPrimer.trim() : "";
     const category =
       typeof body.category === "string" ? body.category.trim() : "other";
     const toneIntensity =
@@ -755,6 +757,7 @@ export async function POST(req: Request) {
         ? `Most recent outcome in this thread: ${recentOutcome}. Use it to decide how hard to push or how much to back off.`
         : "",
       threadSummary ? `\nPrior conversation patterns (what has worked):\n${threadSummary}${threadPatterns}\n\nLeverage these working patterns: notice which tones and goals succeeded, mirror the language and pacing of sent replies that got responses, and adapt to the relationship dynamic that emerged. Avoid repeating mistakes from this thread.` : "",
+      memoryPrimer ? `Saved product memory and successful reply signals:\n${memoryPrimer}` : "",
       earlierSummary ? `Earlier thread summary:\n${earlierSummary}` : "",
       "",
       "Recent transcript:",
@@ -768,27 +771,60 @@ export async function POST(req: Request) {
       "- exactly 3 reply branches for warm, mixed, and cold outcomes",
     ].join("\n");
 
-    const response = await openai.responses.create({
-      model: "gpt-5.4-mini",
-      instructions:
-        "You are Rizzly AI, a calm texting strategist. Read the tone carefully, make modest inferences, and optimize for natural replies that a real person would actually send. Favor emotional intelligence, specificity, and variety. Avoid generic filler, therapy-speak, and robotic phrasing.",
-      input: prompt,
-      max_output_tokens: 900,
-      text: {
-        verbosity: "low",
-        format: {
-          type: "json_schema",
-          name: "sparkline_reply_analysis",
-          strict: true,
-          schema: responseSchema,
+    try {
+      const response = (await Promise.race([
+        openai.responses.create({
+          model: "gpt-5.4-mini",
+          instructions:
+            "You are Rizzly AI, a calm texting strategist. Read the tone carefully, make modest inferences, and optimize for natural replies that a real person would actually send. Favor emotional intelligence, specificity, and variety. Avoid generic filler, therapy-speak, and robotic phrasing.",
+          input: prompt,
+          max_output_tokens: 900,
+          text: {
+            verbosity: "low",
+            format: {
+              type: "json_schema",
+              name: "sparkline_reply_analysis",
+              strict: true,
+              schema: responseSchema,
+            },
+          },
+        }),
+        new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error("OpenAI request timed out.")), 18_000);
+        }),
+      ])) as { output_text: string };
+
+      const parsed = JSON.parse(response.output_text) as SparklineResponse;
+      const safePayload = sanitizeModelPayload(parsed, tone, replyCount);
+
+      return NextResponse.json(safePayload, {
+        headers: {
+          "X-RateLimit-Remaining": String(remaining),
         },
-      },
-    });
+      });
+    } catch (modelError) {
+      console.error("OpenAI degraded mode:", modelError);
+      const fallbackPayload = sanitizeModelPayload(
+        fallbackResponse(tone),
+        tone,
+        replyCount,
+      );
 
-    const parsed = JSON.parse(response.output_text) as SparklineResponse;
-    const safePayload = sanitizeModelPayload(parsed, tone, replyCount);
-
-    return NextResponse.json(safePayload);
+      return NextResponse.json(
+        {
+          ...fallbackPayload,
+          degraded: true,
+          warning:
+            "Rizzly switched to stability mode because the AI service was slow. The replies are still safe to use, but keep them simple.",
+        },
+        {
+          headers: {
+            "X-RateLimit-Remaining": String(remaining),
+            "X-Rizzly-Mode": "fallback",
+          },
+        },
+      );
+    }
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(

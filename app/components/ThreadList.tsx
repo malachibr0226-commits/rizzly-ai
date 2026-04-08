@@ -1,6 +1,6 @@
 "use client";
 
-import type { Thread, OutcomeStatus } from "@/lib/analytics";
+import type { Thread } from "@/lib/analytics";
 
 interface ThreadListProps {
   threads: Thread[];
@@ -75,8 +75,13 @@ export function ThreadList({
                   {thread.summary && (
                     <div className="mt-2 line-clamp-2 text-xs text-white/40">{thread.summary}</div>
                   )}
-                  <div className="mt-1 text-xs text-white/35">
-                    Updated {new Date(thread.updatedAt).toLocaleString()}
+                  <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/35">
+                    <span>Updated {new Date(thread.updatedAt).toLocaleString()}</span>
+                    {typeof thread.successCount === "number" && typeof thread.totalTurns === "number" && thread.totalTurns > 0 && (
+                      <span className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] text-emerald-100">
+                        {Math.round((thread.successCount / thread.totalTurns) * 100)}% positive
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="shrink-0 text-lg">-&gt;</div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { useMVPFeatures } from "@/app/hooks/useMVPFeatures";
@@ -29,6 +30,18 @@ import type {
   Thread,
   ThreadTurn,
 } from "@/lib/analytics";
+import {
+  buildMemoryPrimer,
+  consumeUsageAction,
+  getOutcomeCoach,
+  getUsageSnapshot,
+  readSavedPersonas,
+  savePersonaDraft,
+  touchPersona,
+  type SavedPersona,
+  type UsageAction,
+  type UsageSnapshot,
+} from "@/lib/product-features";
 
 type Reply = {
   text: string;
@@ -74,6 +87,15 @@ type ScreenshotParseResult = {
   personaHint: string;
 };
 
+type GenerateReplyResponse = {
+  replies?: Reply[];
+  bestIndex?: number | null;
+  analysis?: Analysis | null;
+  warning?: string;
+  degraded?: boolean;
+  error?: string;
+};
+
 type DictationTarget = "conversation" | "context";
 
 type BrowserSpeechRecognitionEvent = {
@@ -100,6 +122,24 @@ type BrowserSpeechRecognitionCtor = new () => BrowserSpeechRecognition;
 const DRAFT_KEY = "rizzly-draft-v1";
 const THREADS_KEY = "rizzly-threads-v2";
 const CURRENT_THREAD_KEY = "rizzly-current-thread-v1";
+
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  timeoutMs = 20_000,
+) {
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    window.clearTimeout(timeoutId);
+  }
+}
 
 function loadDraft() {
   if (typeof window === "undefined") {
@@ -648,6 +688,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [systemNotice, setSystemNotice] = useState<string | null>(null);
   const [visibleReplyCount, setVisibleReplyCount] = useState(0);
   const [analysisVisible, setAnalysisVisible] = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
@@ -662,8 +703,11 @@ export default function Home() {
   const [voiceNoteSpeaker, setVoiceNoteSpeaker] = useState<"You" | "Them">(
     "Them",
   );
-  
-  
+  const [savedPersonas, setSavedPersonas] = useState<SavedPersona[]>([]);
+  const [usageSnapshot, setUsageSnapshot] = useState<UsageSnapshot>(() =>
+    getUsageSnapshot(),
+  );
+
   // MVP Features - using custom hook
   const mvpFeatures = useMVPFeatures(threads);
 
@@ -746,6 +790,63 @@ export default function Home() {
       .slice(-4);
   }, [conversation]);
 
+  const memoryPrimer = useMemo(
+    () =>
+      buildMemoryPrimer(
+        threads,
+        currentThreadId,
+        mvpFeatures.favorites,
+        mvpFeatures.replyRatings,
+      ),
+    [threads, currentThreadId, mvpFeatures.favorites, mvpFeatures.replyRatings],
+  );
+
+  const outcomeCoach = useMemo(
+    () => getOutcomeCoach(currentThread?.lastOutcome),
+    [currentThread?.lastOutcome],
+  );
+
+  const consumeProductAction = (action: UsageAction) => {
+    const result = consumeUsageAction(action);
+    setUsageSnapshot(result.snapshot);
+
+    if (!result.allowed) {
+      setError(result.message || "Daily limit reached.");
+      return false;
+    }
+
+    return true;
+  };
+
+  const saveCurrentPersona = () => {
+    if (
+      !profileName.trim() &&
+      !personaCalibration.trim() &&
+      !relationshipNotes.trim()
+    ) {
+      setError("Add a label or some memory notes before saving a persona.");
+      return;
+    }
+
+    const updated = savePersonaDraft({
+      profileName,
+      voice: personaCalibration,
+      notes: relationshipNotes,
+    });
+
+    setSavedPersonas(updated);
+    setError(null);
+    setSystemNotice("Persona saved locally for one-tap reuse.");
+  };
+
+  const applySavedPersona = (persona: SavedPersona) => {
+    setProfileName(persona.profileName || persona.name);
+    setPersonaCalibration(persona.voice);
+    setRelationshipNotes(persona.notes);
+    setSavedPersonas(touchPersona(persona.id));
+    setSystemNotice(`Loaded ${persona.name} into your memory fields.`);
+  };
+
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
@@ -817,6 +918,7 @@ export default function Home() {
               relationshipNotes: relationshipNotes.trim(),
               personaCalibration: personaCalibration.trim(),
               screenshotSummary: screenshotSummary.trim(),
+              category: mvpFeatures.category,
               privacyMode: "local-only",
             }
           : thread,
@@ -828,10 +930,13 @@ export default function Home() {
     relationshipNotes,
     personaCalibration,
     screenshotSummary,
+    mvpFeatures.category,
   ]);
 
   useEffect(() => {
     setVoiceSupported(detectVoiceSupport());
+    setSavedPersonas(readSavedPersonas());
+    setUsageSnapshot(getUsageSnapshot());
   }, []);
 
   // Keyboard shortcuts (1-5 for tones, Ctrl+Enter to generate, etc.)
@@ -999,18 +1104,29 @@ export default function Home() {
       return;
     }
 
+    if (!consumeProductAction("voice")) {
+      event.target.value = "";
+      return;
+    }
+
     setTranscribingVoiceNote(true);
     setError(null);
+    setSystemNotice(null);
+    trackVoiceNote(Math.max(1, Math.round(file.size / 16_000)));
 
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("speaker", voiceNoteSpeaker);
 
-      const res = await fetch("/api/transcribe-voice-note", {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetchWithTimeout(
+        "/api/transcribe-voice-note",
+        {
+          method: "POST",
+          body: formData,
+        },
+        25_000,
+      );
 
       const data = await res.json();
 
@@ -1026,7 +1142,9 @@ export default function Home() {
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
-          ? caughtError.message
+          ? caughtError.name === "AbortError"
+            ? "Voice-note transcription timed out. Try a shorter file or retry."
+            : caughtError.message
           : "Failed to transcribe voice note.",
       );
     } finally {
@@ -1050,8 +1168,14 @@ export default function Home() {
       return;
     }
 
+    if (!consumeProductAction("screenshot")) {
+      event.target.value = "";
+      return;
+    }
+
     setScreenshotParsing(true);
     setError(null);
+    setSystemNotice(null);
 
     try {
       const imageDataUrl = await new Promise<string>((resolve, reject) => {
@@ -1070,13 +1194,17 @@ export default function Home() {
         reader.readAsDataURL(file);
       });
 
-      const res = await fetch("/api/parse-screenshot", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await fetchWithTimeout(
+        "/api/parse-screenshot",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ imageDataUrl }),
         },
-        body: JSON.stringify({ imageDataUrl }),
-      });
+        25_000,
+      );
 
       const data = (await res.json()) as ScreenshotParseResult & { error?: string };
 
@@ -1115,7 +1243,9 @@ export default function Home() {
     } catch (caughtError) {
       setError(
         caughtError instanceof Error
-          ? caughtError.message
+          ? caughtError.name === "AbortError"
+            ? "Screenshot parsing timed out. Try a clearer crop or retry."
+            : caughtError.message
           : "Failed to parse screenshot.",
       );
     } finally {
@@ -1129,6 +1259,7 @@ export default function Home() {
       return;
     }
     trackOutcome(outcome);
+    setSystemNotice(getOutcomeCoach(outcome).nextStep);
 
     setThreads((prev) =>
       prev.map((thread) => {
@@ -1151,6 +1282,8 @@ export default function Home() {
           lastOutcome: outcome,
           updatedAt: Date.now(),
           summary: generateThreadSummary(turns),
+          successCount: turns.filter((item) => item.gotResponse).length,
+          totalTurns: turns.length,
         };
       }),
     );
@@ -1165,6 +1298,7 @@ export default function Home() {
       updatedAt: Date.now(),
       turns: [],
       summary: "",
+      category: mvpFeatures.category,
       profileName: profileName.trim(),
       relationshipNotes: relationshipNotes.trim(),
       personaCalibration: personaCalibration.trim(),
@@ -1189,6 +1323,7 @@ export default function Home() {
     setShowThreadForm(false);
     setThreadName("");
     setError(null);
+    setSystemNotice(null);
   };
 
   const loadThread = (threadId: string) => {
@@ -1196,6 +1331,7 @@ export default function Home() {
     if (!thread) return;
 
     setCurrentThreadId(threadId);
+    mvpFeatures.setCategory(thread.category || "other");
     const lastTurn = thread.turns[thread.turns.length - 1];
 
     if (lastTurn) {
@@ -1235,6 +1371,7 @@ export default function Home() {
 
     setSentReplyIndex(null);
     setError(null);
+    setSystemNotice(null);
   };
 
   const appendTurn = (turn: ThreadTurn) => {
@@ -1243,12 +1380,15 @@ export default function Home() {
         if (thread.id === currentThreadId) {
           const updatedTurns = [...thread.turns, turn];
           const summary = generateThreadSummary(updatedTurns);
+          const successCount = updatedTurns.filter((item) => item.gotResponse).length;
 
           return {
             ...thread,
             turns: updatedTurns,
             updatedAt: Date.now(),
             summary,
+            successCount,
+            totalTurns: updatedTurns.length,
           };
         }
 
@@ -1265,8 +1405,13 @@ export default function Home() {
       return;
     }
 
+    if (!consumeProductAction("generate")) {
+      return;
+    }
+
     setLoading(true);
     setError(null);
+    setSystemNotice(null);
     setVisibleReplyCount(0);
     setAnalysisVisible(false);
     setPreviewVisible(false);
@@ -1275,29 +1420,34 @@ export default function Home() {
     try {
       const threadSummary = currentThread?.summary || "";
 
-      const res = await fetch("/api/generate-reply", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const res = await fetchWithTimeout(
+        "/api/generate-reply",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            conversation,
+            tone,
+            goal,
+            userContext,
+            profileName,
+            relationshipNotes,
+            personaCalibration,
+            screenshotSummary,
+            recentOutcome: currentThread?.lastOutcome || "",
+            threadSummary,
+            memoryPrimer,
+            category: mvpFeatures.category,
+            toneIntensity: mvpFeatures.toneIntensity,
+            bulkCount: mvpFeatures.bulkCount,
+          }),
         },
-        body: JSON.stringify({
-          conversation,
-          tone,
-          goal,
-          userContext,
-          profileName,
-          relationshipNotes,
-          personaCalibration,
-          screenshotSummary,
-          recentOutcome: currentThread?.lastOutcome || "",
-          threadSummary,
-          category: mvpFeatures.category,
-          toneIntensity: mvpFeatures.toneIntensity,
-          bulkCount: mvpFeatures.bulkCount,
-        }),
-      });
+        25_000,
+      );
 
-      const data = await res.json();
+      const data = (await res.json()) as GenerateReplyResponse;
 
       if (!res.ok) {
         throw new Error(data.error || "Failed to generate replies.");
@@ -1306,6 +1456,9 @@ export default function Home() {
       setReplies(data.replies || []);
       setBestIndex(data.bestIndex ?? null);
       setAnalysis(data.analysis || null);
+      if (data.warning) {
+        setSystemNotice(data.warning);
+      }
       mvpFeatures.trackToneUsage(tone);
       trackGenerate(tone, goal, mvpFeatures.category, mvpFeatures.bulkCount);
 
@@ -1318,6 +1471,7 @@ export default function Home() {
           updatedAt: Date.now(),
           turns: [],
           summary: "",
+          category: mvpFeatures.category,
           profileName: profileName.trim(),
           relationshipNotes: relationshipNotes.trim(),
           personaCalibration: personaCalibration.trim(),
@@ -1336,6 +1490,8 @@ export default function Home() {
           tone,
           goal,
           userContext,
+          category: mvpFeatures.category,
+          toneIntensity: mvpFeatures.toneIntensity,
           screenshotSummary,
           relationshipNotesSnapshot: relationshipNotes,
           personaCalibrationSnapshot: personaCalibration,
@@ -1355,6 +1511,8 @@ export default function Home() {
                 turns: updatedTurns,
                 updatedAt: Date.now(),
                 summary,
+                successCount: updatedTurns.filter((item) => item.gotResponse).length,
+                totalTurns: updatedTurns.length,
               };
             }
 
@@ -1370,6 +1528,8 @@ export default function Home() {
           tone,
           goal,
           userContext,
+          category: mvpFeatures.category,
+          toneIntensity: mvpFeatures.toneIntensity,
           screenshotSummary,
           relationshipNotesSnapshot: relationshipNotes,
           personaCalibrationSnapshot: personaCalibration,
@@ -1383,7 +1543,9 @@ export default function Home() {
     } catch (caughtError) {
       const message =
         caughtError instanceof Error
-          ? caughtError.message
+          ? caughtError.name === "AbortError"
+            ? "Reply generation timed out. Rizzly kept your context, so you can retry safely."
+            : caughtError.message
           : "Failed to generate replies.";
 
       setReplies([]);
@@ -1453,6 +1615,8 @@ export default function Home() {
               tone,
               goal,
               userContext,
+              category: mvpFeatures.category,
+              toneIntensity: mvpFeatures.toneIntensity,
               screenshotSummary,
               relationshipNotesSnapshot: relationshipNotes,
               personaCalibrationSnapshot: personaCalibration,
@@ -1468,6 +1632,8 @@ export default function Home() {
             turns,
             updatedAt: Date.now(),
             summary: generateThreadSummary(turns),
+            successCount: turns.filter((item) => item.gotResponse).length,
+            totalTurns: turns.length,
           };
         }),
       );
@@ -1480,6 +1646,7 @@ export default function Home() {
     setVisibleReplyCount(0);
     setAnalysisVisible(false);
     setPreviewVisible(false);
+    setSystemNotice("Reply saved. When they answer, tag the outcome so Rizzly can adapt the next move.");
   };
 
   const deleteThread = (threadId: string) => {
@@ -1835,9 +2002,12 @@ export default function Home() {
                       <div className="mb-4 text-sm font-semibold text-white">Photo Reply</div>
 
                       {photoModalImage && (
-                        <img
+                        <Image
                           src={photoModalImage}
                           alt="Preview"
+                          width={320}
+                          height={192}
+                          unoptimized
                           className="mx-auto mb-3 max-h-48 rounded-lg border border-white/10 object-contain shadow"
                         />
                       )}
@@ -2066,6 +2236,90 @@ export default function Home() {
                   </div>
                 </div>
 
+                <div className="mt-4 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+                    <div className="mb-3 flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+                          Saved Personas
+                        </div>
+                        <div className="mt-1 text-sm text-white/55">
+                          Reuse your best texting voice with one tap.
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={saveCurrentPersona}
+                        className="rounded-xl border border-fuchsia-400/25 bg-fuchsia-500/10 px-3 py-2 text-xs font-semibold text-fuchsia-100 transition hover:bg-fuchsia-500/20"
+                      >
+                        Save current setup
+                      </button>
+                    </div>
+
+                    {savedPersonas.length > 0 ? (
+                      <div className="space-y-2">
+                        {savedPersonas.slice(0, 3).map((persona) => (
+                          <button
+                            key={persona.id}
+                            type="button"
+                            onClick={() => applySavedPersona(persona)}
+                            className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-left transition hover:border-white/20 hover:bg-white/5"
+                          >
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <div className="truncate text-sm font-semibold text-white">
+                                  {persona.name}
+                                </div>
+                                <div className="mt-1 line-clamp-2 text-xs text-white/45">
+                                  {persona.voice || persona.notes || "Saved thread memory"}
+                                </div>
+                              </div>
+                              <span className="shrink-0 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-cyan-100">
+                                Apply
+                              </span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-6 text-white/50">
+                        Save a persona after you dial in your tone, notes, and relationship memory.
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
+                    <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
+                      Public Mode Guardrails
+                    </div>
+                    <p className="mt-1 text-sm text-white/55">
+                      Daily usage budgets, timeout protection, and fallback mode keep the product stable for public traffic.
+                    </p>
+
+                    <div className="mt-3 grid gap-2">
+                      {([
+                        { key: "generate", label: "Reply runs" },
+                        { key: "screenshot", label: "Screenshot reads" },
+                        { key: "voice", label: "Voice notes" },
+                      ] as const).map((item) => (
+                        <div
+                          key={item.key}
+                          className="flex items-center justify-between rounded-xl border border-white/10 bg-black/25 px-3 py-2 text-sm"
+                        >
+                          <span className="text-white/70">{item.label}</span>
+                          <span className="font-semibold text-white">
+                            {usageSnapshot.remaining[item.key]}/{usageSnapshot.limits[item.key]}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-3 rounded-xl border border-emerald-400/15 bg-emerald-500/8 px-3 py-2 text-xs leading-5 text-emerald-100/85">
+                      Resets daily at {usageSnapshot.resetLabel}. Stability mode keeps the app responsive if upstream AI gets slow.
+                    </div>
+                  </div>
+                </div>
+
                 <div className="mt-4 rounded-lg border border-white/10 bg-white/3 p-4">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
@@ -2190,6 +2444,12 @@ export default function Home() {
                     </button>
                   </div>
                 )}
+
+                {systemNotice && !error && (
+                  <div className="mt-4 rounded-2xl border border-amber-400/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-50">
+                    {systemNotice}
+                  </div>
+                )}
               </div>
             </section>
 
@@ -2244,6 +2504,14 @@ export default function Home() {
                     </button>
                   ))}
                 </div>
+
+                <div className={`mt-3 rounded-xl border px-4 py-3 ${outcomeCoach.accent}`}>
+                  <div className="text-sm font-semibold">{outcomeCoach.title}</div>
+                  <p className="mt-1 text-sm opacity-90">{outcomeCoach.detail}</p>
+                  <p className="mt-2 text-xs uppercase tracking-[0.16em] opacity-75">
+                    Next move: {outcomeCoach.nextStep}
+                  </p>
+                </div>
               </section>
             )}
 
@@ -2292,9 +2560,12 @@ export default function Home() {
                     )}
 
                     {reply.image && (
-                      <img
+                      <Image
                         src={reply.image}
                         alt="Reply attachment"
+                        width={420}
+                        height={208}
+                        unoptimized
                         className="mb-4 max-h-52 rounded-2xl border border-white/10 object-contain shadow"
                       />
                     )}

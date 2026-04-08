@@ -231,10 +231,26 @@ export function exportConversation(
 // Insights generation
 export function generateInsight(threads: Thread[]): string {
   const patterns = calculatePatterns(threads);
-  if (!patterns.length) return "Start creating conversations to see patterns!";
+  const stats = calculateStats(threads);
+
+  if (!patterns.length) {
+    return "Start creating conversations to see patterns and momentum shifts.";
+  }
 
   const topPattern = patterns[0];
   const successPercent = (topPattern.successRate * 100).toFixed(0);
+
+  if (stats.outcomeBreakdown.tracked > 0) {
+    const trendLabel =
+      stats.momentum === "up"
+        ? "Momentum is trending up"
+        : stats.momentum === "down"
+          ? "Momentum is slipping"
+          : "Momentum is steady";
+
+    return `🎯 ${trendLabel}. ${topPattern.tone}/${topPattern.goal} is still your strongest combo at ${successPercent}% success.`;
+  }
+
   return `🎯 ${topPattern.tone}/${topPattern.goal} has ${successPercent}% success rate - your most effective combo!`;
 }
 
@@ -246,6 +262,14 @@ export interface ConversationStats {
   mostUsedGoal: GoalKey | null;
   successRate: number;
   avgReplyCount: number;
+  outcomeBreakdown: {
+    warm: number;
+    neutral: number;
+    cold: number;
+    noReply: number;
+    tracked: number;
+  };
+  momentum: "up" | "steady" | "down";
 }
 
 export function calculateStats(threads: Thread[]): ConversationStats {
@@ -255,26 +279,58 @@ export function calculateStats(threads: Thread[]): ConversationStats {
   const goalCount: Record<GoalKey, number> = {} as Record<GoalKey, number>;
   let successCount = 0;
   let totalReplyCount = 0;
+  const outcomeBreakdown = {
+    warm: 0,
+    neutral: 0,
+    cold: 0,
+    noReply: 0,
+    tracked: 0,
+  };
 
   allTurns.forEach((turn) => {
     toneCount[turn.tone] = (toneCount[turn.tone] || 0) + 1;
     goalCount[turn.goal] = (goalCount[turn.goal] || 0) + 1;
     if (turn.gotResponse) successCount += 1;
     totalReplyCount += turn.replies.length;
+
+    if (turn.outcomeStatus) {
+      outcomeBreakdown.tracked += 1;
+      if (turn.outcomeStatus === "warm") outcomeBreakdown.warm += 1;
+      if (turn.outcomeStatus === "neutral") outcomeBreakdown.neutral += 1;
+      if (turn.outcomeStatus === "cold") outcomeBreakdown.cold += 1;
+      if (turn.outcomeStatus === "no-reply") outcomeBreakdown.noReply += 1;
+    }
   });
 
-  const mostUsedTone = Object.entries(toneCount).sort((a, b) => b[1] - a[1])[0]?.[0] as ToneKey ||
+  const mostUsedTone =
+    (Object.entries(toneCount).sort((a, b) => b[1] - a[1])[0]?.[0] as ToneKey) ||
     null;
-  const mostUsedGoal = Object.entries(goalCount).sort((a, b) => b[1] - a[1])[0]?.[0] as GoalKey ||
+  const mostUsedGoal =
+    (Object.entries(goalCount).sort((a, b) => b[1] - a[1])[0]?.[0] as GoalKey) ||
     null;
+  const positiveOutcomes = outcomeBreakdown.warm + outcomeBreakdown.neutral;
+  const negativeOutcomes = outcomeBreakdown.cold + outcomeBreakdown.noReply;
+  const momentum =
+    positiveOutcomes > negativeOutcomes
+      ? "up"
+      : negativeOutcomes > positiveOutcomes
+        ? "down"
+        : "steady";
 
   return {
     totalConversations: threads.length,
     totalTurns: allTurns.length,
     mostUsedTone,
     mostUsedGoal,
-    successRate: allTurns.length > 0 ? successCount / allTurns.length : 0,
+    successRate:
+      outcomeBreakdown.tracked > 0
+        ? positiveOutcomes / outcomeBreakdown.tracked
+        : allTurns.length > 0
+          ? successCount / allTurns.length
+          : 0,
     avgReplyCount:
       allTurns.length > 0 ? totalReplyCount / allTurns.length : 0,
+    outcomeBreakdown,
+    momentum,
   };
 }

@@ -6,6 +6,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 
 export interface Reply {
   id: string;
@@ -60,11 +61,14 @@ export function ReplyCards({
           >
             {/* Reply image (if present) */}
             {reply.image && (
-              <div className="mb-3">
-                <img
+              <div className="mb-3 flex justify-center">
+                <Image
                   src={reply.image}
                   alt="Reply attachment"
-                  className="max-h-40 rounded-lg border border-white/10 shadow-sm object-contain mx-auto"
+                  width={320}
+                  height={160}
+                  unoptimized
+                  className="mx-auto max-h-40 rounded-lg border border-white/10 object-contain shadow-sm"
                 />
               </div>
             )}

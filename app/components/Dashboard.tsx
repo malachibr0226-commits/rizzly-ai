@@ -89,12 +89,50 @@ export function Dashboard({
                 {(stats.successRate * 100).toFixed(0)}%
               </p>
             </div>
+            <div className="bg-white/6 backdrop-blur-md rounded-xl p-5 border border-white/12 hover:border-white/18 transition-all duration-200 transform hover:scale-102">
+              <p className="text-white/60 text-xs uppercase tracking-widest font-semibold mb-2">
+                Tracked Outcomes
+              </p>
+              <p className="text-4xl font-black stat-number bg-gradient-to-r from-cyan-200 to-sky-100 bg-clip-text text-transparent">
+                {stats.outcomeBreakdown.tracked}
+              </p>
+            </div>
+            <div className="bg-white/6 backdrop-blur-md rounded-xl p-5 border border-white/12 hover:border-white/18 transition-all duration-200 transform hover:scale-102">
+              <p className="text-white/60 text-xs uppercase tracking-widest font-semibold mb-2">
+                Momentum
+              </p>
+              <p className="text-2xl font-black stat-number bg-gradient-to-r from-rose-200 to-amber-100 bg-clip-text text-transparent capitalize">
+                {stats.momentum}
+              </p>
+            </div>
           </div>
 
           {/* Insight suggestion */}
           <div className="bg-gradient-to-r from-rose-200/15 via-rose-100/10 to-slate-200/10 rounded-xl p-4 border border-rose-200/20 backdrop-blur-sm">
             <p className="text-sm font-medium text-white/90 leading-relaxed">{suggestion}</p>
           </div>
+
+          {stats.outcomeBreakdown.tracked > 0 && (
+            <div className="rounded-xl border border-white/12 bg-white/6 p-4 backdrop-blur-sm">
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-white">
+                📈 Outcome Mix
+              </h3>
+              <div className="flex flex-wrap gap-2 text-xs font-semibold">
+                <span className="rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1 text-emerald-100">
+                  Warm {stats.outcomeBreakdown.warm}
+                </span>
+                <span className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1 text-cyan-100">
+                  Neutral {stats.outcomeBreakdown.neutral}
+                </span>
+                <span className="rounded-full border border-amber-400/25 bg-amber-500/10 px-3 py-1 text-amber-100">
+                  Cold {stats.outcomeBreakdown.cold}
+                </span>
+                <span className="rounded-full border border-rose-400/25 bg-rose-500/10 px-3 py-1 text-rose-100">
+                  No reply {stats.outcomeBreakdown.noReply}
+                </span>
+              </div>
+            </div>
+          )}
 
           {/* Top patterns */}
           {topPatterns.length > 0 && (
