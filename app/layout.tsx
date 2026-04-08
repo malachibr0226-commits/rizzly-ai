@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { AppAuthProvider } from "@/app/components/AppAuthProvider";
 import { isClerkConfigured } from "@/lib/auth";
 import "./globals.css";
@@ -95,14 +96,25 @@ export default function RootLayout({
             signUpUrl="/sign-up"
             afterSignOutUrl="/"
             appearance={{
+              baseTheme: dark,
               variables: {
                 colorPrimary: "#ec4899",
                 colorBackground: "#1a1030",
                 colorInputBackground: "#2a1a40",
                 colorText: "#ffffff",
-                colorTextSecondary: "rgba(255,255,255,0.88)",
+                colorTextSecondary: "rgba(255,255,255,0.96)",
                 colorTextOnPrimaryBackground: "#ffffff",
                 colorNeutral: "#ffffff",
+              },
+              elements: {
+                navbar: "bg-[#180a2c]/95 text-white",
+                navbarButton: "text-white/90 hover:bg-white/10",
+                profileSectionTitleText: "text-white",
+                headerTitle: "text-white",
+                headerSubtitle: "text-white/90",
+                formFieldLabel: "text-white/90",
+                userPreviewMainIdentifier: "text-white",
+                userPreviewSecondaryIdentifier: "text-white/85",
               },
             }}
           >

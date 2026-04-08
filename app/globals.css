@@ -158,10 +158,17 @@ body .cl-profilePage h2,
 body .cl-profilePage h3,
 body .cl-profilePage p,
 body .cl-profilePage span,
-body .cl-profilePage div {
+body .cl-profilePage div,
+body .cl-userButtonPopoverCard [class*="Title"],
+body .cl-userButtonPopoverCard [class*="Subtitle"],
+body .cl-profilePage [class*="Title"],
+body .cl-profilePage [class*="Subtitle"],
+body .cl-profilePage [class*="title"],
+body .cl-profilePage [class*="subtitle"] {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
   opacity: 1 !important;
+  filter: none !important;
 }
 
 

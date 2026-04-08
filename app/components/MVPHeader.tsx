@@ -8,6 +8,7 @@
 import React from "react";
 import Link from "next/link";
 import { SignOutButton, UserButton } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { useAppAuth } from "@/app/components/AppAuthProvider";
 import type { Achievement, StreakData } from "@/lib/analytics";
 
@@ -141,12 +142,13 @@ export function MVPHeader({
               </SignOutButton>
               <UserButton
                 appearance={{
+                  baseTheme: dark,
                   variables: {
                     colorPrimary: "#ec4899",
                     colorBackground: "#180a2c",
                     colorInputBackground: "rgba(255,255,255,0.06)",
                     colorText: "#ffffff",
-                    colorTextSecondary: "rgba(255,255,255,0.92)",
+                    colorTextSecondary: "rgba(255,255,255,0.96)",
                     colorTextOnPrimaryBackground: "#ffffff",
                     colorNeutral: "#ffffff",
                   },
