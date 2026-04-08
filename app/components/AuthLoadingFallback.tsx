@@ -21,11 +21,9 @@ export function AuthLoadingFallback({
       return;
     }
 
-    const isNonCanonicalHost =
-      window.location.hostname.endsWith(".vercel.app") ||
-      window.location.hostname === "www.rizzlyai.com";
+    const isPreviewHost = window.location.hostname.endsWith(".vercel.app");
 
-    if (isNonCanonicalHost) {
+    if (isPreviewHost) {
       window.location.replace(`${CANONICAL_APP_URL}/${mode}`);
       return;
     }

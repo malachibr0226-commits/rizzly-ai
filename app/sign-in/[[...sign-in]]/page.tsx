@@ -18,7 +18,7 @@ async function redirectToCanonicalSignIn() {
   const host =
     headerStore.get("x-forwarded-host") ?? headerStore.get("host") ?? "";
 
-  if (host.endsWith(".vercel.app") || host === "www.rizzlyai.com") {
+  if (host.endsWith(".vercel.app")) {
     redirect(new URL("/sign-in", CANONICAL_APP_URL).toString());
   }
 }

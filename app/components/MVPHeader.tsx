@@ -36,9 +36,7 @@ export function MVPHeader({
       return;
     }
 
-    const isNonCanonicalHost =
-      window.location.hostname.endsWith(".vercel.app") ||
-      window.location.hostname === "www.rizzlyai.com";
+    const isNonCanonicalHost = window.location.hostname.endsWith(".vercel.app");
 
     if (isNonCanonicalHost) {
       setAuthLinks({
