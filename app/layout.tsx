@@ -3,8 +3,12 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://www.rizzlyai.com"),
   title: "Rizzly AI",
   description: "Paste a conversation and get sharper reply suggestions.",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function RootLayout({
