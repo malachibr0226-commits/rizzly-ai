@@ -939,6 +939,19 @@ export default function Home() {
     setUsageSnapshot(getUsageSnapshot());
   }, []);
 
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("guest") === "1") {
+      setSystemNotice(
+        "Guest mode is active because sign-in is temporarily unavailable. You can still use the main reply generator right now.",
+      );
+    }
+  }, []);
+
   // Keyboard shortcuts (1-5 for tones, Ctrl+Enter to generate, etc.)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
