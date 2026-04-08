@@ -1,4 +1,5 @@
 import type { OutcomeStatus, Thread } from "@/lib/analytics";
+import type { PlanTier } from "@/lib/pricing";
 
 export type UsageAction = "generate" | "screenshot" | "voice";
 
@@ -13,6 +14,7 @@ export type SavedPersona = {
 };
 
 export type UsageSnapshot = {
+  planTier: PlanTier;
   dayKey: string;
   resetLabel: string;
   limits: Record<UsageAction, number>;
@@ -27,11 +29,18 @@ type StoredUsageState = {
 
 const PERSONAS_KEY = "rizzly-saved-personas-v1";
 const USAGE_KEY = "rizzly-usage-budget-v1";
+const PLAN_TIER_KEY = "rizzly-plan-tier-v1";
 
-const DEFAULT_LIMITS: Record<UsageAction, number> = {
+const FREE_LIMITS: Record<UsageAction, number> = {
   generate: 25,
   screenshot: 10,
   voice: 8,
+};
+
+const PRO_LIMITS: Record<UsageAction, number> = {
+  generate: 200,
+  screenshot: 60,
+  voice: 50,
 };
 
 function truncate(text: string, maxLength: number) {
@@ -58,16 +67,39 @@ function getResetLabel() {
   });
 }
 
-function buildSnapshot(used: Record<UsageAction, number>, dayKey = getDayKey()): UsageSnapshot {
+function getLimitsForPlan(planTier: PlanTier) {
+  return planTier === "pro" ? PRO_LIMITS : FREE_LIMITS;
+}
+
+function readStoredPlanTier(): PlanTier {
+  if (typeof window === "undefined") {
+    return "free";
+  }
+
+  try {
+    return window.localStorage.getItem(PLAN_TIER_KEY) === "pro" ? "pro" : "free";
+  } catch {
+    return "free";
+  }
+}
+
+function buildSnapshot(
+  used: Record<UsageAction, number>,
+  dayKey = getDayKey(),
+  planTier: PlanTier = readStoredPlanTier(),
+): UsageSnapshot {
+  const limits = getLimitsForPlan(planTier);
+
   return {
+    planTier,
     dayKey,
     resetLabel: getResetLabel(),
-    limits: DEFAULT_LIMITS,
+    limits,
     used,
     remaining: {
-      generate: Math.max(0, DEFAULT_LIMITS.generate - used.generate),
-      screenshot: Math.max(0, DEFAULT_LIMITS.screenshot - used.screenshot),
-      voice: Math.max(0, DEFAULT_LIMITS.voice - used.voice),
+      generate: Math.max(0, limits.generate - used.generate),
+      screenshot: Math.max(0, limits.screenshot - used.screenshot),
+      voice: Math.max(0, limits.voice - used.voice),
     },
   };
 }
@@ -124,9 +156,25 @@ function writeUsageState(state: StoredUsageState) {
   }
 }
 
+export function getStoredPlanTier(): PlanTier {
+  return readStoredPlanTier();
+}
+
+export function setStoredPlanTier(planTier: PlanTier): UsageSnapshot {
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.setItem(PLAN_TIER_KEY, planTier);
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  return getUsageSnapshot();
+}
+
 export function getUsageSnapshot(): UsageSnapshot {
   const state = readUsageState();
-  return buildSnapshot(state.used, state.dayKey);
+  return buildSnapshot(state.used, state.dayKey, readStoredPlanTier());
 }
 
 export function consumeUsageAction(action: UsageAction): {
@@ -135,14 +183,16 @@ export function consumeUsageAction(action: UsageAction): {
   message?: string;
 } {
   const state = readUsageState();
+  const planTier = readStoredPlanTier();
+  const limits = getLimitsForPlan(planTier);
   const currentUsed = state.used[action] || 0;
-  const limit = DEFAULT_LIMITS[action];
+  const limit = limits[action];
 
   if (currentUsed >= limit) {
     return {
       allowed: false,
-      snapshot: buildSnapshot(state.used, state.dayKey),
-      message: `Daily ${action} limit reached for the free public mode. It resets at ${getResetLabel()}.`,
+      snapshot: buildSnapshot(state.used, state.dayKey, planTier),
+      message: `Daily ${action} limit reached for the ${planTier === "pro" ? "Pro plan" : "free public mode"}. It resets at ${getResetLabel()}.`,
     };
   }
 
@@ -158,7 +208,7 @@ export function consumeUsageAction(action: UsageAction): {
 
   return {
     allowed: true,
-    snapshot: buildSnapshot(nextState.used, nextState.dayKey),
+    snapshot: buildSnapshot(nextState.used, nextState.dayKey, planTier),
   };
 }
 

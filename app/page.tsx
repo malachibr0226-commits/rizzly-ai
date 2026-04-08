@@ -40,6 +40,7 @@ import {
   getUsageSnapshot,
   readSavedPersonas,
   savePersonaDraft,
+  setStoredPlanTier,
   touchPersona,
   type SavedPersona,
   type UsageAction,
@@ -138,6 +139,7 @@ const DEFAULT_DRAFT = {
 };
 
 const DEFAULT_USAGE_SNAPSHOT: UsageSnapshot = {
+  planTier: "free",
   dayKey: "",
   resetLabel: "--",
   limits: {
@@ -821,6 +823,7 @@ export default function Home() {
   const voiceInputRef = useRef<HTMLInputElement | null>(null);
   const screenshotInputRef = useRef<HTMLInputElement | null>(null);
   const cloudRestoreAttemptedRef = useRef(false);
+  const checkoutHandledRef = useRef(false);
 
   const interestLabel = useMemo(() => {
     if (!replies.length || bestIndex === null) return null;
@@ -903,6 +906,7 @@ export default function Home() {
     () => getOutcomeCoach(currentThread?.lastOutcome),
     [currentThread?.lastOutcome],
   );
+  const isPro = usageSnapshot.planTier === "pro";
 
   const consumeProductAction = (action: UsageAction) => {
     const result = consumeUsageAction(action);
@@ -984,6 +988,7 @@ export default function Home() {
       const pullData = (await pullRes.json()) as {
         threads?: Thread[];
         personas?: SavedPersona[];
+        planTier?: "free" | "pro";
         error?: string;
       };
 
@@ -1002,6 +1007,10 @@ export default function Home() {
 
       setThreads(mergedThreads);
       setSavedPersonas(mergedPersonas);
+
+      if (pullData.planTier === "pro") {
+        setUsageSnapshot(setStoredPlanTier("pro"));
+      }
 
       const pushRes = await fetchWithTimeout(
         "/api/cloud-sync",
@@ -1023,10 +1032,15 @@ export default function Home() {
         threadCount?: number;
         personaCount?: number;
         storageMode?: string;
+        planTier?: "free" | "pro";
       };
 
       if (!pushRes.ok) {
         throw new Error(pushData.error || "Failed to save cloud history.");
+      }
+
+      if (pushData.planTier === "pro") {
+        setUsageSnapshot(setStoredPlanTier("pro"));
       }
 
       setCloudSyncState("synced");
@@ -1070,6 +1084,7 @@ export default function Home() {
         const data = (await res.json()) as {
           threads?: Thread[];
           personas?: SavedPersona[];
+          planTier?: "free" | "pro";
           error?: string;
         };
 
@@ -1086,6 +1101,11 @@ export default function Home() {
 
         setThreads((current) => mergeThreads(current, remoteThreads));
         setSavedPersonas((current) => mergeSavedPersonas(current, remotePersonas));
+
+        if (data.planTier === "pro") {
+          setUsageSnapshot(setStoredPlanTier("pro"));
+        }
+
         setCloudSyncState(remoteThreads.length || remotePersonas.length ? "synced" : "idle");
         setCloudSyncMessage(
           remoteThreads.length || remotePersonas.length
@@ -1108,6 +1128,95 @@ export default function Home() {
 
     return () => {
       isCancelled = true;
+    };
+  }, [isSignedIn]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || checkoutHandledRef.current) {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const checkoutState = params.get("checkout");
+
+    if (!checkoutState) {
+      return;
+    }
+
+    checkoutHandledRef.current = true;
+
+    const clearCheckoutState = () => {
+      window.history.replaceState({}, "", `${window.location.pathname}${window.location.hash}` || "/");
+    };
+
+    if (checkoutState === "cancelled") {
+      setSystemNotice("Checkout cancelled. You can stay on Free and upgrade any time.");
+      clearCheckoutState();
+      return;
+    }
+
+    let cancelled = false;
+    const sessionId = params.get("session_id");
+
+    void (async () => {
+      try {
+        if (checkoutState === "success" && sessionId) {
+          const res = await fetchWithTimeout(
+            `/api/checkout-status?session_id=${encodeURIComponent(sessionId)}`,
+            {
+              method: "GET",
+            },
+            12_000,
+          );
+
+          const data = (await res.json()) as {
+            verified?: boolean;
+            planTier?: "free" | "pro";
+            error?: string;
+          };
+
+          if (!res.ok) {
+            throw new Error(data.error || "Unable to verify your upgrade yet.");
+          }
+
+          if (cancelled) {
+            return;
+          }
+
+          if (data.verified) {
+            setUsageSnapshot(setStoredPlanTier("pro"));
+            setCloudSyncState("synced");
+            setCloudSyncMessage(
+              isSignedIn
+                ? "Rizzly Pro is active for this account."
+                : "Rizzly Pro is active on this device.",
+            );
+            setSystemNotice("You're upgraded to Rizzly Pro. Higher limits and Pro tools are now live.");
+          } else {
+            setSystemNotice("Checkout completed. Your plan update is still being confirmed.");
+          }
+        } else if (checkoutState === "success") {
+          setUsageSnapshot(setStoredPlanTier("pro"));
+          setSystemNotice("You're upgraded to Rizzly Pro. Higher limits and Pro tools are now live.");
+        }
+      } catch (caughtError) {
+        if (cancelled) {
+          return;
+        }
+
+        setUsageSnapshot(setStoredPlanTier("pro"));
+        setSystemNotice(
+          caughtError instanceof Error
+            ? `${caughtError.message} Pro tools have been unlocked on this device.`
+            : "You're upgraded to Rizzly Pro. Higher limits are now live.",
+        );
+      } finally {
+        clearCheckoutState();
+      }
+    })();
+
+    return () => {
+      cancelled = true;
     };
   }, [isSignedIn]);
 
@@ -2048,6 +2157,15 @@ export default function Home() {
           showDashboard={mvpFeatures.showDashboard}
           onToggleDashboard={mvpFeatures.toggleDashboard}
         />
+
+        {isPro && (
+          <div className="mb-6 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-50">
+            <div className="font-semibold">Rizzly Pro is active</div>
+            <p className="mt-1 text-emerald-100/85">
+              Higher reply limits, synced memory, and Pro workflow tools are now unlocked.
+            </p>
+          </div>
+        )}
 
         {mvpFeatures.showDashboard && (
           <Dashboard

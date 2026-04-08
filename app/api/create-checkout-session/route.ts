@@ -60,7 +60,7 @@ export async function POST(req: Request) {
       mode: checkoutMode,
       allow_promotion_codes: true,
       line_items: [{ price: stripePriceId, quantity: 1 }],
-      success_url: `${baseUrl}/?checkout=success`,
+      success_url: `${baseUrl}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/?checkout=cancelled`,
       client_reference_id: user?.id ?? undefined,
       customer_email: user?.email ?? undefined,

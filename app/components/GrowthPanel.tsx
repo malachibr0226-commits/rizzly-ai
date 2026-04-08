@@ -35,8 +35,9 @@ export function GrowthPanel({
     : "Sign in to sync threads and personas across devices.";
   const [upgradeLoading, setUpgradeLoading] = useState(false);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
+  const isPro = usageSnapshot.planTier === "pro";
 
-  const nearingLimit = usageSnapshot.remaining.generate <= 5;
+  const nearingLimit = !isPro && usageSnapshot.remaining.generate <= 5;
   const replyBoost = Math.max(
     1,
     Math.round(proPlan.limits.generate / Math.max(freePlan.limits.generate, 1)),
@@ -137,13 +138,17 @@ export function GrowthPanel({
       <div className="rounded-xl border border-fuchsia-400/20 bg-[linear-gradient(180deg,rgba(168,85,247,0.10),rgba(255,255,255,0.03))] p-4 backdrop-blur-sm">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
-            <h2 className="text-lg font-bold text-white">Upgrade when the free plan starts feeling tight</h2>
+            <h2 className="text-lg font-bold text-white">
+              {isPro ? "Rizzly Pro is active" : "Upgrade when the free plan starts feeling tight"}
+            </h2>
             <p className="mt-1 text-xs text-white/50">
-              Keep using Free, or switch on more daily volume, synced memory, and deeper thread intel.
+              {isPro
+                ? "Higher daily volume, synced memory, and deeper thread intel are now unlocked."
+                : "Keep using Free, or switch on more daily volume, synced memory, and deeper thread intel."}
             </p>
           </div>
           <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-100">
-            pro ready
+            {isPro ? "active" : "pro ready"}
           </span>
         </div>
 
@@ -216,13 +221,19 @@ export function GrowthPanel({
         <button
           type="button"
           onClick={() => void handleUpgrade()}
-          disabled={upgradeLoading}
+          disabled={upgradeLoading || isPro}
           className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-cyan-500 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
         >
-          {upgradeLoading ? "Opening secure checkout..." : proPlan.ctaLabel}
+          {isPro
+            ? "Rizzly Pro active"
+            : upgradeLoading
+              ? "Opening secure checkout..."
+              : proPlan.ctaLabel}
         </button>
         <p className="mt-2 text-center text-[11px] text-white/45">
-          Secure checkout opens instantly when Stripe is configured.
+          {isPro
+            ? "Thanks for upgrading — your higher limits are already live."
+            : "Secure checkout opens instantly when Stripe is configured."}
         </p>
         {upgradeError && (
           <p className="mt-2 text-center text-[11px] text-rose-200">{upgradeError}</p>
