@@ -2402,7 +2402,7 @@ export default function Home() {
   };
 
   return (
-    <main id="main-content" tabIndex={-1} className="relative min-h-screen overflow-hidden bg-[#1a0f2e] pb-24 text-white sm:pb-0">
+    <main id="main-content" tabIndex={-1} className="relative min-h-screen overflow-hidden bg-[#181322] pb-32 text-white sm:pb-0">
       <style>{`
         @media (min-width: 1280px) {
           .main-responsive-grid {
@@ -2485,53 +2485,30 @@ export default function Home() {
         .typing-dot { animation: typing-bounce 1.4s ease-in-out infinite; }
       `}</style>
 
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_50%,rgba(217,70,239,0.08),transparent_50%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(168,85,247,0.06),transparent_45%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(236,72,153,0.04),transparent_60%)]" />
-      <div className="pointer-events-none absolute top-10 left-10 h-96 w-96 rounded-full bg-gradient-to-br from-rose-500/12 to-pink-600/6 blur-3xl float-1" style={{ filter: "blur(80px)" }} />
-      <div className="pointer-events-none absolute top-1/3 right-20 h-80 w-80 rounded-full bg-gradient-to-br from-fuchsia-500/10 to-violet-600/6 blur-3xl float-2" style={{ filter: "blur(70px)" }} />
-      <div className="pointer-events-none absolute bottom-20 left-1/3 h-72 w-72 rounded-full bg-gradient-to-br from-violet-500/8 to-purple-600/4 blur-3xl float-3 drift" style={{ filter: "blur(75px)" }} />
-      <div className="pointer-events-none absolute top-1/2 left-1/2 h-96 w-96 rounded-full bg-gradient-to-br from-pink-500/5 to-rose-600/3 blur-3xl float-1" style={{ filter: "blur(85px)" }} />
-      <div className="pointer-events-none absolute inset-0 opacity-[0.015] [background-image:linear-gradient(rgba(236,72,153,0.4)_1px,transparent_1px),linear-gradient(90deg,rgba(217,70,239,0.4)_1px,transparent_1px)] [background-size:40px_40px]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-rose-500/3 via-pink-500/1 to-transparent" />
-      <div className="pointer-events-none absolute -top-1/2 -right-1/4 h-1/2 w-1/2 rounded-full bg-gradient-to-bl from-fuchsia-400/5 to-transparent blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-1/4 -left-1/2 h-1/2 w-1/2 rounded-full bg-gradient-to-tr from-violet-400/4 to-transparent blur-3xl" />
+      {/* Softer, less busy backgrounds for decluttered look */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(120,58,220,0.06),transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(168,85,247,0.03),transparent_45%)]" />
+      <div className="pointer-events-none absolute top-1/2 left-1/2 h-80 w-80 rounded-full bg-gradient-to-br from-pink-500/5 to-rose-600/3 blur-2xl float-1" style={{ filter: "blur(60px)" }} />
 
-      <div className="relative z-10 mx-auto w-full wider-main-ui px-4 py-8 md:px-8">
-        <header className="mb-8 flex items-center justify-center gap-4 md:mb-10 md:justify-between">
-          <div className="flex items-center gap-5">
+      <div className="relative z-10 mx-auto w-full wider-main-ui px-4 py-12 md:px-12">
+        <header className="mb-12 flex flex-col items-center justify-center gap-2 md:mb-14">
+          <div className="flex flex-col items-center gap-2">
             <div className="relative">
-              <div className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-br from-fuchsia-500/20 to-rose-500/12 blur-lg" style={{ animationDuration: "4s" }} />
-              <div className="relative rounded-2xl border border-fuchsia-400/30 bg-gradient-to-br from-black/80 to-black/60 p-2 shadow-[0_8px_24px_rgba(236,72,153,0.15)] backdrop-blur-md">
-                <svg width="64" height="64" viewBox="0 0 64 64" className="logo-glow" fill="none">
+              <div className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-br from-fuchsia-500/10 to-rose-500/8 blur-lg" style={{ animationDuration: "4s" }} />
+              <div className="relative rounded-2xl border border-fuchsia-400/10 bg-gradient-to-br from-black/80 to-black/60 p-2 shadow-[0_8px_24px_rgba(236,72,153,0.08)] backdrop-blur-md">
+                <svg width="56" height="56" viewBox="0 0 64 64" className="logo-glow" fill="none">
                   <rect x="10" y="14" width="24" height="22" rx="5" ry="5" stroke="#d946a6" strokeWidth="2.5" fill="none" />
                   <polygon points="18,36 14,42 22,36" fill="#d946a6" />
                   <rect x="28" y="22" width="26" height="22" rx="5" ry="5" stroke="#06b6d4" strokeWidth="2.5" fill="none" />
                   <polygon points="46,44 50,50 42,44" fill="#06b6d4" />
-                  <circle cx="16" cy="25" r="1.8" fill="#d946a6" opacity="0.9" className="typing-dot" style={{ animationDelay: "0s" }} />
-                  <circle cx="22" cy="25" r="1.8" fill="#d946a6" opacity="0.9" className="typing-dot" style={{ animationDelay: "0.2s" }} />
-                  <circle cx="28" cy="25" r="1.8" fill="#d946a6" opacity="0.9" className="typing-dot" style={{ animationDelay: "0.4s" }} />
-                  <circle cx="35" cy="33" r="1.8" fill="#06b6d4" opacity="0.9" className="typing-dot" style={{ animationDelay: "0s" }} />
-                  <circle cx="41" cy="33" r="1.8" fill="#06b6d4" opacity="0.9" className="typing-dot" style={{ animationDelay: "0.2s" }} />
-                  <circle cx="47" cy="33" r="1.8" fill="#06b6d4" opacity="0.9" className="typing-dot" style={{ animationDelay: "0.4s" }} />
                 </svg>
               </div>
             </div>
-
-            <div>
-              <div className="bg-gradient-to-r from-rose-300 via-pink-300 to-fuchsia-300 bg-clip-text text-xs font-bold uppercase tracking-[0.3em] text-transparent opacity-80">
-                Rizzly
-              </div>
-              <div className="shine mt-1 bg-gradient-to-r from-white via-rose-100 to-cyan-200 bg-clip-text text-lg font-black text-transparent md:text-xl" style={{ animationDuration: "4s" }}>
-                Reply smarter
-              </div>
+            <div className="bg-gradient-to-r from-rose-300 via-pink-300 to-fuchsia-300 bg-clip-text text-xs font-bold uppercase tracking-[0.3em] text-transparent opacity-80">
+              Rizzly
             </div>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/20 bg-gradient-to-r from-emerald-500/8 to-emerald-500/3 px-3.5 py-2 text-xs font-medium text-emerald-300 backdrop-blur-md" style={{ opacity: 0.7 }}>
-              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Live
+            <div className="shine mt-1 bg-gradient-to-r from-white via-rose-100 to-cyan-200 bg-clip-text text-lg font-black text-transparent md:text-xl" style={{ animationDuration: "4s" }}>
+              Reply smarter
             </div>
           </div>
         </header>
@@ -2566,26 +2543,23 @@ export default function Home() {
           />
         )}
 
-        <section className="mb-10 main-responsive-grid gap-6 xl:gap-8">
-          <div className="w-full max-w-4xl">
-            <div className="mb-6 inline-flex rounded-full border border-cyan-500/30 bg-gradient-to-r from-cyan-500/15 to-transparent px-3.5 py-2 text-xs font-semibold tracking-[0.5px] text-cyan-200 backdrop-blur-sm" style={{ textShadow: "0 0 12px rgba(6, 182, 212, 0.2)" }}>
-              Built for real conversations, not robotic filler
-            </div>
+        <section className="mb-16 main-responsive-grid gap-12 xl:gap-16">
+          <div className="w-full max-w-3xl">
 
-            <h1 className="mb-4 text-4xl font-black leading-tight tracking-[-0.02em] md:text-5xl xl:text-6xl text-balance" style={{ textShadow: "0 8px 32px rgba(236, 72, 153, 0.15)" }}>
+
+
+            <h1 className="mb-6 text-4xl font-extrabold leading-tight tracking-[-0.02em] md:text-5xl xl:text-6xl text-balance" style={{ textShadow: "0 4px 16px rgba(236, 72, 153, 0.10)" }}>
               <span className="block bg-gradient-to-r from-white via-white to-cyan-100 bg-clip-text text-transparent">
-                Better replies.
-              </span>
-              <span className="block bg-gradient-to-r from-rose-300 via-pink-300 to-cyan-300 bg-clip-text text-transparent">
-                Better outcomes.
+                Better replies, less noise.
               </span>
             </h1>
 
-            <p className="max-w-3xl text-base font-[450] leading-relaxed tracking-[0.3px] text-white/60 md:text-lg text-balance" style={{ letterSpacing: "0.3px" }}>
-              Rizzly turns pasted chats, screenshots, and voice notes into sharper next messages that feel <span className="font-semibold text-white/90">genuinely like you</span> — fast, clear, and built for real momentum.
+
+            <p className="max-w-2xl text-base font-[450] leading-relaxed tracking-[0.3px] text-white/60 md:text-lg text-balance" style={{ letterSpacing: "0.3px" }}>
+              Rizzly turns chats, screenshots, and voice notes into sharper next messages that feel <span className="font-semibold text-white/90">genuinely like you</span> — fast, clear, and built for real momentum.
             </p>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <button
                 type="button"
                 onClick={() => {
@@ -2597,20 +2571,20 @@ export default function Home() {
                 Try it free
               </button>
 
+
               <a
                 href={isSignedIn ? "#message-studio" : "/sign-up"}
                 onClick={() => trackCtaClick(isSignedIn ? "open_thread" : "create_account", "hero")}
-                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/85 transition hover:border-white/25 hover:bg-white/10"
+                className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:border-white/20 hover:bg-white/10"
               >
                 {isSignedIn ? "Open your thread" : "Create account"}
               </a>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/58 text-balance">
+
+            {/* Remove most badges for declutter, keep only one */}
+            <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/50 text-balance">
               <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">⚡ Replies in seconds</div>
-              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">💬 Guest mode live</div>
-              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">🧠 Thread-aware guidance</div>
-              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">🔒 No card required</div>
             </div>
           </div>
 
