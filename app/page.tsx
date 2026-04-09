@@ -2490,7 +2490,7 @@ export default function Home() {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(168,85,247,0.03),transparent_45%)]" />
       <div className="pointer-events-none absolute top-1/2 left-1/2 h-80 w-80 rounded-full bg-gradient-to-br from-pink-500/5 to-rose-600/3 blur-2xl float-1" style={{ filter: "blur(60px)" }} />
 
-      <div className="relative z-10 mx-auto w-full wider-main-ui px-4 py-12 md:px-12">
+      <div className="relative z-10 mx-auto w-full wider-main-ui px-4 py-12 md:px-12" style={{maxWidth: '1800px'}}>
         <header className="mb-12 flex flex-col items-center justify-center gap-2 md:mb-14">
           <div className="flex flex-col items-center gap-2">
             <div className="relative">
@@ -2543,8 +2543,8 @@ export default function Home() {
           />
         )}
 
-        <section className="mb-16 main-responsive-grid gap-12 xl:gap-16">
-          <div className="w-full max-w-3xl">
+        <section className="mb-16 main-responsive-grid gap-16 xl:gap-24">
+          <div className="w-full max-w-5xl">
 
 
 
@@ -2588,7 +2588,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-lg min-w-[340px] overflow-hidden rounded-[30px] border border-white/12 bg-gradient-to-br from-purple-950/38 via-slate-900/32 to-gray-900/26 p-4 shadow-[0_10px_28px_rgba(190,103,154,0.1)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
+          <div className="mx-auto w-full max-w-xl min-w-[340px] overflow-hidden rounded-[30px] border border-white/12 bg-gradient-to-br from-purple-950/38 via-slate-900/32 to-gray-900/26 p-4 shadow-[0_10px_28px_rgba(190,103,154,0.1)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
             <div className="overflow-hidden rounded-[24px] border border-white/8 bg-white/[0.025] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:p-4 md:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-4">
                 <div className="rounded-2xl px-3 py-2.5">
