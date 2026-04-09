@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppAuth } from "@/app/components/AppAuthProvider";
+import { useUser } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
 const ProfileCard = dynamic(() => import("@/app/components/ProfileCard"), { ssr: false });
 import { useMVPFeatures } from "@/app/hooks/useMVPFeatures";
@@ -918,6 +919,7 @@ function ToneDropdown({
 
 export default function Home() {
   const { isSignedIn, authEnabled } = useAppAuth();
+  const { user } = useUser();
 
   // Photo reply modal state (must be inside the component)
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
