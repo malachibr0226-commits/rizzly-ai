@@ -6,37 +6,20 @@ import {
   ClerkLoading,
   SignIn,
 } from "@clerk/nextjs";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
 import { AuthLoadingFallback } from "@/app/components/AuthLoadingFallback";
 import { AUTH_DISABLED_REASON, isClerkConfigured } from "@/lib/auth";
 
-const CANONICAL_APP_URL = (
-  process.env.NEXT_PUBLIC_APP_URL?.trim() || "https://rizzlyai.com"
-).replace("https://www.rizzlyai.com", "https://rizzlyai.com");
-
-async function redirectToCanonicalSignIn() {
-  const headerStore = await headers();
-  const host =
-    headerStore.get("x-forwarded-host") ?? headerStore.get("host") ?? "";
-
-  if (host.endsWith(".vercel.app")) {
-    redirect(new URL("/sign-in", CANONICAL_APP_URL).toString());
-  }
-}
-
 export default async function SignInPage() {
-  await redirectToCanonicalSignIn();
 
   if (!isClerkConfigured()) {
     return (
-      <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0612] px-4">
-        <div className="relative z-10 mx-auto w-full max-w-[460px] rounded-[28px] border border-amber-400/20 bg-[#160d2b]/95 p-6 text-center shadow-[0_0_32px_rgba(236,72,153,0.10)] backdrop-blur-xl">
-          <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">
-            Local auth
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a1333] via-[#2d1a47] to-[#0a0612] px-4">
+        <div className="relative z-10 mx-auto w-full max-w-md rounded-2xl border border-pink-400/30 bg-[#1a1333]/95 p-8 text-center shadow-2xl backdrop-blur-xl">
+          <div className="inline-flex rounded-full border border-white/10 bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-white/70 mb-2">
+            Local Auth
           </div>
-          <h1 className="mt-4 text-2xl font-black text-white">Sign in is unavailable here</h1>
-          <p className="mt-3 text-sm text-white/80">
+          <h1 className="mt-2 text-3xl font-extrabold text-white drop-shadow-lg">Sign in unavailable</h1>
+          <p className="mt-4 text-base text-white/90">
             {AUTH_DISABLED_REASON || "Clerk is unavailable in this environment."}
           </p>
           <p className="mt-2 text-sm text-white/60">
@@ -44,7 +27,7 @@ export default async function SignInPage() {
           </p>
           <Link
             href="/"
-            className="mt-5 inline-flex rounded-full bg-gradient-to-r from-pink-500 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white"
+            className="mt-6 inline-flex rounded-full bg-gradient-to-r from-pink-500 to-cyan-500 px-6 py-2.5 text-base font-semibold text-white shadow-md hover:scale-105 transition-transform"
           >
             Back to app
           </Link>
@@ -54,33 +37,34 @@ export default async function SignInPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#0a0612] px-4">
-      <div className="pointer-events-none absolute left-1/4 top-1/4 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-600/20 blur-[80px]" />
-      <div className="pointer-events-none absolute bottom-1/4 right-1/4 h-72 w-72 translate-x-1/2 translate-y-1/2 rounded-full bg-purple-600/20 blur-[80px]" />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#1a1333] via-[#2d1a47] to-[#0a0612] px-4 relative overflow-hidden">
+      {/* Ambient glow blobs */}
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute -top-16 left-1/4 w-80 h-80 rounded-full bg-pink-600/18 blur-[100px]" />
+        <div className="absolute top-1/2 -right-16 w-64 h-64 rounded-full bg-purple-700/20 blur-[80px]" />
+        <div className="absolute bottom-12 left-1/3 w-56 h-56 rounded-full bg-fuchsia-500/14 blur-[70px]" />
+      </div>
 
-      <div className="relative z-10 mx-auto flex w-full max-w-[420px] flex-col items-center">
-        <div className="mb-5 w-full text-center">
-          <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/60">
-            Welcome back
-          </div>
-          <span className="mt-3 block bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-3xl font-black tracking-tight text-transparent">
-            Rizzly AI
-          </span>
-          <p className="mt-2 text-sm text-white/72">Sign in to continue</p>
-        </div>
+      {/* Branding above card */}
+      <div className="relative z-10 mb-7 flex flex-col items-center select-none">
+        <span className="bg-gradient-to-r from-pink-400 via-fuchsia-300 to-purple-400 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent drop-shadow-lg">
+          Rizzly AI
+        </span>
+        <p className="mt-1.5 text-[11px] text-white/40 tracking-[0.22em] uppercase font-semibold">
+          Smarter conversations
+        </p>
+      </div>
 
+      <div className="relative z-10 w-full max-w-sm">
         <ClerkLoading>
           <AuthLoadingFallback mode="sign-in" />
         </ClerkLoading>
-
         <ClerkFailed>
           <AuthLoadingFallback mode="sign-in" status="failed" />
         </ClerkFailed>
-
         <ClerkDegraded>
           <AuthLoadingFallback mode="sign-in" status="failed" />
         </ClerkDegraded>
-
         <ClerkLoaded>
           <SignIn
             path="/sign-in"
@@ -89,54 +73,8 @@ export default async function SignInPage() {
             fallbackRedirectUrl="/"
             forceRedirectUrl="/"
             oauthFlow="redirect"
-            appearance={{
-              variables: {
-                colorPrimary: "#ec4899",
-                colorBackground: "#160d2b",
-                colorInputBackground: "#1e1140",
-                colorInputText: "#ffffff",
-                colorText: "#ffffff",
-                colorTextSecondary: "rgba(255,255,255,0.88)",
-                colorTextOnPrimaryBackground: "#ffffff",
-                colorNeutral: "#ffffff",
-                borderRadius: "14px",
-              },
-              elements: {
-                rootBox: "w-full flex justify-center",
-                cardBox: "w-full",
-                card: "w-full border border-pink-500/40 bg-[#160d2b] shadow-[0_0_50px_rgba(236,72,153,0.25)]",
-                headerTitle: { color: "#ffffff", fontWeight: "700" },
-                headerSubtitle: { color: "rgba(255,255,255,0.88)" },
-                socialButtonsBlockButton:
-                  "border-white/20 bg-white/10 hover:bg-white/20 transition-colors",
-                socialButtonsBlockButtonText: {
-                  color: "#ffffff",
-                  fontWeight: "600",
-                },
-                socialButtonsProviderIcon__apple: { color: "#ffffff" },
-                socialButtonsProviderIcon__discord: { color: "#5865F2" },
-                socialButtonsProviderIcon__google: { color: "#4285F4" },
-                dividerLine: "bg-white/10",
-                dividerText: { color: "rgba(255,255,255,0.72)" },
-                formFieldLabel: {
-                  color: "rgba(255,255,255,0.9)",
-                  fontWeight: "500",
-                },
-                formFieldInput:
-                  "border-white/20 text-white placeholder:text-white/45 focus:border-pink-400",
-                formFieldInputShowPasswordButton: { color: "#ffffff" },
-                footerActionText: { color: "rgba(255,255,255,0.78)" },
-                footerActionLink: "text-pink-400 hover:text-pink-300 font-semibold",
-                formButtonPrimary:
-                  "bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-400 hover:to-purple-400 text-white font-bold shadow-lg",
-              },
-            }}
           />
         </ClerkLoaded>
-
-        <p className="mt-3 text-center text-xs text-white/45">
-          Fast, private, and built for real conversations.
-        </p>
       </div>
     </div>
   );

@@ -143,22 +143,48 @@ export default function RootLayout({
               baseTheme: dark,
               variables: {
                 colorPrimary: "#ec4899",
-                colorBackground: "#1a1030",
+                colorBackground: "#120a24",
                 colorInputBackground: "#2a1a40",
                 colorText: "#ffffff",
-                colorTextSecondary: "rgba(255,255,255,0.96)",
+                colorTextSecondary: "rgba(255,255,255,0.60)",
                 colorTextOnPrimaryBackground: "#ffffff",
-                colorNeutral: "#ffffff",
+                colorNeutral: "#a0a0b8",
+                borderRadius: "0.75rem",
               },
               elements: {
+                // Social buttons — inline styles are reliably applied by Clerk v7
+                socialButtonsBlockButton: {
+                  border: "1px solid rgba(255,255,255,0.22)",
+                  background: "rgba(255,255,255,0.055)",
+                  borderRadius: "10px",
+                  color: "#ffffff",
+                  transition: "background 0.18s, border-color 0.18s",
+                },
+                socialButtonsBlockButtonText: {
+                  color: "#ffffff",
+                  fontWeight: "600",
+                },
+                // Divider
+                dividerLine: { background: "rgba(255,255,255,0.15)" },
+                dividerText: { color: "rgba(255,255,255,0.45)" },
+                // Footer action (sign up / sign in link) — keep visible
+                footerActionText: { color: "rgba(255,255,255,0.5)" },
+                footerActionLink: { color: "#f472b6", fontWeight: "600" },
+                // Hide the "Secured by Clerk" logo row
+                footer: { display: "none" },
+                // Form
+                formFieldLabel: { color: "rgba(255,255,255,0.85)" },
+                formButtonPrimary: {
+                  background: "linear-gradient(135deg, #ec4899 0%, #9333ea 100%)",
+                  color: "#ffffff",
+                  fontWeight: "700",
+                },
+                // Profile / account page
                 navbar: "bg-[#180a2c]/95 text-white",
                 navbarButton: "text-white/90 hover:bg-white/10",
                 profileSectionTitleText: "text-white",
-                headerTitle: "text-white",
-                headerSubtitle: "text-white/90",
                 pageHeaderTitle: "!text-white !opacity-100",
                 pageHeaderSubtitle: "!text-white !opacity-100",
-                formFieldLabel: "text-white/90",
                 userPreviewMainIdentifier: "text-white",
                 userPreviewSecondaryIdentifier: "text-white/85",
               },

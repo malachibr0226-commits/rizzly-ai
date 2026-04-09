@@ -2520,7 +2520,7 @@ export default function Home() {
           onToggleDashboard={mvpFeatures.toggleDashboard}
         />
 
-        {hasPaidPlan && (
+        {isSignedIn && hasPaidPlan && (
           <div className="mb-6 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-50">
             <div className="font-semibold">{isPro ? "Rizzly Pro is active" : "Rizzly Plus is active"}</div>
             <p className="mt-1 text-emerald-100/85">
