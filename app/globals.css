@@ -424,6 +424,20 @@ body .cl-formFieldLabelRow label {
   opacity: 1 !important;
 }
 
+/* Smooth input fields */
+body .cl-formFieldInput {
+  border-radius: 12px !important;
+  border: 1px solid rgba(255, 255, 255, 0.10) !important;
+  background: #2a1a40 !important;
+  color: #ffffff !important;
+  transition: border-color 0.2s !important;
+}
+body .cl-formFieldInput:focus {
+  border-color: rgba(244, 114, 182, 0.55) !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.12) !important;
+}
+
 /* Social buttons: visible with border on dark bg */
 body .cl-socialButtonsBlockButton {
   color: #ffffff !important;

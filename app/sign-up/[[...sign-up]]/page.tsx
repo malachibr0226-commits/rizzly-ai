@@ -47,7 +47,15 @@ export default async function SignUpPage() {
 
       {/* Branding above card */}
       <div className="relative z-10 mb-7 flex flex-col items-center select-none">
-        <span className="bg-gradient-to-r from-pink-400 via-fuchsia-300 to-purple-400 bg-clip-text text-5xl font-extrabold tracking-tight text-transparent drop-shadow-lg">
+        <span
+          className="pb-1 text-5xl font-extrabold tracking-tight"
+          style={{
+            background: "linear-gradient(90deg, #f472b6 0%, #e879f9 50%, #a78bfa 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
           Rizzly AI
         </span>
         <p className="mt-1.5 text-[11px] text-white/40 tracking-[0.22em] uppercase font-semibold">

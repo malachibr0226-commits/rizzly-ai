@@ -174,6 +174,13 @@ export default function RootLayout({
                 footer: { display: "none" },
                 // Form
                 formFieldLabel: { color: "rgba(255,255,255,0.85)" },
+                formFieldInput: {
+                  borderRadius: "12px",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  background: "#2a1a40",
+                  color: "#ffffff",
+                  transition: "border-color 0.2s",
+                },
                 formButtonPrimary: {
                   background: "linear-gradient(135deg, #ec4899 0%, #9333ea 100%)",
                   color: "#ffffff",
