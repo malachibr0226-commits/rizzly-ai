@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { Analytics } from "@vercel/analytics/next";
 import { AppAuthProvider } from "@/app/components/AppAuthProvider";
 import { isClerkConfigured } from "@/lib/auth";
 import { resolveSiteUrl } from "@/lib/site-url";
@@ -169,6 +170,7 @@ export default function RootLayout({
         ) : (
           appShell
         )}
+        <Analytics />
       </body>
     </html>
   );
