@@ -35,7 +35,7 @@ export const PLAN_CATALOG: PlanDefinition[] = [
     tier: "plus",
     name: "Rizzly Plus",
     priceLabel: "$9.99/mo",
-    description: "For regular users who want more volume, saved voice presets, and extra tone variety.",
+    description: "Unlock more volume, saved voice presets, exclusive response modes, and premium tone options.",
     ctaLabel: "Unlock Plus",
     limits: {
       generate: 80,
@@ -45,7 +45,10 @@ export const PLAN_CATALOG: PlanDefinition[] = [
     highlights: [
       "80 reply runs per day",
       "Cloud sync + saved personas",
-      "Extra tone modes like Warm and Direct",
+      "Unlocks Warm, Direct, and Playful tone modes",
+      "Access to 'Boundary' and 'Comeback' response modes",
+      "Save and reuse up to 5 custom personas",
+      "Premium reply suggestions and tone analysis",
       "More daily flexibility without the full Pro jump",
     ],
   },

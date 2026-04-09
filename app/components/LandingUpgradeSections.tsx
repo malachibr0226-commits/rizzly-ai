@@ -154,13 +154,15 @@ export function LandingUpgradeSections({
           {featureCards.map((card) => (
             <div
               key={card.title}
-              className="rounded-2xl border border-white/10 bg-black/20 p-4"
+              className="mode-card rounded-2xl border border-white/10 bg-black/20 p-4 flex flex-col h-full min-w-0"
             >
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100/80">
-                {card.eyebrow}
+              <div className="mode-card-content flex flex-col h-full min-w-0">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100/80">
+                  {card.eyebrow}
+                </div>
+                <div className="mt-2 text-base font-semibold text-white break-words">{card.title}</div>
+                <p className="mt-2 text-sm leading-6 text-white/60 break-words">{card.body}</p>
               </div>
-              <div className="mt-2 text-base font-semibold text-white">{card.title}</div>
-              <p className="mt-2 text-sm leading-6 text-white/60">{card.body}</p>
             </div>
           ))}
         </div>

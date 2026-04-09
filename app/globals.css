@@ -1,3 +1,15 @@
+/* Clerk/Account modal: smooth transparent glassy background */
+.cl-card, .cl-modal, .cl-profilePage, .cl-userButtonPopoverCard, .cl-navbar, .cl-footer, .cl-form, .cl-formFieldInput, .cl-formField, .cl-profileSectionContent, .cl-profileSectionTitleText, .cl-header, .cl-headerTitle, .cl-headerSubtitle {
+  background: rgba(18, 10, 44, 0.82) !important;
+  backdrop-filter: blur(16px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.2) !important;
+  color: #fff !important;
+  border-radius: 18px !important;
+  box-shadow: 0 6px 32px 0 rgba(190,103,154,0.10), 0 2px 12px 0 rgba(126,151,163,0.10) !important;
+}
+.cl-card *, .cl-modal *, .cl-profilePage *, .cl-userButtonPopoverCard * {
+  color: #fff !important;
+}
 /* --- Lively Navigation and Animated Background Enhancements --- */
 
 /* Animated navigation underline and glow */
@@ -5,27 +17,29 @@
   position: relative;
   transition: color 0.18s cubic-bezier(0.4,0,0.2,1), filter 0.18s cubic-bezier(0.4,0,0.2,1);
 }
+
 .nav-link::after, .navbar a::after, .navbarButton::after, .nav-animated::after {
   content: "";
   position: absolute;
-  left: 18%;
-  right: 18%;
+  left: 22%;
+  right: 22%;
   bottom: 0.18em;
-  height: 2.5px;
+  height: 2px;
   background: linear-gradient(90deg, #ec4899 0%, #7dd3fc 100%);
   border-radius: 2px;
   opacity: 0;
   transform: scaleX(0.7);
   transition: opacity 0.18s, transform 0.18s;
   pointer-events: none;
+  box-shadow: 0 0 4px 0 #ec489955, 0 0 2px 0 #7dd3fc55;
 }
 .nav-link:hover::after, .navbar a:hover::after, .navbarButton:hover::after, .nav-animated:hover::after {
-  opacity: 1;
+  opacity: 0.7;
   transform: scaleX(1);
 }
 .nav-link:hover, .navbar a:hover, .navbarButton:hover, .nav-animated:hover {
-  color: #fff;
-  filter: drop-shadow(0 0 6px #ec4899cc) drop-shadow(0 0 2px #7dd3fc99);
+  color: #f3e8ff;
+  filter: drop-shadow(0 0 2px #ec489955) drop-shadow(0 0 1px #7dd3fc55);
 }
 
 /* Animated, lively background with floating shapes */
@@ -148,8 +162,59 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  background: radial-gradient(ellipse at 60% 0%, rgba(190,103,154,0.10) 0%, rgba(126,151,163,0.08) 40%, #06070a 100%),
-              linear-gradient(120deg, rgba(190,103,154,0.06) 0%, rgba(126,151,163,0.06) 100%);
+  background:
+    linear-gradient(120deg, rgba(190,103,154,0.13) 0%, rgba(126,151,163,0.13) 100%),
+    radial-gradient(ellipse at 60% 0%, rgba(190,103,154,0.18) 0%, rgba(126,151,163,0.13) 40%, #0a0a16 100%),
+    repeating-linear-gradient(135deg, rgba(236,72,153,0.04) 0 2px, transparent 2px 40px),
+    #0a0a16;
+  overflow-x: hidden;
+}
+
+/* Animated floating sparkles for extra depth */
+.bg-sparkle {
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  width: 100vw;
+  height: 100vh;
+  top: 0; left: 0;
+  background: url('data:image/svg+xml;utf8,<svg width="100%25" height="100%25" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="10" r="1.5" fill="%23ec4899" opacity="0.18"/><circle cx="80" cy="60" r="1.2" fill="%237dd3fc" opacity="0.13"/><circle cx="200" cy="120" r="1.7" fill="%23f472b6" opacity="0.12"/><circle cx="400" cy="300" r="1.3" fill="%23a5b4fc" opacity="0.10"/></svg>');
+  animation: sparkle-float 12s linear infinite;
+}
+@keyframes sparkle-float {
+  0% { background-position: 0 0; }
+  100% { background-position: 60px 40px; }
+}
+
+/* Card content wrapping and scaling for responsive fit */
+.rounded-2xl, .rounded-xl, .card, .mode-card, .starter-card {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  min-width: 0;
+}
+.card-content, .mode-card-content, .starter-card-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+}
+.mode-card p, .starter-card p, .card p {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+@media (max-width: 900px) {
+  .mode-card, .starter-card, .card, .rounded-2xl {
+    font-size: 0.97rem;
+    padding: 0.75rem !important;
+  }
+  .mode-card p, .starter-card p, .card p {
+    font-size: 0.93rem;
+  }
+}
 }
 
 html {
