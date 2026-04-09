@@ -59,8 +59,10 @@ function sanitizeThreads(threads: Thread[]): Thread[] {
         ? thread.turns.slice(-10).map((turn) => ({
             ...turn,
             userMessage: trimText(turn.userMessage, 1800),
+            draftMessage: trimText(turn.draftMessage, 400),
             userContext: trimText(turn.userContext, 600),
             chosenReply: trimText(turn.chosenReply, 400),
+            responseMode: turn.responseMode ?? "balanced",
             screenshotSummary: trimText(turn.screenshotSummary, 240),
             relationshipNotesSnapshot: trimText(turn.relationshipNotesSnapshot, 280),
             personaCalibrationSnapshot: trimText(turn.personaCalibrationSnapshot, 280),
@@ -88,6 +90,12 @@ function sanitizeThreads(threads: Thread[]): Thread[] {
                   timingWindow: trimText(turn.analysis.timingWindow, 180),
                   avoid: trimText(turn.analysis.avoid, 180),
                   coachNotes: trimText(turn.analysis.coachNotes, 180),
+                  dynamicReading: trimText(turn.analysis.dynamicReading, 180),
+                  nonReactiveResponse: trimText(turn.analysis.nonReactiveResponse, 180),
+                  whenNotToReply: trimText(turn.analysis.whenNotToReply, 180),
+                  behaviorFlags: Array.isArray(turn.analysis.behaviorFlags)
+                    ? turn.analysis.behaviorFlags.slice(0, 4).map((item) => trimText(item, 60))
+                    : [],
                   nextMoves: Array.isArray(turn.analysis.nextMoves)
                     ? turn.analysis.nextMoves.slice(0, 3).map((item) => trimText(item, 120))
                     : [],

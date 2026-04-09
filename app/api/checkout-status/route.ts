@@ -4,6 +4,8 @@ import { getServerAuth } from "@/lib/auth";
 import { writeCloudSnapshot } from "@/lib/cloud-store";
 import { rateLimit } from "@/lib/rate-limit";
 
+const STRIPE_SESSION_ID_PATTERN = /^cs_(?:test_|live_)?[A-Za-z0-9_]+$/;
+
 export async function GET(req: Request) {
   const { limited, remaining } = rateLimit(req);
   if (limited) {
@@ -24,10 +26,10 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const sessionId = searchParams.get("session_id")?.trim();
 
-  if (!sessionId) {
+  if (!sessionId || sessionId.length > 200 || !STRIPE_SESSION_ID_PATTERN.test(sessionId)) {
     return NextResponse.json(
-      { error: "Missing checkout session id." },
-      { status: 400, headers: { "X-RateLimit-Remaining": String(remaining) } },
+      { error: "Invalid checkout session id." },
+      { status: 400, headers: { "X-RateLimit-Remaining": String(remaining), "Cache-Control": "no-store" } },
     );
   }
 
@@ -36,27 +38,28 @@ export async function GET(req: Request) {
     const session = await stripe.checkout.sessions.retrieve(sessionId);
     const verified =
       session.payment_status === "paid" || session.status === "complete";
+    const verifiedTier = session.metadata?.planTier === "plus" ? "plus" : "pro";
 
     if (verified) {
       const userId = await getServerAuth();
 
       if (userId) {
-        await writeCloudSnapshot(userId, { planTier: "pro" });
+        await writeCloudSnapshot(userId, { planTier: verifiedTier });
       }
     }
 
     return NextResponse.json(
       {
         verified,
-        planTier: verified ? "pro" : "free",
+        planTier: verified ? verifiedTier : "free",
         status: session.status,
         paymentStatus: session.payment_status,
-        customerEmail: session.customer_details?.email ?? null,
         mode: session.mode,
       },
       {
         headers: {
           "X-RateLimit-Remaining": String(remaining),
+          "Cache-Control": "no-store",
         },
       },
     );
@@ -64,7 +67,7 @@ export async function GET(req: Request) {
     console.error("Checkout verification error:", error);
     return NextResponse.json(
       { error: "Unable to verify checkout right now." },
-      { status: 500, headers: { "X-RateLimit-Remaining": String(remaining) } },
+      { status: 500, headers: { "X-RateLimit-Remaining": String(remaining), "Cache-Control": "no-store" } },
     );
   }
 }

@@ -87,6 +87,9 @@ export function useMVPFeatures(threads: Thread[]): MVPFeaturesState {
 
   useEffect(() => {
     queueMicrotask(() => {
+      setCategory(readStoredJson<CategoryKey>("sparkline-category", "other"));
+      setToneIntensity(readStoredJson<number>("sparkline-intensity", 5));
+      setBulkCount(readStoredJson<number>("sparkline-bulk-count", 1));
       setFavorites(readStoredJson<string[]>("sparkline-favorites", []));
       setReplyRatings(
         readStoredJson<Record<string, number>>("sparkline-ratings", {})
@@ -101,6 +104,18 @@ export function useMVPFeatures(threads: Thread[]): MVPFeaturesState {
       setStreak(updateStreak());
     });
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("sparkline-category", JSON.stringify(category));
+  }, [category]);
+
+  useEffect(() => {
+    localStorage.setItem("sparkline-intensity", JSON.stringify(toneIntensity));
+  }, [toneIntensity]);
+
+  useEffect(() => {
+    localStorage.setItem("sparkline-bulk-count", JSON.stringify(bulkCount));
+  }, [bulkCount]);
 
   // Persist favorites
   useEffect(() => {

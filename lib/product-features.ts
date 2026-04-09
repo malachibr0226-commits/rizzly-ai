@@ -37,6 +37,12 @@ const FREE_LIMITS: Record<UsageAction, number> = {
   voice: 8,
 };
 
+const PLUS_LIMITS: Record<UsageAction, number> = {
+  generate: 80,
+  screenshot: 25,
+  voice: 20,
+};
+
 const PRO_LIMITS: Record<UsageAction, number> = {
   generate: 200,
   screenshot: 60,
@@ -68,7 +74,15 @@ function getResetLabel() {
 }
 
 function getLimitsForPlan(planTier: PlanTier) {
-  return planTier === "pro" ? PRO_LIMITS : FREE_LIMITS;
+  if (planTier === "pro") {
+    return PRO_LIMITS;
+  }
+
+  if (planTier === "plus") {
+    return PLUS_LIMITS;
+  }
+
+  return FREE_LIMITS;
 }
 
 function readStoredPlanTier(): PlanTier {
@@ -77,7 +91,8 @@ function readStoredPlanTier(): PlanTier {
   }
 
   try {
-    return window.localStorage.getItem(PLAN_TIER_KEY) === "pro" ? "pro" : "free";
+    const storedValue = window.localStorage.getItem(PLAN_TIER_KEY);
+    return storedValue === "pro" || storedValue === "plus" ? storedValue : "free";
   } catch {
     return "free";
   }
@@ -192,7 +207,7 @@ export function consumeUsageAction(action: UsageAction): {
     return {
       allowed: false,
       snapshot: buildSnapshot(state.used, state.dayKey, planTier),
-      message: `Daily ${action} limit reached for the ${planTier === "pro" ? "Pro plan" : "free public mode"}. It resets at ${getResetLabel()}.`,
+      message: `Daily ${action} limit reached for the ${planTier === "pro" ? "Pro plan" : planTier === "plus" ? "Plus plan" : "free public mode"}. It resets at ${getResetLabel()}.`,
     };
   }
 
@@ -263,8 +278,13 @@ export function savePersonaDraft(input: {
         persona.name.toLowerCase() !== name.toLowerCase() &&
         persona.profileName.toLowerCase() !== input.profileName.trim().toLowerCase(),
     ),
-  ].slice(0, 4);
+  ].slice(0, 8);
 
+  return writeSavedPersonas(updated);
+}
+
+export function deleteSavedPersona(personaId: string): SavedPersona[] {
+  const updated = readSavedPersonas().filter((persona) => persona.id !== personaId);
   return writeSavedPersonas(updated);
 }
 
@@ -349,6 +369,23 @@ export function buildMemoryPrimer(
     .filter(Boolean)
     .slice(0, 3);
 
+  const voiceLearnings = threads
+    .flatMap((thread) =>
+      thread.turns
+        .map((turn) => [turn.analysis?.userPattern, turn.analysis?.languageStyle])
+        .flat()
+        .filter((item): item is string => Boolean(item?.trim())),
+    )
+    .slice(-4);
+
+  const receiverLearnings = threads
+    .flatMap((thread) =>
+      thread.turns
+        .map((turn) => turn.analysis?.receiverPattern)
+        .filter((item): item is string => Boolean(item?.trim())),
+    )
+    .slice(-4);
+
   const parts: string[] = [];
 
   if (currentThread?.profileName) {
@@ -372,6 +409,24 @@ export function buildMemoryPrimer(
       [
         "Saved on-brand reply signals:",
         ...onBrandReplies.map((reply) => `- ${truncate(reply, 110)}`),
+      ].join("\n"),
+    );
+  }
+
+  if (voiceLearnings.length > 0) {
+    parts.push(
+      [
+        "Learned user voice fingerprints:",
+        ...voiceLearnings.map((item) => `- ${truncate(item, 120)}`),
+      ].join("\n"),
+    );
+  }
+
+  if (receiverLearnings.length > 0) {
+    parts.push(
+      [
+        "Observed receiver behavior patterns:",
+        ...receiverLearnings.map((item) => `- ${truncate(item, 120)}`),
       ].join("\n"),
     );
   }

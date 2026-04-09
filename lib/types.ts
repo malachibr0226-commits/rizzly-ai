@@ -27,6 +27,10 @@ export type Analysis = {
   timingWindow?: string;
   avoid?: string;
   coachNotes?: string;
+  dynamicReading?: string;
+  nonReactiveResponse?: string;
+  whenNotToReply?: string;
+  behaviorFlags?: string[];
   nextMoves?: string[];
   replyBranches?: Array<{
     scenario: string;

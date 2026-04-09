@@ -1,74 +1,101 @@
-import fs from "node:fs";
-import path from "node:path";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { AppAuthProvider } from "@/app/components/AppAuthProvider";
 import { isClerkConfigured } from "@/lib/auth";
+import { resolveSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
-function normalizeUrl(candidate: string) {
-  const parsed = new URL(candidate);
-
-  if (parsed.hostname === "www.rizzlyai.com") {
-    parsed.hostname = "rizzlyai.com";
-  }
-
-  return parsed;
-}
-
-function readLocalEnvValue(name: string) {
-  const filePath = path.join(process.cwd(), ".env.local");
-  const envFile = fs.readFileSync(filePath, "utf8");
-  const match = envFile.match(new RegExp(`^${name}=(.+)$`, "m"));
-  return match?.[1]?.trim() || "";
-}
+const siteUrl = resolveSiteUrl();
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  name: "Rizzly AI",
+  applicationCategory: "CommunicationApplication",
+  operatingSystem: "Web",
+  description:
+    "Rizzly AI helps you turn pasted chats, screenshots, and voice notes into sharper replies that actually sound like you.",
+  url: siteUrl.toString(),
+  offers: {
+    "@type": "Offer",
+    price: "0",
+    priceCurrency: "USD",
+  },
+};
 
 function resolveClerkPublishableKey() {
-  const envValue = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || "";
-
-  if (process.env.NODE_ENV === "production") {
-    return envValue;
-  }
-
-  try {
-    return readLocalEnvValue("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY") || envValue;
-  } catch {
-    return envValue;
-  }
+  return process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() || "";
 }
 
-function resolveMetadataBase() {
-  const candidates = [
-    process.env.NEXT_PUBLIC_APP_URL,
-    process.env.VERCEL_PROJECT_PRODUCTION_URL
-      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-      : undefined,
-    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : undefined,
-    "http://localhost:3000",
-  ];
-
-  for (const candidate of candidates) {
-    if (!candidate) {
-      continue;
-    }
-
-    try {
-      return normalizeUrl(candidate);
-    } catch {
-      continue;
-    }
-  }
-
-  return new URL("http://localhost:3000");
-}
+export const viewport: Viewport = {
+  themeColor: "#1a0f2e",
+  colorScheme: "dark",
+};
 
 export const metadata: Metadata = {
-  metadataBase: resolveMetadataBase(),
-  title: "Rizzly AI",
-  description: "Paste a conversation and get sharper reply suggestions.",
+  metadataBase: siteUrl,
+  title: {
+    default: "Rizzly AI — Smarter replies for real conversations",
+    template: "%s | Rizzly AI",
+  },
+  description:
+    "Rizzly AI helps you turn pasted chats, screenshots, and voice notes into sharper replies that actually sound like you.",
+  applicationName: "Rizzly AI",
+  keywords: [
+    "AI reply generator",
+    "texting assistant",
+    "conversation coach",
+    "dating reply app",
+    "message suggestions",
+  ],
+  manifest: "/manifest.webmanifest",
+  category: "productivity",
+  authors: [{ name: "Rizzly AI" }],
+  creator: "Rizzly AI",
+  publisher: "Rizzly AI",
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
+    icon: "/icon.svg",
+    apple: "/logo.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "Rizzly AI",
+    statusBarStyle: "black-translucent",
+  },
+  formatDetection: {
+    telephone: false,
+    address: false,
+    email: false,
+  },
   alternates: {
     canonical: "/",
+  },
+  openGraph: {
+    title: "Rizzly AI — Smarter replies for real conversations",
+    description:
+      "Generate natural replies, follow-up ideas, and conversation guidance from real chats in seconds.",
+    url: siteUrl.toString(),
+    siteName: "Rizzly AI",
+    type: "website",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "Rizzly AI",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Rizzly AI — Smarter replies for real conversations",
+    description:
+      "Paste a chat, import a screenshot, or transcribe a voice note and get sharper reply options fast.",
+    images: ["/twitter-image"],
   },
 };
 
@@ -89,6 +116,16 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full">
+        <a
+          href="#main-content"
+          className="sr-only absolute left-3 top-3 z-50 rounded-full bg-black px-4 py-2 text-sm font-semibold text-white focus:not-sr-only"
+        >
+          Skip to content
+        </a>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
         {authEnabled ? (
           <ClerkProvider
             publishableKey={publishableKey}

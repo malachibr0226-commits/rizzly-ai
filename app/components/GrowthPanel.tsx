@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { PLAN_CATALOG, getUpgradeUrl } from "@/lib/pricing";
+import { trackCtaClick } from "@/lib/analytics-events";
+import { PLAN_CATALOG, getPlanDefinition, getUpgradeUrl } from "@/lib/pricing";
+import type { PlanTier } from "@/lib/pricing";
 import type { UsageSnapshot } from "@/lib/product-features";
 
 type CloudSyncState = "idle" | "syncing" | "synced" | "error";
@@ -26,20 +28,23 @@ export function GrowthPanel({
   cloudSyncMessage: string;
   onSyncNow: () => void;
 }) {
-  const upgradeUrl = getUpgradeUrl();
-  const freePlan = PLAN_CATALOG[0];
-  const proPlan = PLAN_CATALOG[1];
+  const freePlan = getPlanDefinition("free");
+  const plusPlan = getPlanDefinition("plus");
+  const proPlan = getPlanDefinition("pro");
+  const currentPlan = usageSnapshot.planTier;
   const visibleStatus = isSignedIn ? cloudSyncState : "idle";
   const visibleMessage = isSignedIn
     ? cloudSyncMessage
     : "Sign in to sync threads and personas across devices.";
   const [upgradeLoading, setUpgradeLoading] = useState(false);
+  const [pendingTier, setPendingTier] = useState<Exclude<PlanTier, "free"> | null>(null);
   const [billingLoading, setBillingLoading] = useState(false);
   const [upgradeError, setUpgradeError] = useState<string | null>(null);
   const [billingError, setBillingError] = useState<string | null>(null);
-  const isPro = usageSnapshot.planTier === "pro";
+  const isPlus = currentPlan === "plus";
+  const isPro = currentPlan === "pro";
 
-  const nearingLimit = !isPro && usageSnapshot.remaining.generate <= 5;
+  const nearingLimit = currentPlan === "free" && usageSnapshot.remaining.generate <= 5;
   const replyBoost = Math.max(
     1,
     Math.round(proPlan.limits.generate / Math.max(freePlan.limits.generate, 1)),
@@ -53,13 +58,19 @@ export function GrowthPanel({
     Math.round(proPlan.limits.voice / Math.max(freePlan.limits.voice, 1)),
   );
 
-  const handleUpgrade = async () => {
+  const handleUpgrade = async (tier: Exclude<PlanTier, "free">) => {
+    trackCtaClick(`start_checkout_${tier}`, "growth_panel");
     setUpgradeError(null);
+    setPendingTier(tier);
     setUpgradeLoading(true);
 
     try {
       const response = await fetch("/api/create-checkout-session", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ tier }),
       });
       const data = (await response.json()) as {
         url?: string;
@@ -74,17 +85,21 @@ export function GrowthPanel({
     } catch (error) {
       console.error("Upgrade flow error:", error);
 
+      const upgradeUrl = getUpgradeUrl(tier);
+
       if (upgradeUrl) {
         window.open(upgradeUrl, "_blank", "noopener,noreferrer");
       } else {
         setUpgradeError("Checkout is not ready yet. Please try again shortly.");
       }
     } finally {
+      setPendingTier(null);
       setUpgradeLoading(false);
     }
   };
 
   const handleManageBilling = async () => {
+    trackCtaClick("manage_billing", "growth_panel");
     setBillingError(null);
     setBillingLoading(true);
 
@@ -180,16 +195,22 @@ export function GrowthPanel({
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-white">
-              {isPro ? "Rizzly Pro is active" : "Upgrade when the free plan starts feeling tight"}
+              {isPro
+                ? "Rizzly Pro is active"
+                : isPlus
+                  ? "Rizzly Plus is active"
+                  : "Unlock more replies, tone variety, and momentum"}
             </h2>
             <p className="mt-1 text-xs text-white/50">
               {isPro
-                ? "Higher daily volume, synced memory, and deeper thread intel are now unlocked."
-                : "Keep using Free, or switch on more daily volume, synced memory, and deeper thread intel."}
+                ? "Your full advanced chat enhancers, higher limits, and deeper thread intel are unlocked."
+                : isPlus
+                  ? "Extra tone modes, saved voice setup, and more daily volume are live."
+                  : "Stay on Free, or switch on extra tones, more volume, and smoother cross-device use."}
             </p>
           </div>
           <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-100">
-            {isPro ? "active" : "pro ready"}
+            {isPro ? "pro active" : isPlus ? "plus active" : "upgrade ready"}
           </span>
         </div>
 
@@ -224,72 +245,107 @@ export function GrowthPanel({
         </div>
 
         <div className="space-y-3">
-          {[freePlan, proPlan].map((plan) => (
-            <div
-              key={plan.tier}
-              className={`rounded-xl border p-3 ${
-                plan.tier === "pro"
-                  ? "border-fuchsia-400/25 bg-fuchsia-500/10"
-                  : "border-white/10 bg-black/20"
-              }`}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <div className="text-sm font-semibold text-white">{plan.name}</div>
-                    {plan.tier === "pro" && (
-                      <span className="rounded-full border border-fuchsia-300/30 bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-100">
-                        Most popular
-                      </span>
-                    )}
+          {PLAN_CATALOG.map((plan) => {
+            const isCurrent = currentPlan === plan.tier;
+
+            return (
+              <div
+                key={plan.tier}
+                className={`rounded-xl border p-3 ${
+                  isCurrent
+                    ? "border-cyan-400/30 bg-cyan-500/10"
+                    : plan.tier === "pro"
+                      ? "border-fuchsia-400/25 bg-fuchsia-500/10"
+                      : plan.tier === "plus"
+                        ? "border-sky-400/20 bg-sky-500/10"
+                        : "border-white/10 bg-black/20"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <div className="text-sm font-semibold text-white">{plan.name}</div>
+                      {isCurrent && (
+                        <span className="rounded-full border border-cyan-300/30 bg-cyan-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100">
+                          Current
+                        </span>
+                      )}
+                      {plan.tier === "plus" && !isCurrent && (
+                        <span className="rounded-full border border-sky-300/30 bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-100">
+                          Best value
+                        </span>
+                      )}
+                      {plan.tier === "pro" && !isCurrent && (
+                        <span className="rounded-full border border-fuchsia-300/30 bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-100">
+                          Most power
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-1 text-xs text-white/60">{plan.description}</div>
                   </div>
-                  <div className="mt-1 text-xs text-white/60">{plan.description}</div>
+                  <div className="text-right">
+                    <div className="text-sm font-bold text-white">{plan.priceLabel}</div>
+                    <div className="text-[10px] text-white/45">{plan.tier === "free" ? "starter" : "monthly"}</div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold text-white">{plan.priceLabel}</div>
-                  <div className="text-[10px] text-white/45">{plan.tier === "pro" ? "monthly" : "starter"}</div>
-                </div>
+                <ul className="mt-3 space-y-1 text-xs text-white/75">
+                  {plan.highlights.map((item) => (
+                    <li key={item}>• {item}</li>
+                  ))}
+                </ul>
               </div>
-              <ul className="mt-3 space-y-1 text-xs text-white/75">
-                {plan.highlights.map((item) => (
-                  <li key={item}>• {item}</li>
-                ))}
-              </ul>
-              {plan.tier === "pro" && (
-                <div className="mt-3 rounded-lg border border-fuchsia-400/20 bg-black/20 px-3 py-2 text-[11px] text-fuchsia-50">
-                  Everything in Free, plus synced memory, higher limits, and stronger thread reads.
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3 text-sm text-white/75">
-          Best for users who want more daily runs, faster reuse, and less friction across devices.
+          Best for users who want a clear path: Free to try, Plus for extra tone variety, and Pro for the full enhancer stack.
         </div>
 
-        <button
-          type="button"
-          onClick={() => void handleUpgrade()}
-          disabled={upgradeLoading || isPro}
-          className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-fuchsia-500 to-cyan-500 px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {isPro
-            ? "Rizzly Pro active"
-            : upgradeLoading
-              ? "Opening secure checkout..."
-              : proPlan.ctaLabel}
-        </button>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+          {[plusPlan, proPlan].map((plan) => {
+            const isCurrent = currentPlan === plan.tier;
+            const isDowngradeFromPro = currentPlan === "pro" && plan.tier === "plus";
+            const isDisabled = upgradeLoading || isCurrent || isDowngradeFromPro;
+
+            return (
+              <button
+                key={plan.tier}
+                type="button"
+                onClick={() => void handleUpgrade(plan.tier as Exclude<PlanTier, "free">)}
+                disabled={isDisabled}
+                className={`inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70 ${
+                  plan.tier === "pro"
+                    ? "bg-gradient-to-r from-fuchsia-500 to-cyan-500"
+                    : "border border-sky-400/25 bg-sky-500/10"
+                }`}
+              >
+                {isCurrent
+                  ? `${plan.name} active`
+                  : pendingTier === plan.tier
+                    ? "Opening secure checkout..."
+                    : `${plan.ctaLabel} — ${plan.priceLabel}`}
+              </button>
+            );
+          })}
+        </div>
         <p className="mt-2 text-center text-[11px] text-white/45">
           {isPro
-            ? "Thanks for upgrading — your higher limits are already live."
-            : "Secure checkout opens instantly when Stripe is configured."}
+            ? "Thanks for upgrading — your highest limits and full premium tools are already live."
+            : isPlus
+              ? "Plus is active now — jump to Pro any time if you want the full advanced response stack."
+              : "Secure checkout opens instantly when Stripe is configured."}
         </p>
+        <div className="mt-2 flex flex-wrap justify-center gap-2 text-[11px] text-white/55">
+          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">Secure Stripe checkout</span>
+          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">Cancel anytime</span>
+          <span className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1">Upgrade in minutes</span>
+        </div>
         {isPro && (
           <button
             type="button"
             onClick={() => void handleManageBilling()}
-            disabled={billingLoading}
+            disabled={billingLoading || !isSignedIn}
             className="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white/85 transition hover:border-white/25 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
           >
             {billingLoading

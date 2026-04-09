@@ -2,12 +2,18 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { requireAuth } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
+import { ensureTrustedOrigin, validateAudioUpload } from "@/lib/security";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 export async function POST(req: Request) {
+  const blockedOrigin = ensureTrustedOrigin(req);
+  if (blockedOrigin) {
+    return blockedOrigin;
+  }
+
   const userId = await requireAuth();
   if (!userId) {
     return NextResponse.json(
@@ -27,7 +33,7 @@ export async function POST(req: Request) {
   try {
     if (!process.env.OPENAI_API_KEY) {
       return NextResponse.json(
-        { error: "Missing OPENAI_API_KEY in .env.local." },
+        { error: "Voice transcription is unavailable right now." },
         { status: 500 },
       );
     }
@@ -39,6 +45,14 @@ export async function POST(req: Request) {
     if (!(file instanceof File)) {
       return NextResponse.json(
         { error: "Audio file is required." },
+        { status: 400 },
+      );
+    }
+
+    const audioValidationError = validateAudioUpload(file);
+    if (audioValidationError) {
+      return NextResponse.json(
+        { error: audioValidationError },
         { status: 400 },
       );
     }

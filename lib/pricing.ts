@@ -1,6 +1,6 @@
 import type { UsageAction } from "@/lib/product-features";
 
-export type PlanTier = "free" | "pro";
+export type PlanTier = "free" | "plus" | "pro";
 
 export interface PlanDefinition {
   tier: PlanTier;
@@ -26,16 +26,34 @@ export const PLAN_CATALOG: PlanDefinition[] = [
     },
     highlights: [
       "25 reply runs each day",
-      "Screenshot and voice imports",
+      "Balanced mode + draft cleanup",
+      "Up to 3 reply options per run",
       "Local thread memory",
-      "No-cost starter access",
+    ],
+  },
+  {
+    tier: "plus",
+    name: "Rizzly Plus",
+    priceLabel: "$9.99/mo",
+    description: "For regular users who want more volume, saved voice presets, and extra tone variety.",
+    ctaLabel: "Unlock Plus",
+    limits: {
+      generate: 80,
+      screenshot: 25,
+      voice: 20,
+    },
+    highlights: [
+      "80 reply runs per day",
+      "Cloud sync + saved personas",
+      "Extra tone modes like Warm and Direct",
+      "More daily flexibility without the full Pro jump",
     ],
   },
   {
     tier: "pro",
     name: "Rizzly Pro",
     priceLabel: "$19/mo",
-    description: "For daily texters who want more volume, synced history, and deeper thread intel.",
+    description: "For daily texters who want full control, specific chat enhancers, and synced history.",
     ctaLabel: "Unlock Pro",
     limits: {
       generate: 200,
@@ -44,18 +62,24 @@ export const PLAN_CATALOG: PlanDefinition[] = [
     },
     highlights: [
       "200 reply runs per day",
+      "Advanced response modes + quick presets",
+      "5-reply burst, follow-up radar, and all premium tones",
       "Cloud history across devices",
-      "Advanced thread intelligence",
-      "Faster, lower-friction workflow",
     ],
   },
 ];
 
-export function getUpgradeUrl() {
-  return (
-    process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK?.trim() ||
-    "mailto:hi@rizzlyai.com?subject=Rizzly%20Pro"
-  );
+export function getUpgradeUrl(tier: Exclude<PlanTier, "free"> = "pro") {
+  const plusUrl = process.env.NEXT_PUBLIC_STRIPE_PLUS_PAYMENT_LINK?.trim();
+  const proUrl =
+    process.env.NEXT_PUBLIC_STRIPE_PRO_PAYMENT_LINK?.trim() ||
+    process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK?.trim();
+
+  if (tier === "plus") {
+    return plusUrl || "mailto:hi@rizzlyai.com?subject=Rizzly%20Plus";
+  }
+
+  return proUrl || "mailto:hi@rizzlyai.com?subject=Rizzly%20Pro";
 }
 
 export function getPlanDefinition(tier: PlanTier = "free") {

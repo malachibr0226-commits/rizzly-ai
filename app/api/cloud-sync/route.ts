@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerUser, hasProEmailAccess, requireAuth } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
 import { readCloudSnapshot, writeCloudSnapshot } from "@/lib/cloud-store";
+import { ensureTrustedOrigin } from "@/lib/security";
 import type { Thread } from "@/lib/analytics";
 import type { SavedPersona } from "@/lib/product-features";
 
@@ -50,6 +51,11 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const blockedOrigin = ensureTrustedOrigin(req);
+  if (blockedOrigin) {
+    return blockedOrigin;
+  }
+
   const userId = await requireAuth();
   if (!userId) {
     return NextResponse.json(

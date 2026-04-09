@@ -6,7 +6,8 @@
     "dev": "next dev --webpack",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "security:check": "npm audit --omit=dev && npm run build"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.0.11",

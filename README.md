@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Rizzly AI
 
-## Getting Started
+Rizzly AI is a Next.js app for generating sharper, safer reply suggestions from pasted chats, screenshots, and voice notes.
 
-First, run the development server:
+## Launch-ready highlights
+- polished landing experience and mobile-style UI
+- screenshot and voice-note support
+- saved personas, cloud sync, and Pro upgrade flow
+- admin controls, lightweight analytics, and security hardening
+
+## Local development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment setup
+Copy `.env.example` into `.env.local` and provide your real values:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```env
+OPENAI_API_KEY=...
+CLERK_SECRET_KEY=...
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=...
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+STRIPE_SECRET_KEY=...
+STRIPE_PLUS_PRICE_ID=...
+STRIPE_PRO_PRICE_ID=...
+NEXT_PUBLIC_STRIPE_PLUS_PAYMENT_LINK=...
+NEXT_PUBLIC_STRIPE_PRO_PAYMENT_LINK=...
+RIZZLY_PRO_EMAIL_ALLOWLIST=you@example.com
+RIZZLY_ADMIN_EMAIL_ALLOWLIST=you@example.com
+RIZZLY_ALLOWED_ORIGINS=http://localhost:3000,https://rizzlyai.com,https://www.rizzlyai.com
+```
 
-## Learn More
+> `STRIPE_PRICE_ID` and `NEXT_PUBLIC_STRIPE_PAYMENT_LINK` can still point to your Pro offer as backwards-compatible fallbacks.
 
-To learn more about Next.js, take a look at the following resources:
+## Security checks
+Before shipping:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run security:check
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Or run the checks manually:
 
-## Deploy on Vercel
+```bash
+npm audit --omit=dev
+npm run build
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+See `SECURITY.md` for the full hardening checklist, secret-handling rules, and production lockdown guidance.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+Deploy on Vercel and set the same environment variables there. Use your canonical production domain in `NEXT_PUBLIC_APP_URL` and `RIZZLY_ALLOWED_ORIGINS`.

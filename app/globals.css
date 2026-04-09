@@ -30,6 +30,17 @@ body {
               linear-gradient(120deg, rgba(190,103,154,0.06) 0%, rgba(126,151,163,0.06) 100%);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
+@media (max-width: 640px) {
+  body {
+    background: radial-gradient(ellipse at 50% -10%, rgba(236,72,153,0.14) 0%, rgba(34,211,238,0.10) 35%, #06070a 100%),
+                linear-gradient(160deg, rgba(190,103,154,0.07) 0%, rgba(126,151,163,0.05) 100%);
+  }
+}
+
 ::selection {
   background: rgba(217, 70, 239, 0.35);
   color: #ffffff;

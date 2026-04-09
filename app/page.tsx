@@ -10,11 +10,22 @@ import { ThreadList } from "@/app/components/ThreadList";
 import { AnalysisPanel } from "@/app/components/AnalysisPanel";
 import { RelationshipIntelPanel } from "@/app/components/RelationshipIntelPanel";
 import { GrowthPanel } from "@/app/components/GrowthPanel";
+import { LandingUpgradeSections } from "@/app/components/LandingUpgradeSections";
+import { OnboardingCoachPanel } from "@/app/components/OnboardingCoachPanel";
+import { ReplyCoachPanel } from "@/app/components/ReplyCoachPanel";
+import { MobileActionDock } from "@/app/components/MobileActionDock";
+import { PremiumStatsStrip } from "@/app/components/PremiumStatsStrip";
+import { FollowUpRadar } from "@/app/components/FollowUpRadar";
+import { SmartRecommendationBar } from "@/app/components/SmartRecommendationBar";
+import { HabitMomentumPanel } from "@/app/components/HabitMomentumPanel";
+import { AdminPanel } from "@/app/components/AdminPanel";
 import { ChatPreview } from "@/app/components/ChatPreview";
 import {
+  setAnalyticsProvider,
   trackGenerate,
   trackCopy,
   trackSend,
+  trackCtaClick,
   trackRate,
   trackFavorite,
   trackOutcome,
@@ -25,17 +36,19 @@ import {
   trackVoiceNote,
   trackError,
 } from "@/lib/analytics-events";
-import { buildThreadStrategyInsight } from "@/lib/analytics";
+import { buildThreadStrategyInsight, rankThreadsForFollowUp } from "@/lib/analytics";
 import type {
   ToneKey,
   GoalKey,
   OutcomeStatus,
+  ResponseModeKey,
   Thread,
   ThreadTurn,
 } from "@/lib/analytics";
 import {
   buildMemoryPrimer,
   consumeUsageAction,
+  deleteSavedPersona,
   getOutcomeCoach,
   getUsageSnapshot,
   readSavedPersonas,
@@ -46,6 +59,7 @@ import {
   type UsageAction,
   type UsageSnapshot,
 } from "@/lib/product-features";
+import type { PlanTier } from "@/lib/pricing";
 
 type Reply = {
   text: string;
@@ -74,6 +88,10 @@ type Analysis = {
   timingWindow?: string;
   avoid?: string;
   coachNotes?: string;
+  dynamicReading?: string;
+  nonReactiveResponse?: string;
+  whenNotToReply?: string;
+  behaviorFlags?: string[];
   nextMoves?: string[];
   replyBranches?: Array<{
     scenario: string;
@@ -129,8 +147,10 @@ const CURRENT_THREAD_KEY = "rizzly-current-thread-v1";
 
 const DEFAULT_DRAFT = {
   conversation: "",
+  draftMessage: "",
   tone: "confident" as ToneKey,
   goal: "restart" as GoalKey,
+  responseMode: "balanced" as ResponseModeKey,
   userContext: "",
   profileName: "",
   relationshipNotes: "",
@@ -190,6 +210,10 @@ function loadDraft() {
         typeof parsed?.conversation === "string"
           ? parsed.conversation
           : DEFAULT_DRAFT.conversation,
+      draftMessage:
+        typeof parsed?.draftMessage === "string"
+          ? parsed.draftMessage
+          : DEFAULT_DRAFT.draftMessage,
       tone:
         typeof parsed?.tone === "string"
           ? (parsed.tone as ToneKey)
@@ -198,6 +222,10 @@ function loadDraft() {
         typeof parsed?.goal === "string"
           ? (parsed.goal as GoalKey)
           : DEFAULT_DRAFT.goal,
+      responseMode:
+        typeof parsed?.responseMode === "string"
+          ? (parsed.responseMode as ResponseModeKey)
+          : DEFAULT_DRAFT.responseMode,
       userContext:
         typeof parsed?.userContext === "string"
           ? parsed.userContext
@@ -403,6 +431,35 @@ function ToneIcon({
           />
         </svg>
       );
+    case "warm":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" className={base} aria-hidden="true">
+          <circle cx="12" cy="12" r="7" fill="currentColor" opacity="0.9" />
+          <path d="M12 7.4L13.4 10.2L16.5 10.6L14.2 12.8L14.8 15.9L12 14.4L9.2 15.9L9.8 12.8L7.5 10.6L10.6 10.2L12 7.4Z" fill="white" fillOpacity="0.28" />
+        </svg>
+      );
+    case "direct":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" className={base} aria-hidden="true">
+          <path d="M5 12H19" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M13.5 6.5L19 12L13.5 17.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      );
+    case "playful":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" className={base} aria-hidden="true">
+          <path d="M12 3.5L13.9 8.1L18.5 10L13.9 11.9L12 16.5L10.1 11.9L5.5 10L10.1 8.1L12 3.5Z" fill="currentColor" />
+          <circle cx="18.2" cy="5.8" r="1.4" fill="currentColor" fillOpacity="0.75" />
+          <circle cx="6" cy="17.8" r="1.2" fill="currentColor" fillOpacity="0.6" />
+        </svg>
+      );
+    case "smooth":
+      return (
+        <svg viewBox="0 0 24 24" fill="none" className={base} aria-hidden="true">
+          <path d="M4.5 14C6.7 9.8 9.1 9.1 11.1 11C13.3 13.1 15 13.2 19.5 9.5" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
+          <path d="M4.5 18C7.5 15.2 10.2 14.9 12.4 16.1C14.8 17.4 16.7 17.1 19.5 14.7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.7" />
+        </svg>
+      );
   }
 }
 
@@ -410,6 +467,7 @@ const tones: Array<{
   value: ToneKey;
   label: string;
   desc: string;
+  plan?: Exclude<PlanTier, "free">;
   chip: string;
   glow: string;
   button: string;
@@ -495,6 +553,70 @@ const tones: Array<{
     ambient: "bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,0.12),transparent_42%)]",
     meter: "from-zinc-200 via-slate-300 to-neutral-400",
   },
+  {
+    value: "warm",
+    label: "Warm",
+    desc: "Kind, reassuring, inviting",
+    plan: "plus",
+    chip:
+      "from-orange-400/25 via-amber-300/20 to-rose-400/20 border-orange-200/40 text-orange-50",
+    glow: "shadow-[0_0_28px_rgba(251,146,60,0.24)]",
+    button: "from-orange-400 via-amber-400 to-rose-400",
+    buttonShadow: "shadow-[0_12px_40px_rgba(251,146,60,0.28)]",
+    ring: "focus:border-orange-300/40 focus:ring-orange-400/20",
+    bubble: "bg-orange-300",
+    panel: "border-orange-300/35 bg-[linear-gradient(180deg,rgba(251,146,60,0.15),rgba(251,146,60,0.04))] shadow-[0_0_30px_rgba(251,146,60,0.16)]",
+    ambient: "bg-[radial-gradient(circle_at_50%_35%,rgba(251,146,60,0.18),transparent_42%)]",
+    meter: "from-orange-300 via-amber-300 to-rose-400",
+  },
+  {
+    value: "direct",
+    label: "Direct",
+    desc: "Clear, efficient, no fluff",
+    plan: "plus",
+    chip:
+      "from-sky-500/25 via-cyan-400/20 to-teal-400/20 border-sky-300/40 text-sky-100",
+    glow: "shadow-[0_0_28px_rgba(56,189,248,0.24)]",
+    button: "from-sky-500 via-cyan-500 to-teal-500",
+    buttonShadow: "shadow-[0_12px_40px_rgba(56,189,248,0.28)]",
+    ring: "focus:border-sky-400/40 focus:ring-sky-500/20",
+    bubble: "bg-sky-400",
+    panel: "border-sky-400/35 bg-[linear-gradient(180deg,rgba(56,189,248,0.16),rgba(20,184,166,0.04))] shadow-[0_0_30px_rgba(56,189,248,0.16)]",
+    ambient: "bg-[radial-gradient(circle_at_50%_35%,rgba(56,189,248,0.18),transparent_42%)]",
+    meter: "from-sky-300 via-cyan-400 to-teal-500",
+  },
+  {
+    value: "playful",
+    label: "Playful",
+    desc: "Bouncy, bright, extra spark",
+    plan: "pro",
+    chip:
+      "from-pink-500/25 via-fuchsia-400/20 to-violet-500/20 border-pink-300/40 text-pink-100",
+    glow: "shadow-[0_0_28px_rgba(236,72,153,0.24)]",
+    button: "from-pink-500 via-fuchsia-500 to-violet-500",
+    buttonShadow: "shadow-[0_12px_40px_rgba(236,72,153,0.3)]",
+    ring: "focus:border-pink-400/40 focus:ring-pink-500/20",
+    bubble: "bg-pink-400",
+    panel: "border-pink-400/35 bg-[linear-gradient(180deg,rgba(236,72,153,0.16),rgba(139,92,246,0.04))] shadow-[0_0_30px_rgba(236,72,153,0.16)]",
+    ambient: "bg-[radial-gradient(circle_at_50%_35%,rgba(236,72,153,0.18),transparent_42%)]",
+    meter: "from-pink-300 via-fuchsia-400 to-violet-500",
+  },
+  {
+    value: "smooth",
+    label: "Smooth",
+    desc: "Polished, effortless, clean charm",
+    plan: "pro",
+    chip:
+      "from-emerald-500/25 via-teal-400/20 to-cyan-400/20 border-emerald-300/40 text-emerald-100",
+    glow: "shadow-[0_0_28px_rgba(16,185,129,0.24)]",
+    button: "from-emerald-500 via-teal-500 to-cyan-500",
+    buttonShadow: "shadow-[0_12px_40px_rgba(16,185,129,0.3)]",
+    ring: "focus:border-emerald-400/40 focus:ring-emerald-500/20",
+    bubble: "bg-emerald-400",
+    panel: "border-emerald-400/35 bg-[linear-gradient(180deg,rgba(16,185,129,0.16),rgba(6,182,212,0.04))] shadow-[0_0_30px_rgba(16,185,129,0.16)]",
+    ambient: "bg-[radial-gradient(circle_at_50%_35%,rgba(16,185,129,0.18),transparent_42%)]",
+    meter: "from-emerald-300 via-teal-400 to-cyan-500",
+  },
 ];
 
 const goals: Array<{
@@ -506,6 +628,20 @@ const goals: Array<{
   { value: "clarify", label: "Clarify" },
   { value: "plan", label: "Plan" },
   { value: "repair", label: "Repair" },
+];
+
+const responseModeOptions: Array<{
+  value: ResponseModeKey;
+  label: string;
+  note: string;
+  proOnly?: boolean;
+}> = [
+  { value: "balanced", label: "Balanced", note: "Natural and emotionally intelligent" },
+  { value: "boundary", label: "Boundary", note: "Clear, calm, and low-drama", proOnly: true },
+  { value: "high-value", label: "High-value", note: "Grounded and self-respecting", proOnly: true },
+  { value: "disengage", label: "Disengage", note: "Short and clean if the dynamic is off", proOnly: true },
+  { value: "call-out", label: "Call out", note: "Name the issue lightly", proOnly: true },
+  { value: "comeback", label: "Comeback", note: "Firm or witty without escalating", proOnly: true },
 ];
 
 const quickStartScenarios: Array<{
@@ -537,12 +673,26 @@ const quickStartScenarios: Array<{
   },
 ];
 
+const planRank: Record<PlanTier, number> = {
+  free: 0,
+  plus: 1,
+  pro: 2,
+};
+
+function hasPlanAccess(currentPlan: PlanTier, requiredPlan: PlanTier = "free") {
+  return planRank[currentPlan] >= planRank[requiredPlan];
+}
+
 function ToneDropdown({
   value,
+  currentPlan,
   onChange,
+  onLockedSelect,
 }: {
   value: ToneKey;
+  currentPlan: PlanTier;
   onChange: (value: ToneKey) => void;
+  onLockedSelect: (label: string, requiredPlan: Exclude<PlanTier, "free">) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [openUpward, setOpenUpward] = useState(false);
@@ -684,19 +834,28 @@ function ToneDropdown({
           <div className="grid max-h-[min(360px,calc(100vh-120px))] gap-2 overflow-y-auto pr-1">
             {tones.map((tone: (typeof tones)[number]) => {
               const isActive = tone.value === value;
+              const isLocked = Boolean(tone.plan && !hasPlanAccess(currentPlan, tone.plan));
 
               return (
                 <button
                   key={tone.value}
                   type="button"
                   onClick={() => {
+                    if (isLocked && tone.plan) {
+                      onLockedSelect(tone.label, tone.plan);
+                      setOpen(false);
+                      return;
+                    }
+
                     onChange(tone.value);
                     setOpen(false);
                   }}
                   className={`group rounded-2xl border px-3 py-3 text-left transition ${
                     isActive
                       ? "border-fuchsia-400/30 bg-[linear-gradient(135deg,rgba(217,70,239,0.12),rgba(34,211,238,0.08))] shadow-[0_0_30px_rgba(217,70,239,0.08)]"
-                      : "border-white/8 bg-white/[0.03] hover:border-white/15 hover:bg-white/[0.06]"
+                      : isLocked
+                        ? "border-fuchsia-400/15 bg-fuchsia-500/[0.05]"
+                        : "border-white/8 bg-white/[0.03] hover:border-white/15 hover:bg-white/[0.06]"
                   }`}
                 >
                   <div className="flex items-center gap-3">
@@ -720,10 +879,16 @@ function ToneDropdown({
                             Active
                           </span>
                         )}
+                        {tone.plan && (
+                          <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-white/70">
+                            {tone.plan}
+                          </span>
+                        )}
                       </div>
 
                       <div className="mt-0.5 text-sm text-white/45">
                         {tone.desc}
+                        {isLocked ? ` · Unlock on ${tone.plan === "plus" ? "Rizzly Plus" : "Rizzly Pro"}` : ""}
                       </div>
                     </div>
 
@@ -731,10 +896,12 @@ function ToneDropdown({
                       className={`text-sm transition ${
                         isActive
                           ? "text-fuchsia-200"
-                          : "text-white/20 group-hover:text-white/40"
+                          : isLocked
+                            ? "text-fuchsia-200/70"
+                            : "text-white/20 group-hover:text-white/40"
                       }`}
                     >
-                      {"->"}
+                      {isLocked ? "🔒" : "->"}
                     </div>
                   </div>
                 </button>
@@ -757,8 +924,10 @@ export default function Home() {
   const [photoModalLoading, setPhotoModalLoading] = useState(false);
   const [screenshotParsing, setScreenshotParsing] = useState(false);
   const [conversation, setConversation] = useState(DEFAULT_DRAFT.conversation);
+  const [draftMessage, setDraftMessage] = useState(DEFAULT_DRAFT.draftMessage);
   const [tone, setTone] = useState<ToneKey>(DEFAULT_DRAFT.tone);
   const [goal, setGoal] = useState<GoalKey>(DEFAULT_DRAFT.goal);
+  const [responseMode, setResponseMode] = useState<ResponseModeKey>(DEFAULT_DRAFT.responseMode);
   const [userContext, setUserContext] = useState(DEFAULT_DRAFT.userContext);
   const [profileName, setProfileName] = useState(DEFAULT_DRAFT.profileName);
   const [relationshipNotes, setRelationshipNotes] = useState(
@@ -808,14 +977,31 @@ export default function Home() {
 
   // Keep a stable ref to handleGenerate for event-driven auto-regen
   const handleGenerateRef = useRef<() => void>(() => {});
-  
-  const selectedTone = tones.find((item) => item.value === tone) ?? tones[0];
+
+  const currentPlan = usageSnapshot.planTier;
+  const isPlus = currentPlan === "plus";
+  const isPro = currentPlan === "pro";
+  const hasPaidPlan = currentPlan !== "free";
+  const effectiveTone = hasPlanAccess(
+    currentPlan,
+    tones.find((item) => item.value === tone)?.plan ?? "free",
+  )
+    ? tone
+    : "confident";
+  const selectedTone = tones.find((item) => item.value === effectiveTone) ?? tones[0];
   const bestReply = bestIndex !== null ? replies[bestIndex] : null;
   const currentThread = threads.find((t) => t.id === currentThreadId);
   const currentThreadInsight = useMemo(
     () => (currentThread ? buildThreadStrategyInsight(currentThread) : null),
     [currentThread],
   );
+  const followUpRadarItems = useMemo(
+    () => rankThreadsForFollowUp(threads).slice(0, 3),
+    [threads],
+  );
+  const topStats = useMemo(() => mvpFeatures.getStats(threads), [mvpFeatures, threads]);
+  const canGenerate = Boolean(conversation.trim() || draftMessage.trim());
+  const isDraftImproveMode = Boolean(draftMessage.trim());
   const isDeepConversation =
     conversation.split("\n").filter((line: string) => line.trim()).length > 16 ||
     conversation.length > 2200;
@@ -906,7 +1092,50 @@ export default function Home() {
     () => getOutcomeCoach(currentThread?.lastOutcome),
     [currentThread?.lastOutcome],
   );
-  const isPro = usageSnapshot.planTier === "pro";
+  const effectiveResponseMode =
+    !isPro && responseModeOptions.find((item) => item.value === responseMode)?.proOnly
+      ? "balanced"
+      : responseMode;
+  const effectiveBulkCount = isPro
+    ? mvpFeatures.bulkCount
+    : Math.min(mvpFeatures.bulkCount, 3);
+
+  const promptProEnhancer = (
+    featureLabel: string,
+    requiredPlan: Exclude<PlanTier, "free"> = "pro",
+  ) => {
+    const planLabel = requiredPlan === "plus" ? "Rizzly Plus" : "Rizzly Pro";
+
+    setError(null);
+    setSystemNotice(
+      `${featureLabel} is part of ${planLabel}. Free still includes balanced replies and core draft cleanups.`,
+    );
+    document.getElementById("upgrade")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
+  useEffect(() => {
+    setAnalyticsProvider((name) => {
+      const payload = JSON.stringify({ name });
+
+      if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+        const blob = new Blob([payload], { type: "application/json" });
+        navigator.sendBeacon("/api/analytics/track", blob);
+        return;
+      }
+
+      void fetch("/api/analytics/track", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: payload,
+        keepalive: true,
+      });
+    });
+  }, []);
 
   const consumeProductAction = (action: UsageAction) => {
     const result = consumeUsageAction(action);
@@ -920,14 +1149,30 @@ export default function Home() {
     return true;
   };
 
+  const jumpToStudio = () => {
+    document.getElementById("message-studio")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
+  const triggerAutoRegen = () => {
+    window.setTimeout(() => {
+      const event = new Event("auto-regen");
+      window.dispatchEvent(event);
+    }, 50);
+  };
+
   const applyQuickStart = (scenario: (typeof quickStartScenarios)[number]) => {
     if (tone !== scenario.tone) {
       trackToneChange(tone, scenario.tone);
     }
 
     setConversation(scenario.conversation);
+    setDraftMessage("");
     setTone(scenario.tone);
     setGoal(scenario.goal);
+    setResponseMode("balanced");
     setReplies([]);
     setBestIndex(null);
     setAnalysis(null);
@@ -965,6 +1210,48 @@ export default function Home() {
     setSystemNotice(`Loaded ${persona.name} into your memory fields.`);
   };
 
+  const applyPresetMode = (preset: {
+    label: string;
+    tone: ToneKey;
+    goal: GoalKey;
+    responseMode?: ResponseModeKey;
+  }) => {
+    const lockedResponseMode = Boolean(
+      preset.responseMode &&
+        !isPro &&
+        responseModeOptions.find((item) => item.value === preset.responseMode)?.proOnly,
+    );
+
+    if (tone !== preset.tone) {
+      trackToneChange(tone, preset.tone);
+    }
+
+    setTone(preset.tone);
+    setGoal(preset.goal);
+
+    if (preset.responseMode && !lockedResponseMode) {
+      setResponseMode(preset.responseMode);
+    }
+
+    if (lockedResponseMode) {
+      setResponseMode("balanced");
+      promptProEnhancer(`${preset.label} preset`);
+    } else {
+      setSystemNotice(`Loaded ${preset.label.toLowerCase()} mode.`);
+    }
+
+    if (conversation.trim() || draftMessage.trim()) {
+      triggerAutoRegen();
+    }
+
+    jumpToStudio();
+  };
+
+  const removeSavedPersonaFromList = (personaId: string) => {
+    setSavedPersonas(deleteSavedPersona(personaId));
+    setSystemNotice("Saved persona removed.");
+  };
+
   const syncCloudHistory = async () => {
     if (!isSignedIn) {
       setCloudSyncState("error");
@@ -988,7 +1275,7 @@ export default function Home() {
       const pullData = (await pullRes.json()) as {
         threads?: Thread[];
         personas?: SavedPersona[];
-        planTier?: "free" | "pro";
+        planTier?: PlanTier;
         error?: string;
       };
 
@@ -1008,8 +1295,8 @@ export default function Home() {
       setThreads(mergedThreads);
       setSavedPersonas(mergedPersonas);
 
-      if (pullData.planTier === "pro") {
-        setUsageSnapshot(setStoredPlanTier("pro"));
+      if (pullData.planTier) {
+        setUsageSnapshot(setStoredPlanTier(pullData.planTier));
       }
 
       const pushRes = await fetchWithTimeout(
@@ -1032,15 +1319,15 @@ export default function Home() {
         threadCount?: number;
         personaCount?: number;
         storageMode?: string;
-        planTier?: "free" | "pro";
+        planTier?: PlanTier;
       };
 
       if (!pushRes.ok) {
         throw new Error(pushData.error || "Failed to save cloud history.");
       }
 
-      if (pushData.planTier === "pro") {
-        setUsageSnapshot(setStoredPlanTier("pro"));
+      if (pushData.planTier) {
+        setUsageSnapshot(setStoredPlanTier(pushData.planTier));
       }
 
       setCloudSyncState("synced");
@@ -1084,7 +1371,7 @@ export default function Home() {
         const data = (await res.json()) as {
           threads?: Thread[];
           personas?: SavedPersona[];
-          planTier?: "free" | "pro";
+          planTier?: PlanTier;
           error?: string;
         };
 
@@ -1102,8 +1389,8 @@ export default function Home() {
         setThreads((current) => mergeThreads(current, remoteThreads));
         setSavedPersonas((current) => mergeSavedPersonas(current, remotePersonas));
 
-        if (data.planTier === "pro") {
-          setUsageSnapshot(setStoredPlanTier("pro"));
+        if (data.planTier) {
+          setUsageSnapshot(setStoredPlanTier(data.planTier));
         }
 
         setCloudSyncState(remoteThreads.length || remotePersonas.length ? "synced" : "idle");
@@ -1171,7 +1458,7 @@ export default function Home() {
 
           const data = (await res.json()) as {
             verified?: boolean;
-            planTier?: "free" | "pro";
+            planTier?: PlanTier;
             error?: string;
           };
 
@@ -1184,31 +1471,40 @@ export default function Home() {
           }
 
           if (data.verified) {
-            setUsageSnapshot(setStoredPlanTier("pro"));
+            const verifiedPlan = data.planTier ?? "pro";
+            const planLabel = verifiedPlan === "plus" ? "Rizzly Plus" : "Rizzly Pro";
+
+            setUsageSnapshot(setStoredPlanTier(verifiedPlan));
             setCloudSyncState("synced");
             setCloudSyncMessage(
               isSignedIn
-                ? "Rizzly Pro is active for this account."
-                : "Rizzly Pro is active on this device.",
+                ? `${planLabel} is active for this account.`
+                : `${planLabel} is active on this device.`,
             );
-            setSystemNotice("You're upgraded to Rizzly Pro. Higher limits and Pro tools are now live.");
+            setSystemNotice(`You're upgraded to ${planLabel}. Higher limits and paid tools are now live.`);
           } else {
             setSystemNotice("Checkout completed. Your plan update is still being confirmed.");
           }
         } else if (checkoutState === "success") {
-          setUsageSnapshot(setStoredPlanTier("pro"));
-          setSystemNotice("You're upgraded to Rizzly Pro. Higher limits and Pro tools are now live.");
+          const fallbackPlan = params.get("tier") === "plus" ? "plus" : "pro";
+          const planLabel = fallbackPlan === "plus" ? "Rizzly Plus" : "Rizzly Pro";
+
+          setUsageSnapshot(setStoredPlanTier(fallbackPlan));
+          setSystemNotice(`You're upgraded to ${planLabel}. Higher limits and paid tools are now live.`);
         }
       } catch (caughtError) {
         if (cancelled) {
           return;
         }
 
-        setUsageSnapshot(setStoredPlanTier("pro"));
+        const fallbackPlan = params.get("tier") === "plus" ? "plus" : "pro";
+        const planLabel = fallbackPlan === "plus" ? "Rizzly Plus" : "Rizzly Pro";
+
+        setUsageSnapshot(setStoredPlanTier(fallbackPlan));
         setSystemNotice(
           caughtError instanceof Error
-            ? `${caughtError.message} Pro tools have been unlocked on this device.`
-            : "You're upgraded to Rizzly Pro. Higher limits are now live.",
+            ? `${caughtError.message} ${planLabel} has been unlocked on this device.`
+            : `You're upgraded to ${planLabel}. Higher limits are now live.`,
         );
       } finally {
         clearCheckoutState();
@@ -1243,8 +1539,10 @@ export default function Home() {
       DRAFT_KEY,
       JSON.stringify({
         conversation,
+        draftMessage,
         tone,
         goal,
+        responseMode,
         userContext,
         profileName,
         relationshipNotes,
@@ -1254,7 +1552,9 @@ export default function Home() {
     );
   }, [
     conversation,
+    draftMessage,
     goal,
+    responseMode,
     tone,
     userContext,
     profileName,
@@ -1325,8 +1625,10 @@ export default function Home() {
 
     queueMicrotask(() => {
       setConversation(draft.conversation);
+      setDraftMessage(draft.draftMessage);
       setTone(draft.tone);
       setGoal(draft.goal);
+      setResponseMode(draft.responseMode);
       setUserContext(draft.userContext);
       setProfileName(draft.profileName);
       setRelationshipNotes(draft.relationshipNotes);
@@ -1714,8 +2016,10 @@ export default function Home() {
     setThreads((prev) => [newThread, ...prev]);
     setCurrentThreadId(newThread.id);
     setConversation("");
+    setDraftMessage("");
     setTone("confident");
     setGoal("restart");
+    setResponseMode("balanced");
     setUserContext("");
     setProfileName("");
     setRelationshipNotes("");
@@ -1741,8 +2045,10 @@ export default function Home() {
 
     if (lastTurn) {
       setConversation(lastTurn.userMessage);
+      setDraftMessage(lastTurn.draftMessage || "");
       setTone(lastTurn.tone);
       setGoal(lastTurn.goal);
+      setResponseMode(lastTurn.responseMode || "balanced");
       setUserContext(lastTurn.userContext);
       setProfileName(thread.profileName || "");
       setRelationshipNotes(
@@ -1762,8 +2068,10 @@ export default function Home() {
       setPreviewVisible(Boolean(lastTurn.bestIndex !== null && lastTurn.replies.length));
     } else {
       setConversation("");
+      setDraftMessage("");
       setTone("confident");
       setGoal("restart");
+      setResponseMode("balanced");
       setUserContext("");
       setProfileName(thread.profileName || "");
       setRelationshipNotes(thread.relationshipNotes || "");
@@ -1803,7 +2111,7 @@ export default function Home() {
   };
 
   const handleGenerate = async () => {
-    if (!conversation.trim()) return;
+    if (!conversation.trim() && !draftMessage.trim()) return;
 
     if (!consumeProductAction("generate")) {
       return;
@@ -1835,8 +2143,10 @@ export default function Home() {
           },
           body: JSON.stringify({
             conversation,
-            tone,
+            draftMessage,
+            tone: effectiveTone,
             goal,
+            responseMode: effectiveResponseMode,
             userContext,
             profileName,
             relationshipNotes,
@@ -1847,7 +2157,8 @@ export default function Home() {
             memoryPrimer,
             category: mvpFeatures.category,
             toneIntensity: mvpFeatures.toneIntensity,
-            bulkCount: mvpFeatures.bulkCount,
+            bulkCount: effectiveBulkCount,
+            planTier: usageSnapshot.planTier,
           }),
         },
         25_000,
@@ -1864,9 +2175,13 @@ export default function Home() {
       setAnalysis(data.analysis || null);
       if (data.warning) {
         setSystemNotice(data.warning);
+      } else if (draftMessage.trim()) {
+        setSystemNotice(
+          "Rizzly tightened your draft into cleaner options. Pick the one that still sounds most like you.",
+        );
       }
-      mvpFeatures.trackToneUsage(tone);
-      trackGenerate(tone, goal, mvpFeatures.category, mvpFeatures.bulkCount);
+      mvpFeatures.trackToneUsage(effectiveTone);
+      trackGenerate(effectiveTone, goal, mvpFeatures.category, effectiveBulkCount);
 
       // Create new thread if none is selected
       if (!currentThreadId) {
@@ -1893,8 +2208,10 @@ export default function Home() {
           id: `turn-${Date.now()}`,
           createdAt: Date.now(),
           userMessage: conversation,
-          tone,
+          draftMessage,
+          tone: effectiveTone,
           goal,
+          responseMode: effectiveResponseMode,
           userContext,
           category: mvpFeatures.category,
           toneIntensity: mvpFeatures.toneIntensity,
@@ -1931,8 +2248,10 @@ export default function Home() {
           id: `turn-${Date.now()}`,
           createdAt: Date.now(),
           userMessage: conversation,
-          tone,
+          draftMessage,
+          tone: effectiveTone,
           goal,
+          responseMode: effectiveResponseMode,
           userContext,
           category: mvpFeatures.category,
           toneIntensity: mvpFeatures.toneIntensity,
@@ -2001,7 +2320,9 @@ export default function Home() {
           const shouldPatchLastTurn =
             lastTurn &&
             lastTurn.userMessage === conversation &&
-            lastTurn.tone === tone &&
+            (lastTurn.draftMessage || "") === draftMessage &&
+            (lastTurn.responseMode || "balanced") === effectiveResponseMode &&
+            lastTurn.tone === effectiveTone &&
             lastTurn.goal === goal &&
             !lastTurn.chosenReply;
 
@@ -2009,6 +2330,8 @@ export default function Home() {
             turns[turns.length - 1] = {
               ...lastTurn,
               chosenReply: reply.text,
+              draftMessage,
+              responseMode: effectiveResponseMode,
               screenshotSummary,
               relationshipNotesSnapshot: relationshipNotes,
               personaCalibrationSnapshot: personaCalibration,
@@ -2018,8 +2341,10 @@ export default function Home() {
               id: `turn-${Date.now()}`,
               createdAt: Date.now(),
               userMessage: conversation,
-              tone,
+              draftMessage,
+              tone: effectiveTone,
               goal,
+              responseMode: effectiveResponseMode,
               userContext,
               category: mvpFeatures.category,
               toneIntensity: mvpFeatures.toneIntensity,
@@ -2046,6 +2371,8 @@ export default function Home() {
     }
 
     setConversation("");
+    setDraftMessage("");
+    setResponseMode("balanced");
     setReplies([]);
     setBestIndex(null);
     setAnalysis(null);
@@ -2061,6 +2388,8 @@ export default function Home() {
     if (currentThreadId === threadId) {
       setCurrentThreadId(null);
       setConversation("");
+      setDraftMessage("");
+      setResponseMode("balanced");
       setReplies([]);
       setBestIndex(null);
       setAnalysis(null);
@@ -2069,7 +2398,7 @@ export default function Home() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#1a0f2e] text-white">
+    <main id="main-content" tabIndex={-1} className="relative min-h-screen overflow-hidden bg-[#1a0f2e] pb-24 text-white sm:pb-0">
       <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) translateX(0px); }
@@ -2172,11 +2501,13 @@ export default function Home() {
           onToggleDashboard={mvpFeatures.toggleDashboard}
         />
 
-        {isPro && (
+        {hasPaidPlan && (
           <div className="mb-6 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-50">
-            <div className="font-semibold">Rizzly Pro is active</div>
+            <div className="font-semibold">{isPro ? "Rizzly Pro is active" : "Rizzly Plus is active"}</div>
             <p className="mt-1 text-emerald-100/85">
-              Higher reply limits, synced memory, and Pro workflow tools are now unlocked.
+              {isPro
+                ? "Higher reply limits, synced memory, and the full premium workflow stack are now unlocked."
+                : "More daily volume, saved voice setup, and extra tone modes are now unlocked."}
             </p>
           </div>
         )}
@@ -2196,7 +2527,7 @@ export default function Home() {
         <section className="mb-10 grid gap-6 xl:gap-8 2xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] 2xl:items-end">
           <div className="max-w-4xl">
             <div className="mb-6 inline-flex rounded-full border border-cyan-500/30 bg-gradient-to-r from-cyan-500/15 to-transparent px-3.5 py-2 text-xs font-semibold tracking-[0.5px] text-cyan-200 backdrop-blur-sm" style={{ textShadow: "0 0 12px rgba(6, 182, 212, 0.2)" }}>
-              Smart context-aware replies
+              Built for real conversations, not robotic filler
             </div>
 
             <h1 className="mb-4 text-4xl font-black leading-tight tracking-[-0.02em] md:text-5xl xl:text-6xl" style={{ textShadow: "0 8px 32px rgba(236, 72, 153, 0.15)" }}>
@@ -2209,13 +2540,16 @@ export default function Home() {
             </h1>
 
             <p className="max-w-2xl text-base font-[450] leading-relaxed tracking-[0.3px] text-white/60 md:text-lg" style={{ letterSpacing: "0.3px" }}>
-              Rizzly reads the vibe, scores your interest level, and crafts replies that feel <span className="font-semibold text-white/90">genuinely you</span>. Built for real texting, not templates.
+              Rizzly turns pasted chats, screenshots, and voice notes into sharper next messages that feel <span className="font-semibold text-white/90">genuinely like you</span> — fast, clear, and built for real momentum.
             </p>
 
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <button
                 type="button"
-                onClick={() => document.getElementById("message-studio")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                onClick={() => {
+                  trackCtaClick("try_free", "hero");
+                  jumpToStudio();
+                }}
                 className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_28px_rgba(236,72,153,0.24)] transition hover:scale-[1.01]"
               >
                 Try it free
@@ -2223,6 +2557,7 @@ export default function Home() {
 
               <a
                 href={isSignedIn ? "#message-studio" : "/sign-up"}
+                onClick={() => trackCtaClick(isSignedIn ? "open_thread" : "create_account", "hero")}
                 className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/85 transition hover:border-white/25 hover:bg-white/10"
               >
                 {isSignedIn ? "Open your thread" : "Create account"}
@@ -2232,6 +2567,7 @@ export default function Home() {
             <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/58">
               <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">⚡ Replies in seconds</div>
               <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">💬 Guest mode live</div>
+              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">🧠 Thread-aware guidance</div>
               <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">🔒 No card required</div>
             </div>
           </div>
@@ -2281,6 +2617,26 @@ export default function Home() {
           </div>
         </section>
 
+        <PremiumStatsStrip
+          threadsCount={threads.length}
+          savedPersonasCount={savedPersonas.length}
+          favoriteCount={mvpFeatures.favorites.length}
+          planTier={usageSnapshot.planTier}
+        />
+
+        <SmartRecommendationBar
+          suggestion={mvpFeatures.getSuggestion()}
+          topTone={topStats.mostUsedTone}
+          topGoal={topStats.mostUsedGoal}
+        />
+
+        <LandingUpgradeSections
+          isSignedIn={Boolean(isSignedIn)}
+          scenarios={quickStartScenarios}
+          onChooseScenario={applyQuickStart}
+          onJumpToStudio={jumpToStudio}
+        />
+
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-6">
             {currentThread && (
@@ -2308,6 +2664,8 @@ export default function Home() {
                     onClick={() => {
                       setCurrentThreadId(null);
                       setConversation("");
+                      setDraftMessage("");
+                      setResponseMode("balanced");
                       setProfileName("");
                       setRelationshipNotes("");
                       setPersonaCalibration("");
@@ -2324,6 +2682,17 @@ export default function Home() {
                 </div>
               </div>
             )}
+
+            <OnboardingCoachPanel
+              conversationReady={canGenerate}
+              hasReplies={replies.length > 0}
+              hasSavedPersona={savedPersonas.length > 0}
+              isSignedIn={Boolean(isSignedIn)}
+              isPro={isPro}
+              onJumpToStudio={jumpToStudio}
+              onApplyPreset={applyPresetMode}
+              onSavePersona={saveCurrentPersona}
+            />
 
             <section id="message-studio" className="overflow-visible rounded-xl border border-white/10 bg-white/3 backdrop-blur-sm before:hidden">
               <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
@@ -2378,18 +2747,62 @@ export default function Home() {
                   className={`h-40 w-full resize-none rounded-[24px] border border-white/10 bg-black/40 px-4 py-4 text-white outline-none transition-all duration-400 placeholder:text-white/30 focus:border-white/30 focus:bg-black/50 focus:ring-2 md:h-48 ${selectedTone.ring}`}
                 />
 
+                <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-white/40">
+                  <span>Include both sides of the chat for the cleanest tone read.</span>
+                  <span>{conversation.trim() ? conversation.split("\n").filter((line) => line.trim()).length : 0} lines</span>
+                </div>
+
+                <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                  <div className="mb-2 flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                        Improve your own draft
+                      </div>
+                      <div className="mt-1 text-xs text-white/55">
+                        Optional — paste what you were about to send and Rizzly will tighten it up without losing your vibe.
+                      </div>
+                    </div>
+                    {isDraftImproveMode && (
+                      <div className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
+                        Improve mode on
+                      </div>
+                    )}
+                  </div>
+
+                  <textarea
+                    value={draftMessage}
+                    onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setDraftMessage(event.target.value)}
+                    placeholder="e.g. haha you’re trouble, when are you free this week?"
+                    className={`h-24 w-full resize-none rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-all duration-300 placeholder:text-white/30 focus:border-white/20 focus:bg-black/40 focus:ring-2 ${selectedTone.ring}`}
+                  />
+
+                  <p className="mt-2 text-[11px] text-white/45">
+                    Leave this blank if you want fresh reply ideas from scratch.
+                  </p>
+                </div>
+
                 <div className="mt-4 space-y-3">
                   <div className="flex flex-wrap gap-2 text-[11px] text-white/55">
-                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">1. Paste your chat</div>
+                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">1. Paste a chat or draft</div>
                     <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">2. Pick the vibe</div>
                     <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">3. Copy the best reply</div>
                   </div>
 
                   <p className="text-[11px] text-white/45">
-                    Best results: paste 3-8 recent lines from both sides so the tone read stays accurate.
+                    Best results: paste 3-8 recent lines from both sides for tone matching, or use the draft box when you just want your own message sharpened.
                   </p>
 
-                  <ToneDropdown value={tone} onChange={(newTone: ToneKey) => { trackToneChange(tone, newTone); setTone(newTone); }} />
+                  <ToneDropdown
+                    value={effectiveTone}
+                    currentPlan={usageSnapshot.planTier}
+                    onChange={(newTone: ToneKey) => {
+                      trackToneChange(tone, newTone);
+                      setTone(newTone);
+                    }}
+                    onLockedSelect={(label, requiredPlan) => {
+                      promptProEnhancer(`${label} tone`, requiredPlan);
+                    }}
+                  />
 
                   <input
                     ref={screenshotInputRef}
@@ -2447,11 +2860,25 @@ export default function Home() {
 
                     <button
                       onClick={() => void handleGenerate()}
-                      disabled={loading || !conversation.trim()}
+                      disabled={loading || !canGenerate}
                       className={`flex min-h-[56px] items-center justify-center rounded-2xl bg-gradient-to-r px-6 py-3 text-center text-sm font-bold text-white transition-all duration-300 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:brightness-100 ${selectedTone.button}`}
                     >
-                      <span className="whitespace-nowrap">{loading ? "Analyzing..." : "Get Replies"}</span>
+                      <span className="whitespace-nowrap">
+                        {loading
+                          ? isDraftImproveMode
+                            ? "Improving..."
+                            : "Analyzing..."
+                          : isDraftImproveMode
+                            ? "Improve my message"
+                            : "Get reply options"}
+                      </span>
                     </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 text-[11px] text-white/55">
+                    <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5">⚡ Usually ready in seconds</div>
+                    <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5">🔒 No card needed to try Free</div>
+                    <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5">🧠 Multiple reply angles, not one rigid answer</div>
                   </div>
 
                   {!isSignedIn && (
@@ -2572,6 +2999,55 @@ export default function Home() {
                   </div>
                 </div>
 
+                <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <div className="mb-2 flex items-center gap-2">
+                    <span className="text-xs font-semibold text-white">Response mode</span>
+                    <span className="text-[10px] text-white/40">safe stance</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {responseModeOptions.map((item) => {
+                      const isLocked = Boolean(item.proOnly && !isPro);
+                      const isSelected = effectiveResponseMode === item.value;
+
+                      return (
+                        <button
+                          key={item.value}
+                          type="button"
+                          onClick={() => {
+                            if (isLocked) {
+                              promptProEnhancer(`${item.label} mode`);
+                              return;
+                            }
+
+                            setResponseMode(item.value);
+                            if (canGenerate) {
+                              triggerAutoRegen();
+                            }
+                          }}
+                          className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-bold transition-all duration-300 ${
+                            isSelected
+                              ? `bg-gradient-to-r text-white ${selectedTone.button} border-white/20`
+                              : isLocked
+                                ? "border-fuchsia-400/20 bg-fuchsia-500/8 text-white/60 hover:border-fuchsia-300/35"
+                                : "border-white/15 bg-white/5 text-white/65 hover:border-white/30 hover:text-white/85"
+                          }`}
+                          title={item.note}
+                        >
+                          <span>{item.label}</span>
+                          {item.proOnly && (
+                            <span className="rounded-full border border-fuchsia-400/25 bg-fuchsia-500/10 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.16em] text-fuchsia-100">
+                              Pro
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p className="mt-2 text-[11px] text-white/45">
+                    Balanced stays free. Boundary, comeback, and other advanced stances unlock on Pro.
+                  </p>
+                </div>
+
                 <div className="mt-4 grid gap-4 sm:grid-cols-3">
                   <div>
                     <div className="mb-2 flex items-center gap-2">
@@ -2620,20 +3096,35 @@ export default function Home() {
                       <span className="text-[10px] text-white/40">how many</span>
                     </div>
                     <div className="flex gap-1.5">
-                      {[1, 2, 3, 5].map((n) => (
-                        <button
-                          key={n}
-                          type="button"
-                          onClick={() => mvpFeatures.setBulkCount(n)}
-                          className={`flex-1 rounded-lg border px-2 py-2 text-xs font-bold transition-all duration-300 ${
-                            mvpFeatures.bulkCount === n
-                              ? `bg-gradient-to-r text-white ${selectedTone.button} border-white/20`
-                              : "border-white/15 bg-white/5 text-white/60 hover:border-white/30"
-                          }`}
-                        >
-                          {n}
-                        </button>
-                      ))}
+                      {[1, 2, 3, 5].map((n) => {
+                        const isLocked = n > 3 && !isPro;
+                        const isSelected = effectiveBulkCount === n;
+
+                        return (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => {
+                              if (isLocked) {
+                                promptProEnhancer("5-reply burst");
+                                return;
+                              }
+
+                              mvpFeatures.setBulkCount(n);
+                            }}
+                            className={`flex-1 rounded-lg border px-2 py-2 text-xs font-bold transition-all duration-300 ${
+                              isSelected
+                                ? `bg-gradient-to-r text-white ${selectedTone.button} border-white/20`
+                                : isLocked
+                                  ? "border-fuchsia-400/20 bg-fuchsia-500/8 text-white/60 hover:border-fuchsia-300/35"
+                                  : "border-white/15 bg-white/5 text-white/60 hover:border-white/30"
+                            }`}
+                          >
+                            <span>{n}</span>
+                            {isLocked && <span className="mt-1 block text-[9px] uppercase tracking-[0.14em] text-fuchsia-100/85">Pro</span>}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -2741,14 +3232,12 @@ export default function Home() {
 
                     {savedPersonas.length > 0 ? (
                       <div className="space-y-2">
-                        {savedPersonas.slice(0, 3).map((persona) => (
-                          <button
+                        {savedPersonas.slice(0, 4).map((persona) => (
+                          <div
                             key={persona.id}
-                            type="button"
-                            onClick={() => applySavedPersona(persona)}
-                            className="w-full rounded-xl border border-white/10 bg-black/25 px-4 py-3 text-left transition hover:border-white/20 hover:bg-white/5"
+                            className="rounded-xl border border-white/10 bg-black/25 px-4 py-3"
                           >
-                            <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-start justify-between gap-3">
                               <div className="min-w-0">
                                 <div className="truncate text-sm font-semibold text-white">
                                   {persona.name}
@@ -2757,11 +3246,24 @@ export default function Home() {
                                   {persona.voice || persona.notes || "Saved thread memory"}
                                 </div>
                               </div>
-                              <span className="shrink-0 rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-cyan-100">
-                                Apply
-                              </span>
+                              <div className="flex shrink-0 gap-2">
+                                <button
+                                  type="button"
+                                  onClick={() => applySavedPersona(persona)}
+                                  className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-cyan-100 transition hover:bg-cyan-500/20"
+                                >
+                                  Apply
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => removeSavedPersonaFromList(persona.id)}
+                                  className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] uppercase tracking-[0.16em] text-white/65 transition hover:bg-white/10"
+                                >
+                                  Remove
+                                </button>
+                              </div>
                             </div>
-                          </button>
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -3002,6 +3504,21 @@ export default function Home() {
               <RelationshipIntelPanel insight={currentThreadInsight} />
             )}
 
+            <FollowUpRadar
+              items={followUpRadarItems}
+              isPro={isPro}
+              onOpenThread={loadThread}
+              onUnlockPro={() => promptProEnhancer("Follow-up radar")}
+            />
+
+            <HabitMomentumPanel
+              streakCount={mvpFeatures.streak.count}
+              isPro={isPro}
+              totalThreads={threads.length}
+            />
+
+            <AdminPanel isSignedIn={Boolean(isSignedIn)} />
+
             <GrowthPanel
               isSignedIn={Boolean(isSignedIn)}
               usageSnapshot={usageSnapshot}
@@ -3013,7 +3530,17 @@ export default function Home() {
             />
 
             {analysis && (
-              <AnalysisPanel analysis={analysis} analysisVisible={analysisVisible} panelClass={selectedTone.panel} />
+              <>
+                <ReplyCoachPanel
+                  analysis={analysis}
+                  toneLabel={selectedTone.label}
+                  goalLabel={goals.find((item) => item.value === goal)?.label ?? goal}
+                  isPro={isPro}
+                  onApplyPreset={applyPresetMode}
+                  onUnlockPro={() => promptProEnhancer("Quick coach presets")}
+                />
+                <AnalysisPanel analysis={analysis} analysisVisible={analysisVisible} panelClass={selectedTone.panel} />
+              </>
             )}
 
             <ThreadList
@@ -3130,19 +3657,19 @@ export default function Home() {
                       </button>
 
                       <button
-                        onClick={() => { setTone("flirty"); setTimeout(() => { const event = new Event("auto-regen"); window.dispatchEvent(event); }, 50); }}
+                        onClick={() => applyPresetMode({ label: "flirty remix", tone: "flirty", goal })}
                         className="rounded-xl border border-fuchsia-400/30 bg-fuchsia-500/15 px-4 py-2 text-sm font-bold text-fuchsia-100 transition-all duration-[350ms] transform hover:scale-105 active:scale-95 hover:border-fuchsia-400/50 hover:bg-fuchsia-500/25"
                       >
                         Make Flirty
                       </button>
                       <button
-                        onClick={() => { setTone("confident"); setTimeout(() => { const event = new Event("auto-regen"); window.dispatchEvent(event); }, 50); }}
+                        onClick={() => applyPresetMode({ label: "bolder remix", tone: "confident", goal })}
                         className="rounded-xl border border-cyan-400/30 bg-cyan-500/15 px-4 py-2 text-sm font-bold text-cyan-100 transition-all duration-[350ms] transform hover:scale-105 active:scale-95 hover:border-cyan-400/50 hover:bg-cyan-500/25"
                       >
                         Make Bolder
                       </button>
                       <button
-                        onClick={() => { setTone("funny"); setTimeout(() => { const event = new Event("auto-regen"); window.dispatchEvent(event); }, 50); }}
+                        onClick={() => applyPresetMode({ label: "funny remix", tone: "funny", goal })}
                         className="rounded-xl border border-amber-400/30 bg-amber-500/15 px-4 py-2 text-sm font-bold text-amber-100 transition-all duration-[350ms] transform hover:scale-105 active:scale-95 hover:border-amber-400/50 hover:bg-amber-500/25"
                       >
                         Make Funny
@@ -3155,6 +3682,11 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      <MobileActionDock
+        onJumpToStudio={jumpToStudio}
+        onToggleDashboard={mvpFeatures.toggleDashboard}
+      />
     </main>
   );
 }

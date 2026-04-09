@@ -5,8 +5,24 @@
 
 import type { Analysis, Reply } from "@/lib/types";
 
-export type ToneKey = "confident" | "flirty" | "funny" | "chill" | "apologetic";
+export type ToneKey =
+  | "confident"
+  | "flirty"
+  | "funny"
+  | "chill"
+  | "apologetic"
+  | "warm"
+  | "direct"
+  | "playful"
+  | "smooth";
 export type GoalKey = "restart" | "flirt" | "clarify" | "plan" | "repair";
+export type ResponseModeKey =
+  | "balanced"
+  | "boundary"
+  | "high-value"
+  | "disengage"
+  | "call-out"
+  | "comeback";
 export type CategoryKey = "dating" | "friendship" | "work" | "family" | "exes" | "other";
 export type OutcomeStatus = "warm" | "neutral" | "cold" | "no-reply";
 
@@ -35,8 +51,10 @@ export interface ThreadTurn {
   id: string;
   createdAt: number;
   userMessage: string;
+  draftMessage?: string;
   tone: ToneKey;
   goal: GoalKey;
+  responseMode?: ResponseModeKey;
   userContext: string;
   category?: CategoryKey;
   toneIntensity?: number;
@@ -111,7 +129,7 @@ export function getDefaultAchievements(): Achievement[] {
     {
       id: "all-tones",
       name: "Master of Vibes",
-      description: "Use all 5 tones",
+      description: "Use 5 different tones",
       icon: "🎨",
       unlocked: false,
     },

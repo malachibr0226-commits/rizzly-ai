@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getServerUser } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
+import { ensureTrustedOrigin } from "@/lib/security";
 
 function getBaseUrl() {
   return (
@@ -11,6 +12,11 @@ function getBaseUrl() {
 }
 
 export async function POST(req: Request) {
+  const blockedOrigin = ensureTrustedOrigin(req);
+  if (blockedOrigin) {
+    return blockedOrigin;
+  }
+
   const { limited, remaining } = rateLimit(req);
   if (limited) {
     return NextResponse.json(

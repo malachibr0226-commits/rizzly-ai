@@ -74,7 +74,7 @@ export function Dashboard({
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Quick stats */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="bg-white/6 backdrop-blur-md rounded-xl p-5 border border-white/12 hover:border-white/18 transition-all duration-200 transform hover:scale-102">
               <p className="text-white/60 text-xs uppercase tracking-widest font-semibold mb-2">
                 Conversations
@@ -203,7 +203,7 @@ export function Dashboard({
             <h3 className="text-sm font-bold text-white mb-3 uppercase tracking-widest">
               🏆 Achievements ({unlockedCount}/{achievements.length})
             </h3>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               {achievements.map((ach) => (
                 <div
                   key={ach.id}

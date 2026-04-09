@@ -45,7 +45,7 @@ export function ThreadList({
             key={thread.id}
             className={`group relative w-full rounded-2xl border p-4 text-left transition ${
               currentThreadId === thread.id
-                ? "border-fuchsia-400/30 bg-fuchsia-500/10"
+                ? "border-fuchsia-400/30 bg-fuchsia-500/10 shadow-[0_0_24px_rgba(217,70,239,0.10)]"
                 : "border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/[0.05]"
             }`}
           >
@@ -84,7 +84,7 @@ export function ThreadList({
                     )}
                   </div>
                 </div>
-                <div className="shrink-0 text-lg">-&gt;</div>
+                <div className="shrink-0 rounded-full border border-white/10 bg-white/5 px-2 py-1 text-xs text-white/60">Open</div>
               </div>
             </button>
             <button

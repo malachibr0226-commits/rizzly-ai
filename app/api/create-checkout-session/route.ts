@@ -2,6 +2,9 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getServerUser } from "@/lib/auth";
 import { rateLimit } from "@/lib/rate-limit";
+import { ensureTrustedOrigin } from "@/lib/security";
+
+type CheckoutTier = "plus" | "pro";
 
 function getBaseUrl() {
   return (
@@ -10,14 +13,35 @@ function getBaseUrl() {
   );
 }
 
-function getFallbackUpgradeUrl() {
+function getFallbackUpgradeUrl(tier: CheckoutTier) {
+  if (tier === "plus") {
+    return (
+      process.env.NEXT_PUBLIC_STRIPE_PLUS_PAYMENT_LINK?.trim() ||
+      "mailto:hi@rizzlyai.com?subject=Rizzly%20Plus"
+    );
+  }
+
   return (
+    process.env.NEXT_PUBLIC_STRIPE_PRO_PAYMENT_LINK?.trim() ||
     process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK?.trim() ||
     "mailto:hi@rizzlyai.com?subject=Rizzly%20Pro"
   );
 }
 
+function getStripePriceId(tier: CheckoutTier) {
+  if (tier === "plus") {
+    return process.env.STRIPE_PLUS_PRICE_ID?.trim() || "";
+  }
+
+  return process.env.STRIPE_PRO_PRICE_ID?.trim() || process.env.STRIPE_PRICE_ID?.trim() || "";
+}
+
 export async function POST(req: Request) {
+  const blockedOrigin = ensureTrustedOrigin(req);
+  if (blockedOrigin) {
+    return blockedOrigin;
+  }
+
   const { limited, remaining } = rateLimit(req);
   if (limited) {
     return NextResponse.json(
@@ -26,13 +50,24 @@ export async function POST(req: Request) {
     );
   }
 
+  let requestedTier: CheckoutTier = "pro";
+
+  try {
+    const body = (await req.json()) as { tier?: unknown };
+    if (body.tier === "plus" || body.tier === "pro") {
+      requestedTier = body.tier;
+    }
+  } catch {
+    // allow empty body and default to Pro
+  }
+
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY?.trim();
-  const stripePriceId = process.env.STRIPE_PRICE_ID?.trim();
+  const stripePriceId = getStripePriceId(requestedTier);
   const checkoutMode =
     process.env.STRIPE_CHECKOUT_MODE?.trim() === "payment"
       ? "payment"
       : "subscription";
-  const fallbackUrl = getFallbackUpgradeUrl();
+  const fallbackUrl = getFallbackUpgradeUrl(requestedTier);
 
   if (!stripeSecretKey || !stripePriceId) {
     return NextResponse.json(
@@ -60,17 +95,19 @@ export async function POST(req: Request) {
       mode: checkoutMode,
       allow_promotion_codes: true,
       line_items: [{ price: stripePriceId, quantity: 1 }],
-      success_url: `${baseUrl}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${baseUrl}/?checkout=cancelled`,
+      success_url: `${baseUrl}/?checkout=success&tier=${requestedTier}&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}/?checkout=cancelled&tier=${requestedTier}`,
       client_reference_id: user?.id ?? undefined,
       customer_email: user?.email ?? undefined,
       metadata: user?.id
         ? {
             clerkUserId: user.id,
-            source: "rizzly-web-upgrade",
+            source: `rizzly-web-upgrade-${requestedTier}`,
+            planTier: requestedTier,
           }
         : {
-            source: "rizzly-web-upgrade",
+            source: `rizzly-web-upgrade-${requestedTier}`,
+            planTier: requestedTier,
           },
     });
 

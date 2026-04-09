@@ -87,6 +87,10 @@ export function trackSend(replyIndex: number) {
   dispatch("reply_sent", { replyIndex });
 }
 
+export function trackCtaClick(label: string, location: string) {
+  dispatch("cta_clicked", { label, location });
+}
+
 export function trackRate(replyText: string, rating: number) {
   dispatch("reply_rated", { rating, textLength: replyText.length });
 }
