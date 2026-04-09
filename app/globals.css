@@ -6,8 +6,10 @@
   color: #fff !important;
   border-radius: 18px !important;
   box-shadow: 0 6px 32px 0 rgba(190,103,154,0.10), 0 2px 12px 0 rgba(126,151,163,0.10) !important;
+}
 .cl-card *, .cl-modal *, .cl-profilePage *, .cl-userButtonPopoverCard * {
   color: #fff !important;
+}
 /* --- Lively Navigation and Animated Background Enhancements --- */
 
 /* Animated navigation underline and glow */
@@ -150,6 +152,7 @@ body {
   box-sizing: border-box;
 }
 
+html {
 html {
   background: var(--background);
 }
