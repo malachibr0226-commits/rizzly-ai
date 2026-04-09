@@ -6,6 +6,17 @@ import { ensureTrustedOrigin } from "@/lib/security";
 
 type CheckoutTier = "plus" | "pro";
 
+const DEFAULT_STRIPE_OFFERS: Record<CheckoutTier, { name: string; unitAmount: number }> = {
+  plus: {
+    name: "Rizzly Plus",
+    unitAmount: 999,
+  },
+  pro: {
+    name: "Rizzly Pro",
+    unitAmount: 1900,
+  },
+};
+
 function getBaseUrl() {
   return (
     process.env.NEXT_PUBLIC_APP_URL?.trim().replace(/\/$/, "") ||
@@ -34,6 +45,40 @@ function getStripePriceId(tier: CheckoutTier) {
   }
 
   return process.env.STRIPE_PRO_PRICE_ID?.trim() || process.env.STRIPE_PRICE_ID?.trim() || "";
+}
+
+function getStripeLineItem(
+  tier: CheckoutTier,
+  checkoutMode: "payment" | "subscription",
+) {
+  const stripePriceId = getStripePriceId(tier);
+
+  if (stripePriceId) {
+    return {
+      price: stripePriceId,
+      quantity: 1,
+    };
+  }
+
+  const offer = DEFAULT_STRIPE_OFFERS[tier];
+
+  return {
+    quantity: 1,
+    price_data: {
+      currency: "usd",
+      unit_amount: offer.unitAmount,
+      product_data: {
+        name: offer.name,
+      },
+      ...(checkoutMode === "subscription"
+        ? {
+            recurring: {
+              interval: "month" as const,
+            },
+          }
+        : {}),
+    },
+  };
 }
 
 export async function POST(req: Request) {
@@ -69,7 +114,7 @@ export async function POST(req: Request) {
       : "subscription";
   const fallbackUrl = getFallbackUpgradeUrl(requestedTier);
 
-  if (!stripeSecretKey || !stripePriceId) {
+  if (!stripeSecretKey) {
     return NextResponse.json(
       {
         url: fallbackUrl,
@@ -94,7 +139,7 @@ export async function POST(req: Request) {
     const session = await stripe.checkout.sessions.create({
       mode: checkoutMode,
       allow_promotion_codes: true,
-      line_items: [{ price: stripePriceId, quantity: 1 }],
+      line_items: [getStripeLineItem(requestedTier, checkoutMode)],
       success_url: `${baseUrl}/?checkout=success&tier=${requestedTier}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${baseUrl}/?checkout=cancelled&tier=${requestedTier}`,
       client_reference_id: user?.id ?? undefined,
@@ -116,7 +161,11 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { url: session.url, provider: "stripe-checkout" },
+      {
+        url: session.url,
+        provider: "stripe-checkout",
+        pricingSource: stripePriceId ? "stripe-price-id" : "inline-default",
+      },
       {
         headers: {
           "X-RateLimit-Remaining": String(remaining),
