@@ -120,10 +120,10 @@ export function LandingUpgradeSections({
   onJumpToStudio: () => void;
 }) {
   return (
-    <div className="mb-8 space-y-6">
+    <div className="mb-8 space-y-6 max-w-6xl mx-auto">
       <section
         id="features"
-        className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-4 backdrop-blur-sm sm:p-5"
+        className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] p-6 backdrop-blur-md sm:p-8"
       >
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -150,11 +150,11 @@ export function LandingUpgradeSections({
           </button>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
           {featureCards.map((card) => (
             <div
               key={card.title}
-              className="mode-card rounded-2xl border border-white/10 bg-black/20 p-4 flex flex-col h-full min-w-0"
+              className="mode-card rounded-2xl border border-white/10 bg-black/10 p-6 flex flex-col h-full min-w-0"
             >
               <div className="mode-card-content flex flex-col h-full min-w-0">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100/80">

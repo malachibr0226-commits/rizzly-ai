@@ -130,8 +130,8 @@ export function GrowthPanel({
   };
 
   return (
-    <section id="upgrade" className="grid gap-4 xl:grid-cols-2 scroll-mt-24">
-      <div className="rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm">
+    <section id="upgrade" className="grid gap-6 xl:grid-cols-2 max-w-5xl mx-auto scroll-mt-24">
+      <div className="rounded-xl border border-white/10 bg-white/5 p-6 backdrop-blur-md">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-white">Cloud Sync</h2>
@@ -220,22 +220,22 @@ export function GrowthPanel({
           </div>
         )}
 
-        <div className="mb-3 grid grid-cols-2 gap-2 text-xs text-white/80 lg:grid-cols-3">
-          <div className="min-h-[112px] rounded-xl border border-fuchsia-400/20 bg-black/20 px-3 py-3.5 text-center">
+        <div className="mb-3 grid grid-cols-2 gap-4 text-xs text-white/80 lg:grid-cols-3">
+          <div className="min-h-[112px] rounded-xl border border-fuchsia-400/10 bg-black/10 px-4 py-4 text-center">
             <div className="text-base font-bold leading-none text-white">{replyBoost}x</div>
             <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
               <span className="block">reply</span>
               <span className="block">runs</span>
             </div>
           </div>
-          <div className="min-h-[112px] rounded-xl border border-fuchsia-400/20 bg-black/20 px-3 py-3.5 text-center">
+          <div className="min-h-[112px] rounded-xl border border-fuchsia-400/10 bg-black/10 px-4 py-4 text-center">
             <div className="text-base font-bold leading-none text-white">{screenshotBoost}x</div>
             <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
               <span className="block">shots</span>
               <span className="block">boost</span>
             </div>
           </div>
-          <div className="col-span-2 min-h-[112px] rounded-xl border border-fuchsia-400/20 bg-black/20 px-3 py-3.5 text-center lg:col-span-1">
+          <div className="col-span-2 min-h-[112px] rounded-xl border border-fuchsia-400/10 bg-black/10 px-4 py-4 text-center lg:col-span-1">
             <div className="text-base font-bold leading-none text-white">{voiceBoost}x</div>
             <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
               <span className="block">voice</span>
@@ -244,21 +244,21 @@ export function GrowthPanel({
           </div>
         </div>
 
-        <div className="space-y-3">
+        <div className="space-y-4">
           {PLAN_CATALOG.map((plan) => {
             const isCurrent = currentPlan === plan.tier;
 
             return (
               <div
                 key={plan.tier}
-                className={`rounded-xl border p-3 ${
+                className={`rounded-xl border p-5 max-w-2xl mx-auto ${
                   isCurrent
-                    ? "border-cyan-400/30 bg-cyan-500/10"
+                    ? "border-cyan-400/15 bg-cyan-500/5"
                     : plan.tier === "pro"
-                      ? "border-fuchsia-400/25 bg-fuchsia-500/10"
+                      ? "border-fuchsia-400/10 bg-fuchsia-500/5"
                       : plan.tier === "plus"
-                        ? "border-sky-400/20 bg-sky-500/10"
-                        : "border-white/10 bg-black/20"
+                        ? "border-sky-400/10 bg-sky-500/5"
+                        : "border-white/10 bg-black/10"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -266,17 +266,17 @@ export function GrowthPanel({
                     <div className="flex items-center gap-2">
                       <div className="text-sm font-semibold text-white">{plan.name}</div>
                       {isCurrent && (
-                        <span className="rounded-full border border-cyan-300/30 bg-cyan-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100">
+                        <span className="rounded-full border border-cyan-300/15 bg-cyan-500/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100">
                           Current
                         </span>
                       )}
                       {plan.tier === "plus" && !isCurrent && (
-                        <span className="rounded-full border border-sky-300/30 bg-sky-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-100">
+                        <span className="rounded-full border border-sky-300/15 bg-sky-500/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-100">
                           Best value
                         </span>
                       )}
                       {plan.tier === "pro" && !isCurrent && (
-                        <span className="rounded-full border border-fuchsia-300/30 bg-fuchsia-500/15 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-100">
+                        <span className="rounded-full border border-fuchsia-300/15 bg-fuchsia-500/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-100">
                           Most power
                         </span>
                       )}
