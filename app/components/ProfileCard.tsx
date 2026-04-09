@@ -4,7 +4,7 @@ import { FaEnvelope, FaGoogle, FaUserCircle } from "react-icons/fa";
 
 const Card = styled.div`
   background: rgba(34, 18, 58, 0.75);
-  border-radius: 2.5rem;
+  border-radius: 32px;
   box-shadow: 0 8px 32px 0 rgba(80, 0, 120, 0.18), 0 1.5px 8px 0 rgba(0,0,0,0.12);
   padding: 3rem 2.5rem 2.5rem 2.5rem;
   max-width: 440px;
