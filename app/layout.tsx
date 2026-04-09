@@ -116,7 +116,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full">
-      <body className="min-h-full">
         {/* Animated floating background shapes for lively effect */}
         <div className="bg-float-shape shape1" />
         <div className="bg-float-shape shape2" />
