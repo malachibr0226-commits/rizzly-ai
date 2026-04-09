@@ -120,10 +120,10 @@ export function LandingUpgradeSections({
   onJumpToStudio: () => void;
 }) {
   return (
-    <div className="mb-8 space-y-6 max-w-6xl mx-auto">
+    <div className="mb-8 space-y-10 max-w-7xl mx-auto">
       <section
         id="features"
-        className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))] p-6 backdrop-blur-md sm:p-8"
+        className="rounded-[32px] border border-white/10 bg-gradient-to-br from-white/10 via-black/10 to-black/20 p-10 backdrop-blur-xl shadow-lg sm:p-14"
       >
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -150,11 +150,11 @@ export function LandingUpgradeSections({
           </button>
         </div>
 
-        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
           {featureCards.map((card) => (
             <div
               key={card.title}
-              className="mode-card rounded-2xl border border-white/10 bg-black/10 p-6 flex flex-col h-full min-w-0"
+              className="mode-card rounded-3xl border border-white/10 bg-gradient-to-br from-black/10 via-white/5 to-black/10 p-8 flex flex-col h-full min-w-0 shadow"
             >
               <div className="mode-card-content flex flex-col h-full min-w-0">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100/80">
@@ -182,7 +182,7 @@ export function LandingUpgradeSections({
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-white/10 bg-white/[0.035] p-4 backdrop-blur-sm sm:p-5">
+      <section className="rounded-[32px] border border-white/10 bg-gradient-to-br from-white/10 via-black/10 to-black/20 p-8 backdrop-blur-xl shadow-lg sm:p-12">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="inline-flex rounded-full border border-amber-400/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-100">
@@ -204,11 +204,11 @@ export function LandingUpgradeSections({
           </div>
         </div>
 
-        <div className="mb-4 grid gap-3 lg:grid-cols-3">
+        <div className="mb-6 grid gap-6 lg:grid-cols-3">
           {workflowSteps.map((step) => (
             <div
               key={step.step}
-              className="rounded-2xl border border-white/10 bg-black/20 p-4"
+              className="rounded-3xl border border-white/10 bg-gradient-to-br from-black/10 via-white/5 to-black/10 p-7 shadow"
             >
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-100/80">
                 Step {step.step}
@@ -261,7 +261,7 @@ export function LandingUpgradeSections({
         </div>
       </section>
 
-      <section id="faq" className="rounded-[28px] border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm sm:p-5">
+      <section id="faq" className="rounded-[32px] border border-white/10 bg-gradient-to-br from-white/10 via-black/10 to-black/20 p-8 backdrop-blur-xl shadow-lg sm:p-12">
         <div className="mb-4">
           <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/70">
             FAQ
@@ -271,11 +271,11 @@ export function LandingUpgradeSections({
           </h2>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-4">
           {faqItems.map((item) => (
             <details
               key={item.question}
-              className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-white/80"
+              className="rounded-3xl border border-white/10 bg-gradient-to-br from-black/10 via-white/5 to-black/10 px-7 py-5 text-white/80 shadow"
             >
               <summary className="cursor-pointer list-none text-sm font-semibold text-white">
                 {item.question}
