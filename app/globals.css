@@ -1,3 +1,125 @@
+/* --- Lively Navigation and Animated Background Enhancements --- */
+
+/* Animated navigation underline and glow */
+.nav-link, .navbar a, .navbarButton, .nav-animated {
+  position: relative;
+  transition: color 0.18s cubic-bezier(0.4,0,0.2,1), filter 0.18s cubic-bezier(0.4,0,0.2,1);
+}
+.nav-link::after, .navbar a::after, .navbarButton::after, .nav-animated::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  bottom: 0.18em;
+  height: 2.5px;
+  background: linear-gradient(90deg, #ec4899 0%, #7dd3fc 100%);
+  border-radius: 2px;
+  opacity: 0;
+  transform: scaleX(0.7);
+  transition: opacity 0.18s, transform 0.18s;
+  pointer-events: none;
+}
+.nav-link:hover::after, .navbar a:hover::after, .navbarButton:hover::after, .nav-animated:hover::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+.nav-link:hover, .navbar a:hover, .navbarButton:hover, .nav-animated:hover {
+  color: #fff;
+  filter: drop-shadow(0 0 6px #ec4899cc) drop-shadow(0 0 2px #7dd3fc99);
+}
+
+/* Animated, lively background with floating shapes */
+body {
+  background: radial-gradient(ellipse at 60% 0%, rgba(190,103,154,0.13) 0%, rgba(126,151,163,0.10) 40%, #0a0a16 100%),
+              linear-gradient(120deg, rgba(190,103,154,0.09) 0%, rgba(126,151,163,0.09) 100%);
+  overflow-x: hidden;
+}
+
+@keyframes float-shape {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+  50% { transform: translateY(-18px) scale(1.08); opacity: 1; }
+}
+.bg-float-shape {
+  position: fixed;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  filter: blur(2px) saturate(1.2);
+  animation: float-shape 7s ease-in-out infinite;
+}
+.bg-float-shape.shape1 {
+  top: 8%; left: 12%; width: 180px; height: 180px;
+  background: radial-gradient(circle, #ec4899 0%, #7dd3fc 100%);
+  border-radius: 50%;
+  animation-delay: 0s;
+}
+.bg-float-shape.shape2 {
+  top: 60%; left: 70%; width: 120px; height: 120px;
+  background: radial-gradient(circle, #7dd3fc 0%, #ec4899 100%);
+  border-radius: 50%;
+  animation-delay: 2.5s;
+}
+.bg-float-shape.shape3 {
+  top: 30%; left: 80%; width: 90px; height: 90px;
+  background: radial-gradient(circle, #f472b6 0%, #a5b4fc 100%);
+  border-radius: 50%;
+  animation-delay: 4s;
+}
+.bg-float-shape.shape4 {
+  top: 80%; left: 20%; width: 110px; height: 110px;
+  background: radial-gradient(circle, #a5b4fc 0%, #f472b6 100%);
+  border-radius: 50%;
+  animation-delay: 1.5s;
+}
+
+/* Ensure nav and header are above background shapes */
+.z-30, .z-40, .z-50, header, nav, .navbar, .MVPHeader { z-index: 10 !important; }
+/* --- Button and clickable element enhancements for lively UI --- */
+button, [role="button"], .btn, .clickable, a.button, a[role="button"] {
+  transition: background 0.22s cubic-bezier(0.4,0,0.2,1),
+              color 0.18s cubic-bezier(0.4,0,0.2,1),
+              box-shadow 0.22s cubic-bezier(0.4,0,0.2,1),
+              transform 0.18s cubic-bezier(0.4,0,0.2,1),
+              border 0.18s cubic-bezier(0.4,0,0.2,1),
+              opacity 0.18s cubic-bezier(0.4,0,0.2,1);
+  will-change: background, color, box-shadow, transform, opacity;
+  cursor: pointer;
+}
+button:hover, [role="button"]:hover, .btn:hover, .clickable:hover, a.button:hover, a[role="button"]:hover {
+  filter: brightness(1.08) saturate(1.15);
+  box-shadow: 0 4px 24px 0 rgba(190,103,154,0.10), 0 1.5px 8px 0 rgba(126,151,163,0.10);
+  transform: translateY(-2px) scale(1.035);
+  opacity: 0.97;
+}
+button:active, [role="button"]:active, .btn:active, .clickable:active, a.button:active, a[role="button"]:active {
+  filter: brightness(0.98) saturate(0.95);
+  box-shadow: 0 1.5px 8px 0 rgba(190,103,154,0.08);
+  transform: translateY(1px) scale(0.98);
+  opacity: 0.92;
+}
+
+/* Animate card and panel appearance for lively feel */
+.rounded-xl, .rounded-2xl, .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-xl, .border, .bg-white\/6, .bg-black\/20, .bg-gradient-to-r, .bg-gradient-to-br {
+  transition: box-shadow 0.22s cubic-bezier(0.4,0,0.2,1),
+              background 0.22s cubic-bezier(0.4,0,0.2,1),
+              border 0.18s cubic-bezier(0.4,0,0.2,1),
+              transform 0.18s cubic-bezier(0.4,0,0.2,1),
+              opacity 0.18s cubic-bezier(0.4,0,0.2,1);
+}
+.rounded-xl:hover, .rounded-2xl:hover, .bg-white\/6:hover, .bg-black\/20:hover, .bg-gradient-to-r:hover, .bg-gradient-to-br:hover {
+  box-shadow: 0 6px 32px 0 rgba(190,103,154,0.13), 0 2px 12px 0 rgba(126,151,163,0.13);
+  transform: translateY(-2px) scale(1.012);
+  opacity: 0.99;
+}
+
+/* Subtle page fade-in for lively entrance */
+body {
+  animation: lively-fadein 0.7s cubic-bezier(0.4,0,0.2,1);
+}
+@keyframes lively-fadein {
+  from { opacity: 0; filter: blur(6px); }
+  to { opacity: 1; filter: blur(0); }
+}
 @import "tailwindcss";
 
 :root {
