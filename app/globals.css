@@ -1,14 +1,150 @@
+/* Hide 'Secured by Clerk' badge */
+[class*="clerkBadge"],
+[class*="clerk-badge"],
+[data-testid*="clerk-badge"],
+[aria-label*="Secured by Clerk"],
+.clerk-badge,
+.clerkBadge,
+.clerk-powered,
+.clerk-footer,
+.clerkFooter,
+.clerk-powered-by,
+.clerk-poweredby,
+.clerk-secured-by,
+.clerkSecuredBy,
+.clerk-secured,
+.clerkSecured {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  height: 0 !important;
+  width: 0 !important;
+  min-height: 0 !important;
+  min-width: 0 !important;
+  max-height: 0 !important;
+  max-width: 0 !important;
+  position: absolute !important;
+  z-index: -1 !important;
+}
+
+/* Force Clerk Profile Details modal to be flat, borderless, and clean */
+body .cl-profilePage, body .cl-card, body .cl-modal, body .cl-profileSectionContent, body .cl-profileSectionTitleText, body .cl-card *, body .cl-modal *, body .cl-profilePage *, body .cl-profileSectionContent *, body .cl-profileSectionTitleText * {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  color: #fff !important;
+  filter: none !important;
+  outline: none !important;
+  text-shadow: none !important;
+}
 @import "tailwindcss";
 /* Clerk/Account modal: smooth transparent glassy background */
 .cl-card, .cl-modal, .cl-profilePage, .cl-userButtonPopoverCard, .cl-navbar, .cl-footer, .cl-form, .cl-formFieldInput, .cl-formField, .cl-profileSectionContent, .cl-profileSectionTitleText, .cl-header, .cl-headerTitle, .cl-headerSubtitle {
-  background: rgba(18, 10, 44, 0.82) !important;
-  backdrop-filter: blur(16px) saturate(1.2) !important;
-  -webkit-backdrop-filter: blur(16px) saturate(1.2) !important;
+  background: rgba(18, 10, 44, 0.90) !important;
+  backdrop-filter: blur(18px) saturate(1.18) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.18) !important;
   color: #fff !important;
-  border-radius: 18px !important;
-  box-shadow: 0 6px 32px 0 rgba(190,103,154,0.10), 0 2px 12px 0 rgba(126,151,163,0.10) !important;
+  border-radius: 22px !important;
+  box-shadow: 0 8px 36px 0 rgba(190,103,154,0.08), 0 2px 12px 0 rgba(126,151,163,0.08) !important;
+  border: none !important;
 }
 
+/* Clerk Profile Details: cleaner, centered, less crowded */
+
+body .cl-profilePage, body .cl-card, body .cl-modal {
+  margin: 40px auto !important;
+  max-width: 400px !important;
+  min-width: 0 !important;
+  padding: 2.5rem 1.7rem 2.5rem 1.7rem !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+body .cl-profileSectionContent, body .cl-profileSectionTitleText, body .cl-card, body .cl-modal, body .cl-profilePage {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+body .cl-profileSectionContent, body .cl-profileSectionTitleText {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+body .cl-header, body .cl-headerTitle, body .cl-headerSubtitle {
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+body .cl-profileSectionTitleText {
+  font-weight: 600 !important;
+  font-size: 1.13rem !important;
+  opacity: 0.93 !important;
+}
+
+body .cl-formField, body .cl-formFieldInput {
+  border: none !important;
+  background: rgba(34, 20, 60, 0.92) !important;
+  box-shadow: none !important;
+}
+
+body .cl-navbar, body .cl-footer {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+body .cl-userButtonPopoverCard {
+  border: none !important;
+  background: rgba(18, 10, 44, 0.98) !important;
+  box-shadow: none !important;
+}
+
+.cl-profileSectionContent, .cl-profileSectionTitleText {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.cl-header, .cl-headerTitle, .cl-headerSubtitle {
+  text-align: center !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.cl-profileSectionTitleText {
+  font-weight: 600 !important;
+  font-size: 1.13rem !important;
+  opacity: 0.93 !important;
+}
+
+.cl-formField, .cl-formFieldInput {
+  border: none !important;
+  background: rgba(34, 20, 60, 0.85) !important;
+  box-shadow: none !important;
+}
+
+.cl-navbar, .cl-footer {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.cl-userButtonPopoverCard {
+  border: none !important;
+  background: rgba(18, 10, 44, 0.92) !important;
+  box-shadow: 0 6px 32px 0 rgba(190,103,154,0.10), 0 2px 12px 0 rgba(126,151,163,0.10) !important;
+}
 /* Remove white overlay background from Clerk modal root overlay */
 .cl-rootBox, .cl-overlay, .cl-modalOverlay, .cl-modalBackdrop {
   background: transparent !important;
@@ -17,6 +153,7 @@
 }
 .cl-card *, .cl-modal *, .cl-profilePage *, .cl-userButtonPopoverCard * {
   color: #fff !important;
+  border: none !important;
 }
 /* --- Lively Navigation and Animated Background Enhancements --- */
 
