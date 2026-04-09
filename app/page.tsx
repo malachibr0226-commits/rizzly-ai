@@ -3180,24 +3180,22 @@ export default function Home() {
                   />
                 </div>
 
-                <div className="mt-6 rounded-3xl border-2 border-fuchsia-500/30 bg-gradient-to-br from-[#2a1747] via-[#1a0f2e] to-[#18122b] p-8 shadow-[0_8px_48px_rgba(236,72,153,0.18)] backdrop-blur-2xl transition-all duration-300">
-                  <div className="mb-6 flex items-center justify-between gap-4">
-                    <div>
-                      <div className="text-xs font-extrabold uppercase tracking-[0.18em] text-fuchsia-200 drop-shadow">
-                        Profile Details
-                      </div>
-                      <div className="mt-2 text-base font-semibold text-white/80">
-                        Save context, calibrate your voice, and keep this thread adaptive over time.
-                      </div>
+                <div className="mt-16 flex flex-col items-center justify-center rounded-3xl bg-[#1a1022]/80 p-10 shadow-none transition-all duration-300">
+                  <div className="mb-8 flex flex-col items-center gap-2 w-full">
+                    <div className="text-xs font-extrabold uppercase tracking-[0.18em] text-fuchsia-100/80">
+                      Profile Details
                     </div>
-                    <div className="rounded-full border-2 border-emerald-400/40 bg-emerald-500/20 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-100 shadow-md">
+                    <div className="mt-2 text-base font-semibold text-white/80 text-center">
+                      Save context, calibrate your voice, and keep this thread adaptive over time.
+                    </div>
+                    <div className="mt-2 rounded-full bg-emerald-500/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-100/80">
                       Local Only
                     </div>
                   </div>
 
-                  <div className="grid gap-6 md:grid-cols-2">
+                  <div className="mt-8 grid gap-8 md:grid-cols-2 w-full">
                     <label className="block">
-                      <div className="mb-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-fuchsia-200">
+                      <div className="mb-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-fuchsia-100/80">
                         Contact Label
                       </div>
                       <input
@@ -3205,12 +3203,12 @@ export default function Home() {
                         value={profileName}
                         onChange={(event) => setProfileName(event.target.value)}
                         placeholder="e.g. Maya, ex, hinge match"
-                        className="w-full rounded-xl border-2 border-fuchsia-400/30 bg-[#25164a]/90 px-4 py-3 text-base text-white font-semibold outline-none transition placeholder:text-white/40 focus:border-fuchsia-400 focus:bg-[#2d195a]/95 focus:ring-2"
+                        className="w-full rounded-xl bg-[#25164a]/80 px-4 py-3 text-base text-white font-semibold outline-none transition placeholder:text-white/40 focus:bg-[#2d195a]/95 focus:ring-2 border-none shadow-none"
                       />
                     </label>
 
                     <label className="block">
-                      <div className="mb-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-fuchsia-200">
+                      <div className="mb-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-fuchsia-100/80">
                         Your Voice Calibration
                       </div>
                       <textarea
@@ -3218,14 +3216,14 @@ export default function Home() {
                         onChange={(event) => setPersonaCalibration(event.target.value)}
                         placeholder="e.g. I text direct, lowercase, a little playful, and never too eager"
                         rows={4}
-                        className="w-full resize-none rounded-xl border-2 border-fuchsia-400/30 bg-[#25164a]/90 px-4 py-3 text-base text-white font-semibold outline-none transition placeholder:text-white/40 focus:border-fuchsia-400 focus:bg-[#2d195a]/95 focus:ring-2"
+                        className="w-full resize-none rounded-xl bg-[#25164a]/80 px-4 py-3 text-base text-white font-semibold outline-none transition placeholder:text-white/40 focus:bg-[#2d195a]/95 focus:ring-2 border-none shadow-none"
                       />
                     </label>
                   </div>
 
-                  <div className="mt-6 grid gap-6 md:grid-cols-[1.25fr_0.95fr]">
+                  <div className="mt-8 grid gap-8 md:grid-cols-[1.25fr_0.95fr] w-full">
                     <label className="block">
-                      <div className="mb-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-fuchsia-200">
+                      <div className="mb-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-fuchsia-100/80">
                         Relationship Notes
                       </div>
                       <textarea
@@ -3233,12 +3231,12 @@ export default function Home() {
                         onChange={(event) => setRelationshipNotes(event.target.value)}
                         placeholder="Save what matters: history, red flags, pacing, what worked, what backfired"
                         rows={5}
-                        className="w-full resize-none rounded-xl border-2 border-fuchsia-400/30 bg-[#25164a]/90 px-4 py-3 text-base text-white font-semibold outline-none transition placeholder:text-white/40 focus:border-fuchsia-400 focus:bg-[#2d195a]/95 focus:ring-2"
+                        className="w-full resize-none rounded-xl bg-[#25164a]/80 px-4 py-3 text-base text-white font-semibold outline-none transition placeholder:text-white/40 focus:bg-[#2d195a]/95 focus:ring-2 border-none shadow-none"
                       />
                     </label>
 
-                    <div className="rounded-xl border-2 border-fuchsia-400/20 bg-[#1a142a]/90 p-5 shadow-md">
-                      <div className="mb-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-fuchsia-200">
+                    <div className="rounded-xl bg-[#1a142a]/80 p-5">
+                      <div className="mb-2 text-[12px] font-extrabold uppercase tracking-[0.18em] text-fuchsia-100/80">
                         Screenshot Intelligence
                       </div>
                       <p className="text-base leading-6 text-white/80 font-medium">
