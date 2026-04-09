@@ -2400,6 +2400,20 @@ export default function Home() {
   return (
     <main id="main-content" tabIndex={-1} className="relative min-h-screen overflow-hidden bg-[#1a0f2e] pb-24 text-white sm:pb-0">
       <style>{`
+        @media (min-width: 1280px) {
+          .main-responsive-grid {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) minmax(420px,1.2fr);
+            gap: 3rem;
+            align-items: start;
+          }
+        }
+        .text-balance {
+          text-wrap: balance;
+          word-break: break-word;
+        }
+      `}</style>
+      <style>{`
         @keyframes float {
           0%, 100% { transform: translateY(0px) translateX(0px); }
           50% { transform: translateY(-20px) translateX(10px); }
@@ -2455,7 +2469,7 @@ export default function Home() {
       <div className="pointer-events-none absolute -top-1/2 -right-1/4 h-1/2 w-1/2 rounded-full bg-gradient-to-bl from-fuchsia-400/5 to-transparent blur-3xl" />
       <div className="pointer-events-none absolute -bottom-1/4 -left-1/2 h-1/2 w-1/2 rounded-full bg-gradient-to-tr from-violet-400/4 to-transparent blur-3xl" />
 
-      <div className="relative z-10 mx-auto max-w-6xl px-4 py-8 md:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-4 py-8 md:px-8">
         <header className="mb-8 flex items-center justify-center gap-4 md:mb-10 md:justify-between">
           <div className="flex items-center gap-5">
             <div className="relative">
@@ -2524,13 +2538,13 @@ export default function Home() {
           />
         )}
 
-        <section className="mb-10 grid gap-6 xl:gap-8 2xl:grid-cols-[minmax(0,1fr)_minmax(340px,420px)] 2xl:items-end">
-          <div className="max-w-4xl">
+        <section className="mb-10 main-responsive-grid gap-6 xl:gap-8">
+          <div className="w-full max-w-4xl">
             <div className="mb-6 inline-flex rounded-full border border-cyan-500/30 bg-gradient-to-r from-cyan-500/15 to-transparent px-3.5 py-2 text-xs font-semibold tracking-[0.5px] text-cyan-200 backdrop-blur-sm" style={{ textShadow: "0 0 12px rgba(6, 182, 212, 0.2)" }}>
               Built for real conversations, not robotic filler
             </div>
 
-            <h1 className="mb-4 text-4xl font-black leading-tight tracking-[-0.02em] md:text-5xl xl:text-6xl" style={{ textShadow: "0 8px 32px rgba(236, 72, 153, 0.15)" }}>
+            <h1 className="mb-4 text-4xl font-black leading-tight tracking-[-0.02em] md:text-5xl xl:text-6xl text-balance" style={{ textShadow: "0 8px 32px rgba(236, 72, 153, 0.15)" }}>
               <span className="block bg-gradient-to-r from-white via-white to-cyan-100 bg-clip-text text-transparent">
                 Better replies.
               </span>
@@ -2539,7 +2553,7 @@ export default function Home() {
               </span>
             </h1>
 
-            <p className="max-w-2xl text-base font-[450] leading-relaxed tracking-[0.3px] text-white/60 md:text-lg" style={{ letterSpacing: "0.3px" }}>
+            <p className="max-w-3xl text-base font-[450] leading-relaxed tracking-[0.3px] text-white/60 md:text-lg text-balance" style={{ letterSpacing: "0.3px" }}>
               Rizzly turns pasted chats, screenshots, and voice notes into sharper next messages that feel <span className="font-semibold text-white/90">genuinely like you</span> — fast, clear, and built for real momentum.
             </p>
 
@@ -2564,7 +2578,7 @@ export default function Home() {
               </a>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/58">
+            <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/58 text-balance">
               <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">⚡ Replies in seconds</div>
               <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">💬 Guest mode live</div>
               <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">🧠 Thread-aware guidance</div>
@@ -2572,7 +2586,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-md overflow-hidden rounded-[30px] border border-white/12 bg-gradient-to-br from-purple-950/38 via-slate-900/32 to-gray-900/26 p-4 shadow-[0_10px_28px_rgba(190,103,154,0.1)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
+          <div className="mx-auto w-full max-w-lg min-w-[340px] overflow-hidden rounded-[30px] border border-white/12 bg-gradient-to-br from-purple-950/38 via-slate-900/32 to-gray-900/26 p-4 shadow-[0_10px_28px_rgba(190,103,154,0.1)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
             <div className="overflow-hidden rounded-[24px] border border-white/8 bg-white/[0.025] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:p-4 md:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-4">
                 <div className="rounded-2xl px-3 py-2.5">
@@ -2638,7 +2652,7 @@ export default function Home() {
         />
 
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="space-y-6">
+          <div className="space-y-6 min-w-0">
             {currentThread && (
               <div className="rounded-lg border border-white/10 bg-white/4 p-4">
                 <div className="flex items-center justify-between gap-3">
@@ -2694,7 +2708,7 @@ export default function Home() {
               onSavePersona={saveCurrentPersona}
             />
 
-            <section id="message-studio" className="overflow-visible rounded-xl border border-white/10 bg-white/3 backdrop-blur-sm before:hidden">
+            <section id="message-studio" className="overflow-visible rounded-xl border border-white/10 bg-white/3 backdrop-blur-sm before:hidden min-w-0">
               <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
                 <div>
                   <p className="text-sm font-semibold tracking-[0.3px] text-white" style={{ textShadow: "0 2px 8px rgba(255, 255, 255, 0.08)" }}>
@@ -2744,7 +2758,7 @@ export default function Home() {
                   value={conversation}
                   onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setConversation(event.target.value)}
                   placeholder={`Them: hey sorry ive been busy\nYou: no worries\nThem: how have you been`}
-                  className={`h-40 w-full resize-none rounded-[24px] border border-white/10 bg-black/40 px-4 py-4 text-white outline-none transition-all duration-400 placeholder:text-white/30 focus:border-white/30 focus:bg-black/50 focus:ring-2 md:h-48 ${selectedTone.ring}`}
+                  className={`h-40 w-full resize-none rounded-[24px] border border-white/10 bg-black/40 px-4 py-4 text-white outline-none transition-all duration-400 placeholder:text-white/30 focus:border-white/30 focus:bg-black/50 focus:ring-2 md:h-48 text-balance ${selectedTone.ring}`}
                 />
 
                 <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-white/40">
@@ -2773,7 +2787,7 @@ export default function Home() {
                     value={draftMessage}
                     onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setDraftMessage(event.target.value)}
                     placeholder="e.g. haha you’re trouble, when are you free this week?"
-                    className={`h-24 w-full resize-none rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-all duration-300 placeholder:text-white/30 focus:border-white/20 focus:bg-black/40 focus:ring-2 ${selectedTone.ring}`}
+                    className={`h-24 w-full resize-none rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-all duration-300 placeholder:text-white/30 focus:border-white/20 focus:bg-black/40 focus:ring-2 text-balance ${selectedTone.ring}`}
                   />
 
                   <p className="mt-2 text-[11px] text-white/45">
