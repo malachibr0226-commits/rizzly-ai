@@ -2408,6 +2408,30 @@ export default function Home() {
             align-items: start;
           }
         }
+        @media (min-width: 1536px) {
+          .main-responsive-grid {
+            grid-template-columns: minmax(0,1.2fr) minmax(520px,1.3fr);
+            gap: 4rem;
+          }
+        }
+        .text-balance {
+          text-wrap: balance;
+          word-break: break-word;
+        }
+        .wider-main-ui {
+          max-width: 98vw !important;
+          width: 100vw !important;
+        }
+      `}</style>
+      <style>{`
+        @media (min-width: 1280px) {
+          .main-responsive-grid {
+            display: grid;
+            grid-template-columns: minmax(0,1fr) minmax(420px,1.2fr);
+            gap: 3rem;
+            align-items: start;
+          }
+        }
         .text-balance {
           text-wrap: balance;
           word-break: break-word;
@@ -2469,7 +2493,7 @@ export default function Home() {
       <div className="pointer-events-none absolute -top-1/2 -right-1/4 h-1/2 w-1/2 rounded-full bg-gradient-to-bl from-fuchsia-400/5 to-transparent blur-3xl" />
       <div className="pointer-events-none absolute -bottom-1/4 -left-1/2 h-1/2 w-1/2 rounded-full bg-gradient-to-tr from-violet-400/4 to-transparent blur-3xl" />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1600px] px-4 py-8 md:px-8">
+      <div className="relative z-10 mx-auto w-full wider-main-ui px-4 py-8 md:px-8">
         <header className="mb-8 flex items-center justify-center gap-4 md:mb-10 md:justify-between">
           <div className="flex items-center gap-5">
             <div className="relative">
