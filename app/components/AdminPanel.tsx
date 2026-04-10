@@ -42,8 +42,9 @@ export function AdminPanel({ isSignedIn }: { isSignedIn: boolean }) {
       const response = await fetch("/api/admin/access", { method: "GET" });
       const data = (await response.json()) as AdminSnapshot;
 
-      if (response.status === 401) {
+      if (response.status === 401 || response.status === 403) {
         setSnapshot(EMPTY_SNAPSHOT);
+        setError(null);
         return;
       }
 
@@ -186,7 +187,7 @@ export function AdminPanel({ isSignedIn }: { isSignedIn: boolean }) {
     }
   };
 
-  if (!isSignedIn || !resolved || (!loading && !snapshot.allowed && !error)) {
+  if (!isSignedIn || !resolved || !snapshot.allowed) {
     return null;
   }
 

@@ -38,6 +38,7 @@ export async function GET(req: Request) {
         currentUserEmail: user?.email ?? null,
       },
       {
+        status: 403,
         headers: {
           "X-RateLimit-Remaining": String(remaining),
         },
