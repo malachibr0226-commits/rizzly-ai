@@ -38,39 +38,15 @@ export default async function SignUpPage() {
   }
 
   return (
-    <div className="auth-page-shell min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#1a1333] via-[#2d1a47] to-[#0a0612] px-4 relative overflow-hidden">
+    <div className="auth-page-shell min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a1333] via-[#2d1a47] to-[#0a0612] px-4 relative overflow-hidden">
       {/* Ambient glow blobs */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-16 left-1/4 w-80 h-80 rounded-full bg-pink-600/18 blur-[100px]" />
-        <div className="absolute top-1/2 -right-16 w-64 h-64 rounded-full bg-purple-700/20 blur-[80px]" />
-        <div className="absolute bottom-12 left-1/3 w-56 h-56 rounded-full bg-fuchsia-500/14 blur-[70px]" />
-      </div>
-
-      {/* Branding above card */}
-      <div className="relative z-10 mb-7 flex flex-col items-center select-none">
-        <span
-          className="text-5xl font-extrabold tracking-tight"
-          style={{
-            background: "linear-gradient(90deg, #f472b6 0%, #e879f9 50%, #a78bfa 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-            display: "block",
-            lineHeight: "1.15",
-            paddingBottom: "0.18em",
-          }}
-        >
-          Rizzly AI
-        </span>
-        <p className="mt-1.5 text-[11px] text-white/40 tracking-[0.22em] uppercase font-semibold">
-          Smarter conversations
-        </p>
+        <div className="absolute -top-16 left-1/4 h-80 w-80 rounded-full bg-pink-600/18 blur-[100px]" />
+        <div className="absolute top-1/2 -right-16 h-64 w-64 rounded-full bg-purple-700/20 blur-[80px]" />
+        <div className="absolute bottom-12 left-1/3 h-56 w-56 rounded-full bg-fuchsia-500/14 blur-[70px]" />
       </div>
 
       <div className="relative z-10 w-full max-w-sm">
-        <div className="mb-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm text-white/80 backdrop-blur-md">
-          Create an account with <span className="font-semibold text-white">Apple</span>, <span className="font-semibold text-white">Google</span>, or email.
-        </div>
         <ClerkLoading>
           <AuthLoadingFallback mode="sign-up" />
         </ClerkLoading>
