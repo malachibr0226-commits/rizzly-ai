@@ -152,6 +152,9 @@ export default function RootLayout({
                 borderRadius: "0.75rem",
               },
               elements: {
+                // Hide redundant Clerk card header (we have our own Rizzly AI branding above)
+                headerTitle: { display: "none" },
+                headerSubtitle: { display: "none" },
                 // Social buttons — inline styles are reliably applied by Clerk v7
                 socialButtonsBlockButton: {
                   border: "1px solid rgba(255,255,255,0.22)",

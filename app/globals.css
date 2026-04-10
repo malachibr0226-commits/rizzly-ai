@@ -41,14 +41,14 @@ body .cl-profilePage *, body .cl-profileSectionContent *, body .cl-profileSectio
   text-shadow: none !important;
 }
 @import "tailwindcss";
-/* Clerk sign-in/sign-up card: glassy dark card with glow border */
+/* Clerk sign-in/sign-up card: glassy dark card, no distracting ring */
 .cl-card {
   background: rgba(18, 10, 44, 0.96) !important;
   backdrop-filter: blur(24px) saturate(1.3) !important;
   -webkit-backdrop-filter: blur(24px) saturate(1.3) !important;
   color: #fff !important;
   border-radius: 18px !important;
-  box-shadow: 0 0 0 1px rgba(236,72,153,0.22), 0 12px 56px 0 rgba(190,103,154,0.22), 0 2px 16px 0 rgba(126,151,163,0.12) !important;
+  box-shadow: 0 12px 56px 0 rgba(190,103,154,0.18), 0 2px 16px 0 rgba(126,151,163,0.10) !important;
   border: none !important;
 }
 /* Clerk user button popover card */
@@ -102,7 +102,12 @@ body .cl-profileSectionTitleText {
   opacity: 0.93 !important;
 }
 
-body .cl-formField, body .cl-formFieldInput {
+body .cl-formField {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body .cl-formFieldInput {
   border: none !important;
   background: rgba(34, 20, 60, 0.92) !important;
   box-shadow: none !important;
@@ -138,7 +143,12 @@ body .cl-userButtonPopoverCard {
   opacity: 0.93 !important;
 }
 
-.cl-formField, .cl-formFieldInput {
+.cl-formField {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.cl-formFieldInput {
   border: none !important;
   background: rgba(34, 20, 60, 0.85) !important;
   box-shadow: none !important;

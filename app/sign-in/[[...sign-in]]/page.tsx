@@ -48,12 +48,15 @@ export default async function SignInPage() {
       {/* Branding above card */}
       <div className="relative z-10 mb-7 flex flex-col items-center select-none">
         <span
-          className="pb-1 text-5xl font-extrabold tracking-tight"
+          className="text-5xl font-extrabold tracking-tight"
           style={{
             background: "linear-gradient(90deg, #f472b6 0%, #e879f9 50%, #a78bfa 100%)",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
             backgroundClip: "text",
+            display: "block",
+            lineHeight: "1.15",
+            paddingBottom: "0.18em",
           }}
         >
           Rizzly AI
