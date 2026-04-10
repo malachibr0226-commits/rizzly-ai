@@ -738,6 +738,23 @@ body .cl-rootBox {
 .auth-page-shell .cl-card {
   margin-left: auto !important;
   margin-right: auto !important;
+  width: 100% !important;
+  max-width: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: 0 !important;
+}
+
+.auth-page-shell .cl-cardBox,
+.auth-page-shell .cl-rootBox,
+.auth-page-shell .cl-main {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.auth-page-shell .cl-socialButtonsBlockButton,
+.auth-page-shell .auth-apple-button-wrap button {
+  min-height: 46px !important;
 }
 
 body .cl-modalContent,

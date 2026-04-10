@@ -47,7 +47,7 @@ export default async function SignUpPage() {
         <div className="absolute bottom-12 left-1/3 h-56 w-56 rounded-full bg-fuchsia-500/14 blur-[70px]" />
       </div>
 
-      <div className="relative z-10 w-full max-w-sm">
+      <div className="relative z-10 w-full max-w-md">
         <div className="mb-6 flex flex-col items-center text-center select-none">
           <span
             className="text-5xl font-extrabold tracking-tight"
@@ -67,38 +67,40 @@ export default async function SignUpPage() {
             Smarter conversations
           </p>
         </div>
-        <AuthAppleButton mode="sign-up" />
-        <ClerkLoading>
-          <AuthLoadingFallback mode="sign-up" />
-        </ClerkLoading>
-        <ClerkFailed>
-          <AuthLoadingFallback mode="sign-up" status="failed" />
-        </ClerkFailed>
-        <ClerkDegraded>
-          <AuthLoadingFallback mode="sign-up" status="failed" />
-        </ClerkDegraded>
-        <ClerkLoaded>
-          <SignUp
-            path="/sign-up"
-            routing="path"
-            signInUrl="/sign-in"
-            fallbackRedirectUrl="/"
-            forceRedirectUrl="/"
-            oauthFlow="redirect"
-            appearance={{
-              baseTheme: dark,
-              layout: {
-                socialButtonsPlacement: "top",
-                socialButtonsVariant: "blockButton",
-              },
-              elements: {
-                rootBox: "mx-auto w-full",
-                cardBox: "mx-auto flex w-full justify-center",
-                card: "mx-auto",
-              },
-            }}
-          />
-        </ClerkLoaded>
+        <div className="auth-card-shell rounded-[28px] border border-white/10 bg-[linear-gradient(160deg,rgba(17,10,38,0.96),rgba(22,12,40,0.94))] p-4 sm:p-5 shadow-[0_26px_70px_rgba(11,6,24,0.42)] backdrop-blur-xl">
+          <AuthAppleButton mode="sign-up" />
+          <ClerkLoading>
+            <AuthLoadingFallback mode="sign-up" />
+          </ClerkLoading>
+          <ClerkFailed>
+            <AuthLoadingFallback mode="sign-up" status="failed" />
+          </ClerkFailed>
+          <ClerkDegraded>
+            <AuthLoadingFallback mode="sign-up" status="failed" />
+          </ClerkDegraded>
+          <ClerkLoaded>
+            <SignUp
+              path="/sign-up"
+              routing="path"
+              signInUrl="/sign-in"
+              fallbackRedirectUrl="/"
+              forceRedirectUrl="/"
+              oauthFlow="redirect"
+              appearance={{
+                baseTheme: dark,
+                layout: {
+                  socialButtonsPlacement: "top",
+                  socialButtonsVariant: "blockButton",
+                },
+                elements: {
+                  rootBox: "mx-auto w-full",
+                  cardBox: "mx-auto flex w-full justify-center",
+                  card: "mx-auto w-full max-w-none bg-transparent shadow-none border-0",
+                },
+              }}
+            />
+          </ClerkLoaded>
+        </div>
       </div>
     </div>
   );

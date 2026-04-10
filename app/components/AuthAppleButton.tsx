@@ -55,12 +55,12 @@ export function AuthAppleButton({ mode }: { mode: "sign-in" | "sign-up" }) {
   };
 
   return (
-    <div className="mb-3">
+    <div className="auth-apple-button-wrap mb-3">
       <button
         type="button"
         onClick={() => void handleAppleAuth()}
         disabled={loading}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-[#130a26]/95 px-4 py-3 text-sm font-semibold text-white shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition hover:border-white/25 hover:bg-[#1a1031] disabled:cursor-not-allowed disabled:opacity-70"
+        className="flex min-h-[46px] w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-white/25 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-70"
       >
         <FaApple className="text-base" />
         <span>{loading ? "Connecting to Apple..." : "Continue with Apple"}</span>
