@@ -76,10 +76,10 @@ export function MVPHeader({
         {/* Streak counter - Romantic glow effect */}
         <div className="flex flex-wrap items-center gap-2">
           {streak.count > 0 && (
-            <div className="streak-glow inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-rose-200/20 to-pink-100/10 border border-rose-200/30 backdrop-blur-md hover:from-rose-200/30 hover:to-pink-100/18 transition-all duration-300">
+            <div className="streak-glow inline-flex items-center gap-1.5 rounded-full border border-rose-300/20 bg-rose-500/10 px-4 py-2 backdrop-blur-md transition-all duration-300">
               <span className="text-xl pulse-soft">🔥</span>
-              <span className="text-sm font-bold bg-gradient-to-r from-rose-100 to-pink-100 bg-clip-text text-transparent">
-                {streak.count}-day streak
+              <span className="bg-gradient-to-r from-rose-100 to-pink-100 bg-clip-text text-sm font-bold text-transparent">
+                {streak.count}-day spark
               </span>
             </div>
           )}
@@ -88,10 +88,10 @@ export function MVPHeader({
         {/* Achievement badges + Stats button */}
         <div className="flex flex-wrap items-center gap-2 md:justify-end">
           {unlockedCount > 0 && (
-            <div className="badge-float inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-amber-200/20 to-yellow-100/10 border border-amber-200/30 backdrop-blur-md hover:from-amber-200/30 hover:to-yellow-100/18 transition-all duration-300">
+            <div className="badge-float inline-flex items-center gap-1.5 rounded-full border border-amber-300/20 bg-amber-500/10 px-4 py-2 backdrop-blur-md transition-all duration-300">
               <span className="text-xl pulse-soft">🏆</span>
-              <span className="text-sm font-bold bg-gradient-to-r from-amber-100 to-yellow-100 bg-clip-text text-transparent">
-                {unlockedCount} badge{unlockedCount !== 1 ? "s" : ""}
+              <span className="bg-gradient-to-r from-amber-100 to-yellow-100 bg-clip-text text-sm font-bold text-transparent">
+                {unlockedCount} win{unlockedCount !== 1 ? "s" : ""}
               </span>
             </div>
           )}
@@ -113,10 +113,10 @@ export function MVPHeader({
           {/* Dashboard toggle - Enhanced with glow */}
           <button
             onClick={onToggleDashboard}
-            className={`whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 ease-spring transform hover:scale-102 active:scale-98 ${
+            className={`whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold transition-all duration-200 ease-spring ${
               showDashboard
-                ? "bg-gradient-to-r from-violet-200 to-slate-300 text-white shadow-[0_0_12px_rgba(126,151,163,0.18)]"
-                : "bg-gradient-to-r from-violet-100/20 to-slate-200/20 text-violet-100 border border-violet-100/30 hover:from-violet-100/30 hover:to-slate-200/30 hover:shadow-[0_2px_8px_rgba(126,151,163,0.10)]"
+                ? "border border-slate-300/20 bg-slate-700 text-white shadow-[0_8px_18px_rgba(15,23,42,0.16)]"
+                : "border border-slate-300/15 bg-slate-800/60 text-slate-100 hover:border-slate-200/20 hover:bg-slate-700/70"
             }`}
             title="View stats and analytics"
           >
@@ -125,7 +125,7 @@ export function MVPHeader({
 
           <Link
             href={upgradeHref}
-            className="relative z-40 cursor-pointer pointer-events-auto rounded-full border border-fuchsia-400/30 bg-fuchsia-500/10 px-4 py-2.5 text-sm font-semibold text-fuchsia-100 transition hover:border-fuchsia-300/40 hover:bg-fuchsia-500/20"
+            className="relative z-40 cursor-pointer pointer-events-auto rounded-full border border-rose-300/25 bg-gradient-to-r from-rose-500/12 to-fuchsia-500/10 px-4 py-2.5 text-sm font-semibold text-rose-50 transition hover:border-rose-200/35 hover:bg-rose-500/18"
           >
             Upgrade
           </Link>
@@ -145,7 +145,7 @@ export function MVPHeader({
               </Link>
               <Link
                 href={authLinks.signIn}
-                className="relative z-40 cursor-pointer pointer-events-auto rounded-full bg-gradient-to-r from-pink-500 to-cyan-500 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_12px_rgba(236,72,153,0.3)] transition-all duration-200 transform hover:scale-105 active:scale-95 hover:shadow-[0_0_20px_rgba(236,72,153,0.5)]"
+                className="relative z-40 cursor-pointer pointer-events-auto rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_12px_24px_rgba(244,63,94,0.26)] transition-all duration-200 hover:shadow-[0_14px_26px_rgba(217,70,239,0.26)]"
               >
                 Sign In
               </Link>

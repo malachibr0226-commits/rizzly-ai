@@ -130,8 +130,11 @@ export function GrowthPanel({
   };
 
   return (
-    <section id="upgrade" className="grid gap-10 xl:grid-cols-2 max-w-6xl mx-auto scroll-mt-24">
-      <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-white/10 via-black/10 to-black/20 p-8 md:p-10 shadow-lg backdrop-blur-xl">
+    <section
+      id="upgrade"
+      className="mx-auto grid max-w-7xl gap-6 scroll-mt-24 xl:grid-cols-[minmax(320px,0.9fr)_minmax(420px,1.15fr)]"
+    >
+      <div className="rounded-[28px] border border-white/10 bg-[linear-gradient(180deg,rgba(17,24,39,0.82),rgba(10,14,22,0.94))] p-8 shadow-[0_18px_40px_rgba(15,23,42,0.16)] backdrop-blur-xl md:p-10">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-white">Cloud Sync</h2>
@@ -154,24 +157,24 @@ export function GrowthPanel({
           </div>
         )}
 
-        <div className="mt-6 grid grid-cols-2 gap-4 text-base text-white/80 lg:grid-cols-3">
-          <div className="min-h-[120px] rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 via-white/5 to-black/10 px-6 py-6 text-center flex flex-col justify-center items-center">
-            <div className="text-lg font-bold leading-none text-white">{usageSnapshot.remaining.generate}</div>
-            <div className="mt-2 text-[10px] leading-tight text-white/70 sm:text-[11px]">
+        <div className="mt-6 grid gap-4 text-base text-white/80 sm:grid-cols-3">
+          <div className="flex min-h-[112px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-6 text-center">
+            <div className="text-xl font-bold leading-none text-white">{usageSnapshot.remaining.generate}</div>
+            <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
               <span className="block">reply runs</span>
               <span className="block">left</span>
             </div>
           </div>
-          <div className="min-h-[120px] rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 via-white/5 to-black/10 px-6 py-6 text-center flex flex-col justify-center items-center">
-            <div className="text-lg font-bold leading-none text-white">{usageSnapshot.remaining.screenshot}</div>
-            <div className="mt-2 text-[10px] leading-tight text-white/70 sm:text-[11px]">
-              <span className="block">shots</span>
+          <div className="flex min-h-[112px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-6 text-center">
+            <div className="text-xl font-bold leading-none text-white">{usageSnapshot.remaining.screenshot}</div>
+            <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
+              <span className="block">screenshots</span>
               <span className="block">left</span>
             </div>
           </div>
-          <div className="col-span-2 min-h-[120px] rounded-2xl border border-white/10 bg-gradient-to-br from-black/20 via-white/5 to-black/10 px-6 py-6 text-center flex flex-col justify-center items-center lg:col-span-1">
-            <div className="text-lg font-bold leading-none text-white">{usageSnapshot.remaining.voice}</div>
-            <div className="mt-2 text-[10px] leading-tight text-white/70 sm:text-[11px]">
+          <div className="flex min-h-[112px] flex-col items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-6 text-center">
+            <div className="text-xl font-bold leading-none text-white">{usageSnapshot.remaining.voice}</div>
+            <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
               <span className="block">voice notes</span>
               <span className="block">left</span>
             </div>
@@ -191,7 +194,7 @@ export function GrowthPanel({
         </button>
       </div>
 
-      <div className="rounded-2xl border border-fuchsia-400/20 bg-gradient-to-br from-fuchsia-900/20 via-purple-900/10 to-white/5 p-8 md:p-10 shadow-lg backdrop-blur-xl">
+      <div className="rounded-[28px] border border-fuchsia-400/15 bg-[linear-gradient(180deg,rgba(26,17,43,0.88),rgba(12,17,27,0.96))] p-8 shadow-[0_18px_44px_rgba(76,29,149,0.18)] backdrop-blur-xl md:p-10">
         <div className="mb-3 flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-white">
@@ -220,23 +223,23 @@ export function GrowthPanel({
           </div>
         )}
 
-        <div className="mb-6 grid grid-cols-2 gap-6 text-base text-white/90 lg:grid-cols-3">
-          <div className="min-h-[112px] rounded-2xl border border-fuchsia-400/10 bg-gradient-to-br from-fuchsia-900/10 via-white/5 to-black/10 px-7 py-7 text-center flex flex-col justify-center items-center">
-            <div className="text-base font-bold leading-none text-white">{replyBoost}x</div>
+        <div className="mb-6 grid gap-4 text-base text-white/90 sm:grid-cols-3">
+          <div className="flex min-h-[108px] flex-col items-center justify-center rounded-2xl border border-fuchsia-400/12 bg-white/[0.04] px-7 py-6 text-center">
+            <div className="text-lg font-bold leading-none text-white">{replyBoost}x</div>
             <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
               <span className="block">reply</span>
               <span className="block">runs</span>
             </div>
           </div>
-          <div className="min-h-[112px] rounded-2xl border border-fuchsia-400/10 bg-gradient-to-br from-fuchsia-900/10 via-white/5 to-black/10 px-7 py-7 text-center flex flex-col justify-center items-center">
-            <div className="text-base font-bold leading-none text-white">{screenshotBoost}x</div>
+          <div className="flex min-h-[108px] flex-col items-center justify-center rounded-2xl border border-fuchsia-400/12 bg-white/[0.04] px-7 py-6 text-center">
+            <div className="text-lg font-bold leading-none text-white">{screenshotBoost}x</div>
             <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
-              <span className="block">shots</span>
+              <span className="block">screenshots</span>
               <span className="block">boost</span>
             </div>
           </div>
-          <div className="col-span-2 min-h-[112px] rounded-2xl border border-fuchsia-400/10 bg-gradient-to-br from-fuchsia-900/10 via-white/5 to-black/10 px-7 py-7 text-center flex flex-col justify-center items-center lg:col-span-1">
-            <div className="text-base font-bold leading-none text-white">{voiceBoost}x</div>
+          <div className="flex min-h-[108px] flex-col items-center justify-center rounded-2xl border border-fuchsia-400/12 bg-white/[0.04] px-7 py-6 text-center">
+            <div className="text-lg font-bold leading-none text-white">{voiceBoost}x</div>
             <div className="mt-2 text-[10px] leading-tight text-white/65 sm:text-[11px]">
               <span className="block">voice</span>
               <span className="block">notes</span>
@@ -251,46 +254,62 @@ export function GrowthPanel({
             return (
               <div
                 key={plan.tier}
-                className={`rounded-2xl border p-8 max-w-3xl mx-auto bg-gradient-to-br from-white/10 via-black/10 to-black/20 shadow-md ${
+                className={`rounded-[24px] border bg-[linear-gradient(180deg,rgba(17,24,39,0.78),rgba(10,14,22,0.92))] p-5 shadow-[0_14px_36px_rgba(15,23,42,0.18)] sm:p-6 ${
                   isCurrent
-                    ? "border-cyan-400/15 bg-cyan-500/5"
+                    ? "border-cyan-400/25"
                     : plan.tier === "pro"
-                      ? "border-fuchsia-400/10 bg-fuchsia-500/5"
+                      ? "border-fuchsia-400/18"
                       : plan.tier === "plus"
-                        ? "border-sky-400/10 bg-sky-500/5"
-                        : "border-white/10 bg-black/10"
+                        ? "border-sky-400/18"
+                        : "border-white/10"
                 }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
                       <div className="text-sm font-semibold text-white">{plan.name}</div>
                       {isCurrent && (
-                        <span className="rounded-full border border-cyan-300/15 bg-cyan-500/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100">
+                        <span className="rounded-full border border-cyan-300/20 bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-cyan-100">
                           Current
                         </span>
                       )}
                       {plan.tier === "plus" && !isCurrent && (
-                        <span className="rounded-full border border-sky-300/15 bg-sky-500/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-100">
+                        <span className="rounded-full border border-sky-300/20 bg-sky-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-sky-100">
                           Best value
                         </span>
                       )}
                       {plan.tier === "pro" && !isCurrent && (
-                        <span className="rounded-full border border-fuchsia-300/15 bg-fuchsia-500/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-100">
+                        <span className="rounded-full border border-fuchsia-300/20 bg-fuchsia-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-fuchsia-100">
                           Most power
                         </span>
                       )}
                     </div>
-                    <div className="mt-1 text-xs text-white/60">{plan.description}</div>
+                    <div className="mt-2 max-w-2xl text-sm leading-6 text-white/68">{plan.description}</div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm font-bold text-white">{plan.priceLabel}</div>
-                    <div className="text-[10px] text-white/45">{plan.tier === "free" ? "starter" : "monthly"}</div>
+                  <div
+                    className={`shrink-0 rounded-2xl border px-4 py-3 text-left lg:min-w-[122px] lg:text-right ${
+                      plan.tier === "pro"
+                        ? "border-fuchsia-400/20 bg-fuchsia-500/10"
+                        : plan.tier === "plus"
+                          ? "border-sky-400/20 bg-sky-500/10"
+                          : "border-white/10 bg-white/5"
+                    }`}
+                  >
+                    <div className="whitespace-nowrap text-lg font-bold text-white">{plan.priceLabel}</div>
+                    <div className="text-[10px] uppercase tracking-[0.16em] text-white/50">
+                      {plan.tier === "free" ? "starter" : "monthly"}
+                    </div>
                   </div>
                 </div>
-                <ul className="mt-3 space-y-1 text-xs text-white/75">
+                <ul className="mt-4 grid gap-2 text-xs text-white/78 sm:grid-cols-2">
                   {plan.highlights.map((item) => (
-                    <li key={item}>• {item}</li>
+                    <li
+                      key={item}
+                      className="flex items-start gap-2 rounded-xl border border-white/8 bg-white/[0.03] px-3 py-2"
+                    >
+                      <span className="mt-0.5 text-emerald-300">✓</span>
+                      <span>{item}</span>
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -302,11 +321,15 @@ export function GrowthPanel({
           Best for users who want a clear path: Free to try, Plus for extra tone variety, and Pro for the full enhancer stack.
         </div>
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <div className="mt-5 grid gap-3 lg:grid-cols-2">
           {[plusPlan, proPlan].map((plan) => {
             const isCurrent = currentPlan === plan.tier;
             const isDowngradeFromPro = currentPlan === "pro" && plan.tier === "plus";
             const isDisabled = upgradeLoading || isCurrent || isDowngradeFromPro;
+            const planSummary =
+              plan.tier === "plus"
+                ? "More tones and daily volume"
+                : "Full stack and highest limits";
 
             return (
               <button
@@ -314,17 +337,35 @@ export function GrowthPanel({
                 type="button"
                 onClick={() => void handleUpgrade(plan.tier as Exclude<PlanTier, "free">)}
                 disabled={isDisabled}
-                className={`inline-flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold text-white transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70 ${
+                className={`inline-flex w-full items-stretch rounded-2xl px-4 py-3.5 text-white transition disabled:cursor-not-allowed disabled:opacity-70 ${
                   plan.tier === "pro"
-                    ? "bg-gradient-to-r from-fuchsia-500 to-cyan-500"
+                    ? "bg-gradient-to-r from-fuchsia-500/90 to-cyan-500/90 shadow-[0_12px_28px_rgba(217,70,239,0.22)]"
                     : "border border-sky-400/25 bg-sky-500/10"
                 }`}
               >
-                {isCurrent
-                  ? `${plan.name} active`
-                  : pendingTier === plan.tier
-                    ? "Opening secure checkout..."
-                    : `${plan.ctaLabel} — ${plan.priceLabel}`}
+                <span className="flex w-full items-center justify-between gap-3 text-left">
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold">
+                      {isCurrent
+                        ? `${plan.name} active`
+                        : pendingTier === plan.tier
+                          ? "Opening secure checkout..."
+                          : plan.ctaLabel}
+                    </span>
+                    <span className="mt-1 block text-[11px] text-white/70">
+                      {isCurrent ? "You already have access." : planSummary}
+                    </span>
+                  </span>
+                  <span
+                    className={`shrink-0 rounded-full border px-3 py-1 text-[11px] font-semibold ${
+                      plan.tier === "pro"
+                        ? "border-white/20 bg-white/10"
+                        : "border-sky-300/25 bg-sky-400/10"
+                    }`}
+                  >
+                    {isCurrent ? "Active" : pendingTier === plan.tier ? "Loading" : plan.priceLabel}
+                  </span>
+                </span>
               </button>
             );
           })}

@@ -12,28 +12,28 @@ type QuickStartScenario = {
 
 const featureCards = [
   {
-    eyebrow: "Reads the room",
-    title: "Context before copy",
+    eyebrow: "Reads the energy",
+    title: "Chemistry before copy",
     body:
-      "Rizzly looks at warmth, pacing, questions, and tone first so the reply feels placed, not random.",
+      "Rizzly looks at warmth, pacing, questions, and subtext first so the reply feels smooth, placed, and emotionally on-beat.",
   },
   {
     eyebrow: "Keeps your voice",
-    title: "Still sounds like you",
+    title: "Flirty when you want, grounded when you need",
     body:
-      "Match lowercase, direct, playful, chill, or careful energy without slipping into robotic filler.",
+      "Match playful, soft, direct, or careful energy without slipping into robotic filler or lines that feel try-hard.",
   },
   {
-    eyebrow: "Works fast",
-    title: "Paste, screenshot, voice note, or your own draft",
+    eyebrow: "Moves fast",
+    title: "Go from messy input to a message that lands",
     body:
-      "Bring messy real-world inputs or a rough message you already wrote into the studio and keep the workflow moving in seconds.",
+      "Paste the chat, drop in a screenshot, add a voice note, or refine your own draft in a flow that stays quick and natural.",
   },
   {
-    eyebrow: "Gets smarter",
-    title: "Built for repeat wins",
+    eyebrow: "Gets sharper",
+    title: "Built for momentum and follow-through",
     body:
-      "Outcome tags, saved personas, and thread memory make the next move sharper over time.",
+      "Saved personas, outcome tags, and thread memory help the next reply feel even better the more you use it.",
   },
 ] as const;
 
@@ -64,8 +64,8 @@ const useCases = [
 
 const socialProof = [
   "Feels natural instead of robotic",
-  "Gives multiple angles fast",
-  "Actually helps me keep momentum",
+  "Helps the chemistry stay easy",
+  "Makes follow-through feel lighter",
 ] as const;
 
 const faqItems = [
@@ -123,18 +123,18 @@ export function LandingUpgradeSections({
     <div className="mb-8 space-y-10 max-w-7xl mx-auto">
       <section
         id="features"
-        className="rounded-[32px] border border-white/10 bg-gradient-to-br from-white/10 via-black/10 to-black/20 p-10 backdrop-blur-xl shadow-lg sm:p-14"
+        className="rounded-[32px] border border-rose-200/12 bg-[linear-gradient(135deg,rgba(37,18,52,0.92),rgba(19,17,33,0.96))] p-10 shadow-[0_22px_50px_rgba(76,29,149,0.18)] backdrop-blur-xl sm:p-14"
       >
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="inline-flex rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100">
-              Why it feels better
+              Why it feels smoother
             </div>
             <h2 className="mt-2 text-2xl font-bold text-white md:text-3xl">
-              Built for real conversations, not generic prompt dumps
+              Built for real chemistry, not stiff AI one-liners
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-white/60 md:text-base">
-              Every step is tuned to help you reply faster, keep your tone intact, and stay natural under pressure.
+              Every step is tuned to help you reply faster, keep your tone intact, and stay warm, playful, or clear without forcing it.
             </p>
           </div>
 
@@ -154,7 +154,7 @@ export function LandingUpgradeSections({
           {featureCards.map((card) => (
             <div
               key={card.title}
-              className="mode-card rounded-3xl border border-white/10 bg-gradient-to-br from-black/10 via-white/5 to-black/10 p-8 flex flex-col h-full min-w-0 shadow"
+              className="mode-card flex h-full min-w-0 flex-col rounded-3xl border border-rose-200/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-8 shadow-[0_14px_30px_rgba(15,23,42,0.12)]"
             >
               <div className="mode-card-content flex flex-col h-full min-w-0">
                 <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-100/80">
@@ -182,14 +182,14 @@ export function LandingUpgradeSections({
         </div>
       </section>
 
-      <section className="rounded-[32px] border border-white/10 bg-gradient-to-br from-white/10 via-black/10 to-black/20 p-8 backdrop-blur-xl shadow-lg sm:p-12">
+      <section className="rounded-[32px] border border-fuchsia-200/10 bg-[linear-gradient(135deg,rgba(27,16,39,0.92),rgba(15,20,33,0.96))] p-8 shadow-[0_22px_50px_rgba(30,41,59,0.16)] backdrop-blur-xl sm:p-12">
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="inline-flex rounded-full border border-amber-400/20 bg-amber-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-100">
               How it works
             </div>
             <h2 className="mt-2 text-2xl font-bold text-white md:text-3xl">
-              A cleaner flow from messy chat to confident send
+              A smoother path from mixed signals to a message that lands
             </h2>
           </div>
           <div className="flex flex-wrap gap-2 text-xs text-white/55">
@@ -208,7 +208,7 @@ export function LandingUpgradeSections({
           {workflowSteps.map((step) => (
             <div
               key={step.step}
-              className="rounded-3xl border border-white/10 bg-gradient-to-br from-black/10 via-white/5 to-black/10 p-7 shadow"
+              className="rounded-3xl border border-fuchsia-200/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] p-7 shadow-[0_14px_30px_rgba(15,23,42,0.12)]"
             >
               <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-100/80">
                 Step {step.step}
@@ -226,10 +226,10 @@ export function LandingUpgradeSections({
               Start faster
             </div>
             <h2 className="mt-2 text-2xl font-bold text-white md:text-3xl">
-              Popular starting points for the studio
+              Popular romantic and real-life starting points
             </h2>
             <p className="mt-2 max-w-2xl text-sm text-white/60 md:text-base">
-              Pick a scenario, load the chat, and let Rizzly shape the next move around the energy you want.
+              Pick a scenario, load the chat, and let Rizzly shape the next move around the warmth, tension, or playful energy you want.
             </p>
           </div>
         </div>
@@ -244,7 +244,7 @@ export function LandingUpgradeSections({
                 onChooseScenario(scenario);
                 onJumpToStudio();
               }}
-              className="rounded-2xl border border-white/10 bg-black/20 p-4 text-left transition hover:border-white/20 hover:bg-white/5"
+              className="rounded-2xl border border-rose-200/10 bg-black/20 p-4 text-left transition hover:border-rose-200/20 hover:bg-rose-500/5"
             >
               <div className="flex items-center justify-between gap-2">
                 <div className="text-sm font-semibold text-white">{scenario.label}</div>
@@ -261,13 +261,13 @@ export function LandingUpgradeSections({
         </div>
       </section>
 
-      <section id="faq" className="rounded-[32px] border border-white/10 bg-gradient-to-br from-white/10 via-black/10 to-black/20 p-8 backdrop-blur-xl shadow-lg sm:p-12">
+      <section id="faq" className="rounded-[32px] border border-white/10 bg-[linear-gradient(135deg,rgba(23,18,34,0.92),rgba(15,18,28,0.96))] p-8 shadow-[0_22px_50px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:p-12">
         <div className="mb-4">
           <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/70">
             FAQ
           </div>
           <h2 className="mt-2 text-2xl font-bold text-white md:text-3xl">
-            Quick answers before you dive in
+            Quick answers before you send anything
           </h2>
         </div>
 
@@ -275,7 +275,7 @@ export function LandingUpgradeSections({
           {faqItems.map((item) => (
             <details
               key={item.question}
-              className="rounded-3xl border border-white/10 bg-gradient-to-br from-black/10 via-white/5 to-black/10 px-7 py-5 text-white/80 shadow"
+              className="rounded-3xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.025))] px-7 py-5 text-white/80 shadow-[0_12px_28px_rgba(15,23,42,0.12)]"
             >
               <summary className="cursor-pointer list-none text-sm font-semibold text-white">
                 {item.question}

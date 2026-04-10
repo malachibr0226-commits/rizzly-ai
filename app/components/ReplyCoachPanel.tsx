@@ -6,11 +6,19 @@ type AnalysisLike = {
   timingWindow?: string;
   avoid?: string;
   coachNotes?: string;
+  liveNow?: string;
+  deliveryTip?: string;
+  nextIfTheyEngage?: string;
   dynamicReading?: string;
   nonReactiveResponse?: string;
   whenNotToReply?: string;
   behaviorFlags?: string[];
   nextMoves?: string[];
+  liveScenarios?: Array<{
+    ifTheySay: string;
+    youSay: string;
+    why: string;
+  }>;
 };
 
 export function ReplyCoachPanel({
@@ -37,13 +45,30 @@ export function ReplyCoachPanel({
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="inline-flex rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-fuchsia-100">
-            Reply coach
+            Live coach
           </div>
-          <h2 className="mt-2 text-lg font-bold text-white">Sharper guidance before you send</h2>
+          <h2 className="mt-2 text-lg font-bold text-white">In-the-moment guidance before you send</h2>
           <p className="mt-1 text-sm text-white/60">
             Current direction: <span className="font-semibold text-white/85">{toneLabel}</span> · <span className="font-semibold text-white/85">{goalLabel}</span>
           </p>
         </div>
+      </div>
+
+      <div className="mt-4 rounded-xl border border-fuchsia-400/20 bg-fuchsia-500/10 p-3">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-fuchsia-100/80">Coach in your ear</div>
+        <p className="mt-2 text-sm text-white/85">
+          {analysis.liveNow || analysis.coachNotes || "Keep it simple, grounded, and easy to answer."}
+        </p>
+        <p className="mt-2 text-xs text-white/70">
+          <span className="font-semibold text-white/85">Delivery:</span>{" "}
+          {analysis.deliveryTip || analysis.nonReactiveResponse || "Say less, stay relaxed, and do not force extra energy."}
+        </p>
+        {analysis.nextIfTheyEngage && (
+          <p className="mt-2 text-xs text-white/70">
+            <span className="font-semibold text-white/85">If they lean in:</span>{" "}
+            {analysis.nextIfTheyEngage}
+          </p>
+        )}
       </div>
 
       <div className="mt-4 grid gap-3 lg:grid-cols-2">
@@ -92,8 +117,25 @@ export function ReplyCoachPanel({
         </div>
       )}
 
+      {analysis.liveScenarios && analysis.liveScenarios.length > 0 && (
+        <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">If they say X, send Y</div>
+          <div className="mt-3 grid gap-3 lg:grid-cols-3">
+            {analysis.liveScenarios.slice(0, 3).map((item, index) => (
+              <div key={`${item.ifTheySay}-${index}`} className="rounded-xl border border-white/10 bg-white/[0.03] p-3">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-fuchsia-100/75">If they say</div>
+                <p className="mt-1 text-sm text-white/80">{item.ifTheySay}</p>
+                <div className="mt-3 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-100/75">You say</div>
+                <p className="mt-1 text-sm font-semibold text-white">{item.youSay}</p>
+                <p className="mt-2 text-[11px] leading-5 text-white/55">{item.why}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="mt-4 rounded-xl border border-white/10 bg-black/20 p-3 text-xs text-white/60">
-        Pro tip: protect your footing first. The strongest reply is usually the one that stays clear, calm, and hard to bait.
+        Coach rule: one grounded move at a time. Say less, stay present, and let the other person show you where the energy actually is.
       </div>
 
       {!isPro && (

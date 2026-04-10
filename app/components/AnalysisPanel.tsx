@@ -26,6 +26,11 @@ interface AnalysisPanelProps {
       move: string;
       note: string;
     }>;
+    liveScenarios?: Array<{
+      ifTheySay: string;
+      youSay: string;
+      why: string;
+    }>;
   };
   analysisVisible: boolean;
   panelClass: string;
@@ -41,6 +46,9 @@ const ANALYSIS_FIELDS: Array<{ key: string; label: string }> = [
   { key: "languageStyle", label: "Language style" },
   { key: "adaptationNote", label: "Adaptation note" },
   { key: "coachNotes", label: "Coach notes" },
+  { key: "liveNow", label: "Do this now" },
+  { key: "deliveryTip", label: "Delivery tip" },
+  { key: "nextIfTheyEngage", label: "If they lean in" },
   { key: "dynamicReading", label: "Likely dynamic" },
   { key: "nonReactiveResponse", label: "Best non-reactive move" },
   { key: "whenNotToReply", label: "When not to reply" },
@@ -102,6 +110,25 @@ export function AnalysisPanel({ analysis, analysisVisible, panelClass }: Analysi
               >
                 <span className="mr-2 text-white/40">0{index + 1}</span>
                 {move}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {analysis.liveScenarios && analysis.liveScenarios.length > 0 && (
+        <div className={`rounded-2xl border bg-black/30 p-4 ${panelClass}`}>
+          <div className="mb-3 text-xs uppercase tracking-[0.2em] text-white/40">Text-back planner</div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {analysis.liveScenarios.map((item, index) => (
+              <div key={`${item.ifTheySay}-${index}`} className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
+                <div className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">
+                  If they say
+                </div>
+                <div className="mt-2 text-sm text-white/80">{item.ifTheySay}</div>
+                <div className="mt-3 text-xs font-semibold uppercase tracking-[0.18em] text-white/45">You say</div>
+                <div className="mt-2 text-sm font-semibold text-white/85">{item.youSay}</div>
+                <div className="mt-2 text-xs leading-5 text-white/55">{item.why}</div>
               </div>
             ))}
           </div>

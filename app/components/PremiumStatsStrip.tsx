@@ -14,10 +14,26 @@ export function PremiumStatsStrip({
   planTier: PlanTier;
 }) {
   const items = [
-    { label: "Threads saved", value: threadsCount },
-    { label: "Personas ready", value: savedPersonasCount },
-    { label: "Favorites kept", value: favoriteCount },
-    { label: "Plan", value: planTier === "pro" ? "Pro" : planTier === "plus" ? "Plus" : "Free" },
+    {
+      label: "Threads saved",
+      value: threadsCount,
+      tone: "border-sky-400/15 bg-sky-500/[0.08]",
+    },
+    {
+      label: "Personas ready",
+      value: savedPersonasCount,
+      tone: "border-violet-400/15 bg-violet-500/[0.08]",
+    },
+    {
+      label: "Favorites kept",
+      value: favoriteCount,
+      tone: "border-emerald-400/15 bg-emerald-500/[0.08]",
+    },
+    {
+      label: "Plan",
+      value: planTier === "pro" ? "Pro" : planTier === "plus" ? "Plus" : "Free",
+      tone: "border-rose-400/15 bg-rose-500/[0.08]",
+    },
   ];
 
   return (
@@ -25,7 +41,7 @@ export function PremiumStatsStrip({
       {items.map((item) => (
         <div
           key={item.label}
-          className="rounded-2xl border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-4 py-3 backdrop-blur-sm"
+          className={`rounded-[22px] border px-4 py-3 backdrop-blur-sm shadow-[0_10px_24px_rgba(15,23,42,0.10)] ${item.tone}`}
         >
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
             {item.label}

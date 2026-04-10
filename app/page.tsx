@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppAuth } from "@/app/components/AppAuthProvider";
 import { useUser } from "@clerk/nextjs";
@@ -91,6 +92,9 @@ type Analysis = {
   timingWindow?: string;
   avoid?: string;
   coachNotes?: string;
+  liveNow?: string;
+  deliveryTip?: string;
+  nextIfTheyEngage?: string;
   dynamicReading?: string;
   nonReactiveResponse?: string;
   whenNotToReply?: string;
@@ -100,6 +104,11 @@ type Analysis = {
     scenario: string;
     move: string;
     note: string;
+  }>;
+  liveScenarios?: Array<{
+    ifTheySay: string;
+    youSay: string;
+    why: string;
   }>;
 };
 
@@ -121,7 +130,12 @@ type GenerateReplyResponse = {
   error?: string;
 };
 
-type DictationTarget = "conversation" | "context";
+type DictationTarget = "conversation" | "context" | "live-line" | "live-context";
+
+type HomePageProps = {
+  initialStudioMode?: ResponseModeKey;
+  standaloneLiveCoach?: boolean;
+};
 
 type BrowserSpeechRecognitionEvent = {
   results: ArrayLike<ArrayLike<{ transcript: string }>>;
@@ -151,6 +165,8 @@ const CURRENT_THREAD_KEY = "rizzly-current-thread-v1";
 const DEFAULT_DRAFT = {
   conversation: "",
   draftMessage: "",
+  liveCoachLine: "",
+  liveCoachContext: "",
   tone: "confident" as ToneKey,
   goal: "restart" as GoalKey,
   responseMode: "balanced" as ResponseModeKey,
@@ -200,6 +216,52 @@ async function fetchWithTimeout(
   }
 }
 
+function normalizeLiveCoachLine(value: string) {
+  return value
+    .replace(/^(she|he|they)\s+said\s*/i, "")
+    .replace(/^them\s*:\s*/i, "")
+    .trim()
+    .replace(/^["'“”`]+/, "")
+    .replace(/["'“”`]+$/, "")
+    .trim();
+}
+
+function isAdviceStyleLiveCoachPrompt(value: string) {
+  return /\b(start|open|begin|restart|keep|make|ask|approach|respond|reply|text|say|flirt|conversation|small talk|break the ice|follow up|follow-up|plan|what do i say|help me)\b/i.test(
+    value,
+  );
+}
+
+function buildLiveCoachConversation(baseConversation: string, liveCoachLine: string) {
+  const normalized = normalizeLiveCoachLine(liveCoachLine);
+
+  if (!normalized) {
+    return baseConversation.trim();
+  }
+
+  const trimmedBase = baseConversation.trim();
+
+  if (isAdviceStyleLiveCoachPrompt(normalized)) {
+    return trimmedBase;
+  }
+
+  const formattedLine = `Them: ${normalized}`;
+
+  if (!trimmedBase) {
+    return formattedLine;
+  }
+
+  if (trimmedBase.toLowerCase().includes(normalized.toLowerCase())) {
+    return trimmedBase;
+  }
+
+  return `${trimmedBase}\n${formattedLine}`;
+}
+
+function mergeLiveCoachContext(baseContext: string, liveCoachContext: string) {
+  return [baseContext.trim(), liveCoachContext.trim()].filter(Boolean).join("\n");
+}
+
 function loadDraft() {
   if (typeof window === "undefined") {
     return DEFAULT_DRAFT;
@@ -217,6 +279,14 @@ function loadDraft() {
         typeof parsed?.draftMessage === "string"
           ? parsed.draftMessage
           : DEFAULT_DRAFT.draftMessage,
+      liveCoachLine:
+        typeof parsed?.liveCoachLine === "string"
+          ? parsed.liveCoachLine
+          : DEFAULT_DRAFT.liveCoachLine,
+      liveCoachContext:
+        typeof parsed?.liveCoachContext === "string"
+          ? parsed.liveCoachContext
+          : DEFAULT_DRAFT.liveCoachContext,
       tone:
         typeof parsed?.tone === "string"
           ? (parsed.tone as ToneKey)
@@ -640,6 +710,7 @@ const responseModeOptions: Array<{
   proOnly?: boolean;
 }> = [
   { value: "balanced", label: "Balanced", note: "Natural and emotionally intelligent" },
+  { value: "live-coach", label: "Live coach", note: "Direct, in-the-moment guidance like a coach beside you", proOnly: true },
   { value: "boundary", label: "Boundary", note: "Clear, calm, and low-drama", proOnly: true },
   { value: "high-value", label: "High-value", note: "Grounded and self-respecting", proOnly: true },
   { value: "disengage", label: "Disengage", note: "Short and clean if the dynamic is off", proOnly: true },
@@ -673,6 +744,38 @@ const quickStartScenarios: Array<{
     goal: "plan",
     conversation:
       "Them: we should do something this week\nYou: im down\nThem: what did you have in mind",
+  },
+];
+
+const liveCoachPromptIdeas: Array<{
+  label: string;
+  prompt: string;
+  tone: ToneKey;
+  goal: GoalKey;
+}> = [
+  {
+    label: "Start a conversation",
+    prompt: "Start a conversation in a natural, low-pressure way.",
+    tone: "chill",
+    goal: "restart",
+  },
+  {
+    label: "Reply to a dry text",
+    prompt: "Help me reply to a dry or vague text without forcing it.",
+    tone: "confident",
+    goal: "clarify",
+  },
+  {
+    label: "Ask them out",
+    prompt: "Turn this into a real plan without sounding try-hard.",
+    tone: "confident",
+    goal: "plan",
+  },
+  {
+    label: "Keep it flirty",
+    prompt: "Keep the chemistry playful without getting corny.",
+    tone: "flirty",
+    goal: "flirt",
   },
 ];
 
@@ -917,7 +1020,10 @@ function ToneDropdown({
   );
 }
 
-export default function Home() {
+export default function Home({
+  initialStudioMode = DEFAULT_DRAFT.responseMode,
+  standaloneLiveCoach = false,
+}: HomePageProps = {}) {
   const { isSignedIn, authEnabled } = useAppAuth();
   const { user } = useUser();
 
@@ -929,9 +1035,11 @@ export default function Home() {
   const [screenshotParsing, setScreenshotParsing] = useState(false);
   const [conversation, setConversation] = useState(DEFAULT_DRAFT.conversation);
   const [draftMessage, setDraftMessage] = useState(DEFAULT_DRAFT.draftMessage);
+  const [liveCoachLine, setLiveCoachLine] = useState(DEFAULT_DRAFT.liveCoachLine);
+  const [liveCoachContext, setLiveCoachContext] = useState(DEFAULT_DRAFT.liveCoachContext);
   const [tone, setTone] = useState<ToneKey>(DEFAULT_DRAFT.tone);
   const [goal, setGoal] = useState<GoalKey>(DEFAULT_DRAFT.goal);
-  const [responseMode, setResponseMode] = useState<ResponseModeKey>(DEFAULT_DRAFT.responseMode);
+  const [responseMode, setResponseMode] = useState<ResponseModeKey>(initialStudioMode);
   const [userContext, setUserContext] = useState(DEFAULT_DRAFT.userContext);
   const [profileName, setProfileName] = useState(DEFAULT_DRAFT.profileName);
   const [relationshipNotes, setRelationshipNotes] = useState(
@@ -950,7 +1058,9 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [systemNotice, setSystemNotice] = useState<string | null>(null);
+  const [systemNotice, setSystemNotice] = useState<string | null>(
+    standaloneLiveCoach ? "Live coach is ready — add the moment and get what to say next." : null,
+  );
   const [visibleReplyCount, setVisibleReplyCount] = useState(0);
   const [analysisVisible, setAnalysisVisible] = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
@@ -1004,8 +1114,11 @@ export default function Home() {
     [threads],
   );
   const topStats = useMemo(() => mvpFeatures.getStats(threads), [mvpFeatures, threads]);
-  const canGenerate = Boolean(conversation.trim() || draftMessage.trim());
+  const canGenerate = Boolean(
+    conversation.trim() || draftMessage.trim() || liveCoachLine.trim(),
+  );
   const isDraftImproveMode = Boolean(draftMessage.trim());
+  const isLiveCoachReady = Boolean(liveCoachLine.trim());
   const isDeepConversation =
     conversation.split("\n").filter((line: string) => line.trim()).length > 16 ||
     conversation.length > 2200;
@@ -1100,6 +1213,7 @@ export default function Home() {
     !isPro && responseModeOptions.find((item) => item.value === responseMode)?.proOnly
       ? "balanced"
       : responseMode;
+  const isLiveCoachMode = effectiveResponseMode === "live-coach";
   const effectiveBulkCount = isPro
     ? mvpFeatures.bulkCount
     : Math.min(mvpFeatures.bulkCount, 3);
@@ -1174,6 +1288,8 @@ export default function Home() {
 
     setConversation(scenario.conversation);
     setDraftMessage("");
+    setLiveCoachLine("");
+    setLiveCoachContext("");
     setTone(scenario.tone);
     setGoal(scenario.goal);
     setResponseMode("balanced");
@@ -1544,6 +1660,8 @@ export default function Home() {
       JSON.stringify({
         conversation,
         draftMessage,
+        liveCoachLine,
+        liveCoachContext,
         tone,
         goal,
         responseMode,
@@ -1557,6 +1675,8 @@ export default function Home() {
   }, [
     conversation,
     draftMessage,
+    liveCoachLine,
+    liveCoachContext,
     goal,
     responseMode,
     tone,
@@ -1630,6 +1750,8 @@ export default function Home() {
     queueMicrotask(() => {
       setConversation(draft.conversation);
       setDraftMessage(draft.draftMessage);
+      setLiveCoachLine(draft.liveCoachLine);
+      setLiveCoachContext(draft.liveCoachContext);
       setTone(draft.tone);
       setGoal(draft.goal);
       setResponseMode(draft.responseMode);
@@ -1726,6 +1848,20 @@ export default function Home() {
     if (target === "conversation") {
       setConversation((current: string) =>
         current.trim() ? `${current.trim()}\n${cleaned}` : cleaned,
+      );
+      return;
+    }
+
+    if (target === "live-line") {
+      setLiveCoachLine((current: string) =>
+        current.trim() ? `${current.trim()} ${cleaned}` : cleaned,
+      );
+      return;
+    }
+
+    if (target === "live-context") {
+      setLiveCoachContext((current: string) =>
+        current.trim() ? `${current.trim()} ${cleaned}` : cleaned,
       );
       return;
     }
@@ -2021,6 +2157,8 @@ export default function Home() {
     setCurrentThreadId(newThread.id);
     setConversation("");
     setDraftMessage("");
+    setLiveCoachLine("");
+    setLiveCoachContext("");
     setTone("confident");
     setGoal("restart");
     setResponseMode("balanced");
@@ -2050,6 +2188,8 @@ export default function Home() {
     if (lastTurn) {
       setConversation(lastTurn.userMessage);
       setDraftMessage(lastTurn.draftMessage || "");
+      setLiveCoachLine("");
+      setLiveCoachContext("");
       setTone(lastTurn.tone);
       setGoal(lastTurn.goal);
       setResponseMode(lastTurn.responseMode || "balanced");
@@ -2073,6 +2213,8 @@ export default function Home() {
     } else {
       setConversation("");
       setDraftMessage("");
+      setLiveCoachLine("");
+      setLiveCoachContext("");
       setTone("confident");
       setGoal("restart");
       setResponseMode("balanced");
@@ -2114,8 +2256,35 @@ export default function Home() {
     );
   };
 
-  const handleGenerate = async () => {
-    if (!conversation.trim() && !draftMessage.trim()) return;
+  const handleGenerate = async (modeOverride?: ResponseModeKey) => {
+    const normalizedLiveCoachPrompt = normalizeLiveCoachLine(liveCoachLine);
+    const requestConversation = buildLiveCoachConversation(conversation, normalizedLiveCoachPrompt);
+    const requestUserContext = mergeLiveCoachContext(userContext, liveCoachContext);
+    const wantsLiveCoach = Boolean(
+      modeOverride === "live-coach" ||
+        responseMode === "live-coach" ||
+        normalizedLiveCoachPrompt ||
+        liveCoachContext.trim(),
+    );
+    const requestResponseMode: ResponseModeKey =
+      modeOverride === "live-coach"
+        ? isPro
+          ? "live-coach"
+          : effectiveResponseMode
+        : wantsLiveCoach && isPro
+          ? "live-coach"
+          : effectiveResponseMode;
+
+    if (!requestConversation.trim() && !draftMessage.trim() && !normalizedLiveCoachPrompt) return;
+
+    if (!isPro && wantsLiveCoach) {
+      promptProEnhancer("Live coach");
+      return;
+    }
+
+    if (wantsLiveCoach && isPro && responseMode !== "live-coach") {
+      setResponseMode("live-coach");
+    }
 
     if (!consumeProductAction("generate")) {
       return;
@@ -2138,6 +2307,10 @@ export default function Home() {
     try {
       const threadSummary = currentThread?.summary || "";
 
+      if (!conversation.trim() && requestConversation) {
+        setConversation(requestConversation);
+      }
+
       const res = await fetchWithTimeout(
         "/api/generate-reply",
         {
@@ -2146,12 +2319,13 @@ export default function Home() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            conversation,
+            conversation: requestConversation,
             draftMessage,
+            liveCoachPrompt: normalizedLiveCoachPrompt,
             tone: effectiveTone,
             goal,
-            responseMode: effectiveResponseMode,
-            userContext,
+            responseMode: requestResponseMode,
+            userContext: requestUserContext,
             profileName,
             relationshipNotes,
             personaCalibration,
@@ -2179,6 +2353,10 @@ export default function Home() {
       setAnalysis(data.analysis || null);
       if (data.warning) {
         setSystemNotice(data.warning);
+      } else if (requestResponseMode === "live-coach") {
+        setSystemNotice(
+          "Live coach mode is on — follow the cue, keep it natural, and adjust based on their energy.",
+        );
       } else if (draftMessage.trim()) {
         setSystemNotice(
           "Rizzly tightened your draft into cleaner options. Pick the one that still sounds most like you.",
@@ -2211,12 +2389,12 @@ export default function Home() {
         const turn: ThreadTurn = {
           id: `turn-${Date.now()}`,
           createdAt: Date.now(),
-          userMessage: conversation,
+          userMessage: requestConversation || normalizedLiveCoachPrompt,
           draftMessage,
           tone: effectiveTone,
           goal,
-          responseMode: effectiveResponseMode,
-          userContext,
+          responseMode: requestResponseMode,
+          userContext: requestUserContext,
           category: mvpFeatures.category,
           toneIntensity: mvpFeatures.toneIntensity,
           screenshotSummary,
@@ -2251,12 +2429,12 @@ export default function Home() {
         const turn: ThreadTurn = {
           id: `turn-${Date.now()}`,
           createdAt: Date.now(),
-          userMessage: conversation,
+          userMessage: requestConversation || normalizedLiveCoachPrompt,
           draftMessage,
           tone: effectiveTone,
           goal,
-          responseMode: effectiveResponseMode,
-          userContext,
+          responseMode: requestResponseMode,
+          userContext: requestUserContext,
           category: mvpFeatures.category,
           toneIntensity: mvpFeatures.toneIntensity,
           screenshotSummary,
@@ -2287,6 +2465,34 @@ export default function Home() {
     }
   };
 
+  const openLiveCoachStudio = () => {
+    if (!isPro) {
+      promptProEnhancer("Live coach");
+      return;
+    }
+
+    setResponseMode("live-coach");
+    setError(null);
+    setSystemNotice("Live coach is ready — add the moment and get what to say next.");
+  };
+
+  const handleLiveCoachGenerate = () => {
+    if (!isPro) {
+      promptProEnhancer("Live coach");
+      return;
+    }
+
+    if (!conversation.trim() && !draftMessage.trim() && !liveCoachLine.trim()) {
+      setError("Add what they said or what you need help with first.");
+      setSystemNotice(null);
+      return;
+    }
+
+    setResponseMode("live-coach");
+    setError(null);
+    void handleGenerate("live-coach");
+  };
+
   // Keep ref current for event-driven calls
   handleGenerateRef.current = handleGenerate;
 
@@ -2312,6 +2518,15 @@ export default function Home() {
     setSentReplyIndex(index);
     trackSend(index);
 
+    const currentLivePrompt = normalizeLiveCoachLine(liveCoachLine);
+    const currentMessageContext =
+      buildLiveCoachConversation(conversation, currentLivePrompt) || currentLivePrompt;
+    const currentUserContext = mergeLiveCoachContext(userContext, liveCoachContext);
+    const currentResponseMode: ResponseModeKey =
+      (responseMode === "live-coach" || currentLivePrompt || liveCoachContext.trim()) && isPro
+        ? "live-coach"
+        : effectiveResponseMode;
+
     if (currentThreadId) {
       setThreads((prev) =>
         prev.map((thread) => {
@@ -2323,9 +2538,9 @@ export default function Home() {
           const lastTurn = turns.at(-1);
           const shouldPatchLastTurn =
             lastTurn &&
-            lastTurn.userMessage === conversation &&
+            lastTurn.userMessage === currentMessageContext &&
             (lastTurn.draftMessage || "") === draftMessage &&
-            (lastTurn.responseMode || "balanced") === effectiveResponseMode &&
+            (lastTurn.responseMode || "balanced") === currentResponseMode &&
             lastTurn.tone === effectiveTone &&
             lastTurn.goal === goal &&
             !lastTurn.chosenReply;
@@ -2335,7 +2550,7 @@ export default function Home() {
               ...lastTurn,
               chosenReply: reply.text,
               draftMessage,
-              responseMode: effectiveResponseMode,
+              responseMode: currentResponseMode,
               screenshotSummary,
               relationshipNotesSnapshot: relationshipNotes,
               personaCalibrationSnapshot: personaCalibration,
@@ -2344,12 +2559,12 @@ export default function Home() {
             turns.push({
               id: `turn-${Date.now()}`,
               createdAt: Date.now(),
-              userMessage: conversation,
+              userMessage: currentMessageContext,
               draftMessage,
               tone: effectiveTone,
               goal,
-              responseMode: effectiveResponseMode,
-              userContext,
+              responseMode: currentResponseMode,
+              userContext: currentUserContext,
               category: mvpFeatures.category,
               toneIntensity: mvpFeatures.toneIntensity,
               screenshotSummary,
@@ -2402,7 +2617,7 @@ export default function Home() {
   };
 
   return (
-    <main id="main-content" tabIndex={-1} className="relative min-h-screen overflow-hidden bg-[#181322] pb-32 text-white sm:pb-0">
+    <main id="main-content" tabIndex={-1} className="relative min-h-screen overflow-hidden bg-[#140f1f] pb-32 text-white sm:pb-0">
       <style>{`
         @media (min-width: 1280px) {
           .main-responsive-grid {
@@ -2485,30 +2700,36 @@ export default function Home() {
         .typing-dot { animation: typing-bounce 1.4s ease-in-out infinite; }
       `}</style>
 
-      {/* Softer, less busy backgrounds for decluttered look */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(120,58,220,0.06),transparent_60%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_80%_80%,rgba(168,85,247,0.03),transparent_45%)]" />
-      <div className="pointer-events-none absolute top-1/2 left-1/2 h-80 w-80 rounded-full bg-gradient-to-br from-pink-500/5 to-rose-600/3 blur-2xl float-1" style={{ filter: "blur(60px)" }} />
+      {/* Romantic, lively background accents */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_14%,rgba(251,113,133,0.16),transparent_0%,transparent_36%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_14%,rgba(217,70,239,0.14),transparent_0%,transparent_30%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_52%_78%,rgba(56,189,248,0.08),transparent_0%,transparent_28%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
+      <div className="pointer-events-none absolute left-[7%] top-24 h-44 w-44 rounded-full bg-rose-400/10 blur-3xl glow-pulse" />
+      <div className="pointer-events-none absolute right-[8%] top-18 h-52 w-52 rounded-full bg-fuchsia-400/10 blur-3xl drift" />
 
-      <div className="relative z-10 mx-auto w-full wider-main-ui px-4 py-12 md:px-12" style={{maxWidth: '1800px'}}>
-        <header className="mb-12 flex flex-col items-center justify-center gap-2 md:mb-14">
+      <div className="relative z-10 mx-auto w-full wider-main-ui px-4 py-10 md:px-8 lg:px-10" style={{ maxWidth: "1680px" }}>
+        <header className="mb-12 flex flex-col items-center justify-center gap-3 md:mb-14">
+          <div className="inline-flex items-center rounded-full border border-rose-300/20 bg-rose-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-100">
+            Romantic reply studio
+          </div>
           <div className="flex flex-col items-center gap-2">
             <div className="relative">
-              <div className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-br from-fuchsia-500/10 to-rose-500/8 blur-lg" style={{ animationDuration: "4s" }} />
-              <div className="relative rounded-2xl border border-fuchsia-400/10 bg-gradient-to-br from-black/80 to-black/60 p-2 shadow-[0_8px_24px_rgba(236,72,153,0.08)] backdrop-blur-md">
+              <div className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-br from-rose-500/14 via-fuchsia-500/10 to-cyan-500/8 blur-xl" style={{ animationDuration: "4s" }} />
+              <div className="relative rounded-2xl border border-rose-300/15 bg-gradient-to-br from-[#1b1326]/95 to-[#120f1e]/90 p-2 shadow-[0_10px_28px_rgba(244,63,94,0.14)] backdrop-blur-md">
                 <svg width="56" height="56" viewBox="0 0 64 64" className="logo-glow" fill="none">
-                  <rect x="10" y="14" width="24" height="22" rx="5" ry="5" stroke="#d946a6" strokeWidth="2.5" fill="none" />
-                  <polygon points="18,36 14,42 22,36" fill="#d946a6" />
-                  <rect x="28" y="22" width="26" height="22" rx="5" ry="5" stroke="#06b6d4" strokeWidth="2.5" fill="none" />
-                  <polygon points="46,44 50,50 42,44" fill="#06b6d4" />
+                  <rect x="10" y="14" width="24" height="22" rx="5" ry="5" stroke="#fb7185" strokeWidth="2.5" fill="none" />
+                  <polygon points="18,36 14,42 22,36" fill="#fb7185" />
+                  <rect x="28" y="22" width="26" height="22" rx="5" ry="5" stroke="#c084fc" strokeWidth="2.5" fill="none" />
+                  <polygon points="46,44 50,50 42,44" fill="#c084fc" />
                 </svg>
               </div>
             </div>
-            <div className="bg-gradient-to-r from-rose-300 via-pink-300 to-fuchsia-300 bg-clip-text text-xs font-bold uppercase tracking-[0.3em] text-transparent opacity-80">
+            <div className="bg-gradient-to-r from-rose-200 via-pink-200 to-fuchsia-200 bg-clip-text text-xs font-bold uppercase tracking-[0.3em] text-transparent opacity-90">
               Rizzly
             </div>
-            <div className="shine mt-1 bg-gradient-to-r from-white via-rose-100 to-cyan-200 bg-clip-text text-lg font-black text-transparent md:text-xl" style={{ animationDuration: "4s" }}>
-              Reply smarter
+            <div className="shine mt-1 bg-gradient-to-r from-white via-rose-100 to-fuchsia-100 bg-clip-text text-lg font-black text-transparent md:text-xl" style={{ animationDuration: "4s" }}>
+              Charm, clarity, timing
             </div>
           </div>
         </header>
@@ -2548,15 +2769,14 @@ export default function Home() {
 
 
 
-            <h1 className="mb-6 text-4xl font-extrabold leading-tight tracking-[-0.02em] md:text-5xl xl:text-6xl text-balance" style={{ textShadow: "0 4px 16px rgba(236, 72, 153, 0.10)" }}>
-              <span className="block bg-gradient-to-r from-white via-white to-cyan-100 bg-clip-text text-transparent">
-                Better replies, less noise.
+            <h1 className="mb-6 text-balance text-4xl font-extrabold leading-tight tracking-[-0.03em] md:text-5xl xl:text-6xl" style={{ textShadow: "0 6px 18px rgba(244, 63, 94, 0.14)" }}>
+              <span className="block bg-gradient-to-r from-white via-rose-100 to-fuchsia-100 bg-clip-text text-transparent">
+                Better replies, warmer chemistry.
               </span>
             </h1>
 
-
-            <p className="max-w-2xl text-base font-[450] leading-relaxed tracking-[0.3px] text-white/60 md:text-lg text-balance" style={{ letterSpacing: "0.3px" }}>
-              Rizzly turns chats, screenshots, and voice notes into sharper next messages that feel <span className="font-semibold text-white/90">genuinely like you</span> — fast, clear, and built for real momentum.
+            <p className="max-w-2xl text-balance text-base font-[450] leading-relaxed tracking-[0.3px] text-white/68 md:text-lg" style={{ letterSpacing: "0.3px" }}>
+              Rizzly turns chats, screenshots, and voice notes into smoother next messages that feel <span className="font-semibold text-white/90">playful, natural, and still like you</span> — whether you are flirting, reconnecting, or locking in real plans.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -2566,7 +2786,7 @@ export default function Home() {
                   trackCtaClick("try_free", "hero");
                   jumpToStudio();
                 }}
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-pink-500 to-cyan-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_10px_28px_rgba(236,72,153,0.24)] transition hover:scale-[1.01]"
+                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(244,63,94,0.28)] transition hover:scale-[1.01]"
               >
                 Try it free
               </button>
@@ -2575,24 +2795,25 @@ export default function Home() {
               <a
                 href={isSignedIn ? "#message-studio" : "/sign-up"}
                 onClick={() => trackCtaClick(isSignedIn ? "open_thread" : "create_account", "hero")}
-                className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 transition hover:border-white/20 hover:bg-white/10"
+                className="inline-flex items-center justify-center rounded-full border border-rose-200/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/85 transition hover:border-rose-200/25 hover:bg-white/10"
               >
                 {isSignedIn ? "Open your thread" : "Create account"}
               </a>
             </div>
 
 
-            {/* Remove most badges for declutter, keep only one */}
-            <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/50 text-balance">
-              <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">⚡ Replies in seconds</div>
+            <div className="mt-4 flex flex-wrap gap-2 text-balance text-xs text-white/60">
+              <div className="rounded-full border border-rose-200/15 bg-rose-500/10 px-3 py-1.5">💖 Warm restarts</div>
+              <div className="rounded-full border border-fuchsia-200/15 bg-fuchsia-500/10 px-3 py-1.5">✨ Flirty replies</div>
+              <div className="rounded-full border border-cyan-200/15 bg-cyan-500/10 px-3 py-1.5">📅 Plans that land</div>
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-xl min-w-[340px] overflow-hidden rounded-[30px] border border-white/12 bg-gradient-to-br from-purple-950/38 via-slate-900/32 to-gray-900/26 p-4 shadow-[0_10px_28px_rgba(190,103,154,0.1)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
-            <div className="overflow-hidden rounded-[24px] border border-white/8 bg-white/[0.025] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] sm:p-4 md:p-5">
+          <div className="mx-auto w-full max-w-xl min-w-[340px] overflow-hidden rounded-[30px] border border-rose-200/12 bg-[linear-gradient(180deg,rgba(30,18,44,0.92),rgba(15,11,25,0.98))] p-4 shadow-[0_22px_48px_rgba(76,29,149,0.22)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
+            <div className="overflow-hidden rounded-[24px] border border-rose-100/10 bg-white/[0.035] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] sm:p-4 md:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-4">
                 <div className="rounded-2xl px-3 py-2.5">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/40">Status</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/40">Mood</div>
                   <div className="mt-2 text-[1.35rem] font-bold leading-none text-white/95">{liveStatus.label}</div>
                 </div>
                 <div className="inline-flex min-h-[50px] w-full max-w-full items-center gap-2 rounded-[20px] border border-white/8 bg-white/[0.04] px-4 py-2 text-sm leading-snug text-white/62 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] sm:max-w-[250px] xl:max-w-[270px]">
@@ -2605,13 +2826,13 @@ export default function Home() {
 
               <div className="mt-5">
                 <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/38">
-                  Live Read
+                  Chemistry snapshot
                 </div>
 
                 <div className="grid grid-cols-2 gap-2.5 md:gap-3">
                   <div className="col-span-2 flex min-h-[96px] min-w-0 flex-col justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] md:px-4 md:py-5">
                     <div className="flex flex-1 items-center justify-center px-2 text-center bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-[clamp(0.9rem,1.15vw,1.08rem)] font-extrabold leading-tight tracking-[-0.03em] text-transparent drop-shadow-sm">
-                      <span className="max-w-full whitespace-nowrap">{pulseMetrics.toneLabel}</span>
+                      <span className="max-w-full whitespace-normal break-words text-balance">{pulseMetrics.toneLabel}</span>
                     </div>
                     <div className="mt-2 flex min-h-[1.5rem] items-center justify-center text-[9px] font-semibold uppercase tracking-[0.14em] leading-relaxed text-white/46 sm:text-[10px]">Tone</div>
                   </div>
@@ -2633,29 +2854,33 @@ export default function Home() {
           </div>
         </section>
 
-        <PremiumStatsStrip
-          threadsCount={threads.length}
-          savedPersonasCount={savedPersonas.length}
-          favoriteCount={mvpFeatures.favorites.length}
-          planTier={usageSnapshot.planTier}
-        />
+        {!standaloneLiveCoach && (
+          <>
+            <PremiumStatsStrip
+              threadsCount={threads.length}
+              savedPersonasCount={savedPersonas.length}
+              favoriteCount={mvpFeatures.favorites.length}
+              planTier={usageSnapshot.planTier}
+            />
 
-        <SmartRecommendationBar
-          suggestion={mvpFeatures.getSuggestion()}
-          topTone={topStats.mostUsedTone}
-          topGoal={topStats.mostUsedGoal}
-        />
+            <SmartRecommendationBar
+              suggestion={mvpFeatures.getSuggestion()}
+              topTone={topStats.mostUsedTone}
+              topGoal={topStats.mostUsedGoal}
+            />
 
-        <LandingUpgradeSections
-          isSignedIn={Boolean(isSignedIn)}
-          scenarios={quickStartScenarios}
-          onChooseScenario={applyQuickStart}
-          onJumpToStudio={jumpToStudio}
-        />
+            <LandingUpgradeSections
+              isSignedIn={Boolean(isSignedIn)}
+              scenarios={quickStartScenarios}
+              onChooseScenario={applyQuickStart}
+              onJumpToStudio={jumpToStudio}
+            />
+          </>
+        )}
 
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-6 min-w-0">
-            {currentThread && (
+            {!standaloneLiveCoach && currentThread && (
               <div className="rounded-lg border border-white/10 bg-white/4 p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
@@ -2681,6 +2906,8 @@ export default function Home() {
                       setCurrentThreadId(null);
                       setConversation("");
                       setDraftMessage("");
+                      setLiveCoachLine("");
+                      setLiveCoachContext("");
                       setResponseMode("balanced");
                       setProfileName("");
                       setRelationshipNotes("");
@@ -2699,113 +2926,302 @@ export default function Home() {
               </div>
             )}
 
-            <OnboardingCoachPanel
-              conversationReady={canGenerate}
-              hasReplies={replies.length > 0}
-              hasSavedPersona={savedPersonas.length > 0}
-              isSignedIn={Boolean(isSignedIn)}
-              isPro={isPro}
-              onJumpToStudio={jumpToStudio}
-              onApplyPreset={applyPresetMode}
-              onSavePersona={saveCurrentPersona}
-            />
+            {!standaloneLiveCoach && (
+              <OnboardingCoachPanel
+                conversationReady={canGenerate}
+                hasReplies={replies.length > 0}
+                hasSavedPersona={savedPersonas.length > 0}
+                isSignedIn={Boolean(isSignedIn)}
+                isPro={isPro}
+                onJumpToStudio={jumpToStudio}
+                onApplyPreset={applyPresetMode}
+                onSavePersona={saveCurrentPersona}
+              />
+            )}
 
             <section id="message-studio" className="overflow-visible rounded-xl border border-white/10 bg-white/3 backdrop-blur-sm before:hidden min-w-0">
-              <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-                <div>
-                  <p className="text-sm font-semibold tracking-[0.3px] text-white" style={{ textShadow: "0 2px 8px rgba(255, 255, 255, 0.08)" }}>
-                    Message Studio
-                  </p>
-                  <p className="mt-1 text-xs text-white/50">
-                    Paste the last few messages, choose a vibe, and get a stronger next reply fast.
-                  </p>
+              <div className="border-b border-white/10 px-5 py-4">
+                <div className="mb-3 inline-flex w-fit rounded-full border border-white/10 bg-black/20 p-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResponseMode("balanced");
+                      setError(null);
+                    }}
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
+                      !isLiveCoachMode
+                        ? `bg-gradient-to-r text-white ${selectedTone.button}`
+                        : "text-white/65 hover:text-white"
+                    }`}
+                  >
+                    Reply generator
+                  </button>
+                  <button
+                    type="button"
+                    onClick={openLiveCoachStudio}
+                    className={`rounded-full px-3 py-1.5 text-[11px] font-semibold transition ${
+                      isLiveCoachMode
+                        ? "bg-gradient-to-r from-cyan-500 to-sky-500 text-white"
+                        : "text-cyan-100/85 hover:text-cyan-50"
+                    }`}
+                  >
+                    {isPro ? "Live coach" : "Live coach · Pro"}
+                  </button>
                 </div>
 
-                <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60">
-                  {conversation.length} <span className="text-white/40">chars</span>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold tracking-[0.3px] text-white" style={{ textShadow: "0 2px 8px rgba(255, 255, 255, 0.08)" }}>
+                      {isLiveCoachMode ? "Live Coach Console" : "Message Studio"}
+                    </p>
+                    <p className="mt-1 text-xs text-white/50">
+                      {isLiveCoachMode
+                        ? "Use the live prompt as its own prompter for in-the-moment help, then send the best text back fast."
+                        : "Paste the last few messages or describe the live interaction, choose a vibe, and get coached on the next move fast."}
+                    </p>
+                    {standaloneLiveCoach && (
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-cyan-100/80">
+                        <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 font-semibold uppercase tracking-[0.16em]">
+                          Dedicated route
+                        </span>
+                        <Link href="/" className="text-white/65 underline decoration-white/20 underline-offset-4 transition hover:text-white">
+                          Back to full studio
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-white/60">
+                    {conversation.length} <span className="text-white/40">chars</span>
+                  </div>
                 </div>
               </div>
 
               <div className="p-5">
-                <div className="mb-4 rounded-[24px] border border-white/10 bg-black/20 p-3.5">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
-                        Quick start
+                {!isLiveCoachMode && (
+                  <div className="mb-4 rounded-[24px] border border-white/10 bg-black/20 p-3.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                          Quick start
+                        </div>
+                        <div className="mt-1 text-sm text-white/75">
+                          Tap a scenario, tweak the chat, then get a reply draft fast.
+                        </div>
                       </div>
-                      <div className="mt-1 text-sm text-white/75">
-                        Tap a scenario, tweak the chat, then get a reply draft fast.
+                      <div className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
+                        30 sec setup
                       </div>
                     </div>
-                    <div className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
-                      30 sec setup
+
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {quickStartScenarios.map((scenario) => (
+                        <button
+                          key={scenario.label}
+                          type="button"
+                          onClick={() => applyQuickStart(scenario)}
+                          className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 transition hover:border-white/20 hover:bg-white/10"
+                        >
+                          {scenario.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className={`mb-4 rounded-[24px] border p-3.5 ${isLiveCoachMode ? "border-cyan-300/30 bg-[linear-gradient(180deg,rgba(34,211,238,0.16),rgba(6,182,212,0.08))]" : "border-cyan-400/20 bg-cyan-500/8"}`}>
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100/80">
+                        {isLiveCoachMode ? "Live coach prompter" : "Live coach starter"}
+                      </div>
+                      <div className="mt-1 text-sm text-white/75">
+                        {isLiveCoachMode
+                          ? "This is your dedicated live coach prompt — drop in the exact moment and get what to text back plus how to play the next beat."
+                          : "Type what they said or what you want help with, and get a tone-matched text back plus backup branches."}
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleLiveCoachGenerate}
+                        disabled={loading}
+                        className="rounded-full border border-cyan-400/25 bg-cyan-500/10 px-3 py-1.5 text-[11px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {loading ? "Coaching..." : isPro ? (isLiveCoachMode ? "Generate live coach" : "Use live coach") : "Use live coach · Pro"}
+                      </button>
+                      {!standaloneLiveCoach && (
+                        <Link
+                          href="/live-coach"
+                          className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/80 transition hover:border-white/20 hover:bg-white/10"
+                        >
+                          {isPro ? "Open live coach page" : "Open live coach page · Pro"}
+                        </Link>
+                      )}
                     </div>
                   </div>
 
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {quickStartScenarios.map((scenario) => (
+                    {liveCoachPromptIdeas.map((idea) => (
                       <button
-                        key={scenario.label}
+                        key={idea.label}
                         type="button"
-                        onClick={() => applyQuickStart(scenario)}
-                        className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white/80 transition hover:border-white/20 hover:bg-white/10"
+                        onClick={() => {
+                          if (!isPro) {
+                            promptProEnhancer("Live coach");
+                            return;
+                          }
+
+                          if (tone !== idea.tone) {
+                            trackToneChange(tone, idea.tone);
+                          }
+
+                          setTone(idea.tone);
+                          setGoal(idea.goal);
+                          setResponseMode("live-coach");
+                          setLiveCoachLine(idea.prompt);
+                          setError(null);
+                          setSystemNotice(`Live coach loaded: ${idea.label.toLowerCase()}.`);
+                        }}
+                        className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white/80 transition hover:border-white/20 hover:bg-white/10"
                       >
-                        {scenario.label}
+                        {idea.label}
                       </button>
                     ))}
                   </div>
+
+                  <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.95fr)]">
+                    <div>
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45">
+                          What they said or what you need help with
+                        </label>
+                        {voiceSupported && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!isPro) {
+                                promptProEnhancer("Live coach voice prompts");
+                                return;
+                              }
+
+                              startDictation("live-line");
+                            }}
+                            className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+                          >
+                            {dictationTarget === "live-line" ? "Stop mic" : "Speak prompt"}
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        value={liveCoachLine}
+                        onChange={(event) => setLiveCoachLine(event.target.value)}
+                        placeholder='e.g. "you always disappear when it gets interesting" or "start a conversation after a few days"'
+                        className={`w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-all duration-300 placeholder:text-white/30 focus:border-white/20 focus:bg-black/40 focus:ring-2 ${selectedTone.ring}`}
+                      />
+                    </div>
+                    <div>
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <label className="block text-[11px] font-semibold uppercase tracking-[0.16em] text-white/45">
+                          Context (optional)
+                        </label>
+                        {voiceSupported && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (!isPro) {
+                                promptProEnhancer("Live coach voice prompts");
+                                return;
+                              }
+
+                              startDictation("live-context");
+                            }}
+                            className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-2.5 py-1 text-[10px] font-semibold text-cyan-100 transition hover:bg-cyan-500/20"
+                          >
+                            {dictationTarget === "live-context" ? "Stop mic" : "Speak context"}
+                          </button>
+                        )}
+                      </div>
+                      <input
+                        value={liveCoachContext}
+                        onChange={(event) => setLiveCoachContext(event.target.value)}
+                        placeholder="after a first date, after silence, in person, over text..."
+                        className={`w-full rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-all duration-300 placeholder:text-white/30 focus:border-white/20 focus:bg-black/40 focus:ring-2 ${selectedTone.ring}`}
+                      />
+                    </div>
+                  </div>
+
+                  <p className="mt-2 text-[11px] text-cyan-50/70">
+                    Example: <span className="text-white/80">they said "idk maybe"</span> or <span className="text-white/80">"start a conversation"</span> → live coach gives what to text back, how to say it, and what to do next.
+                  </p>
+                  {!isPro && (
+                    <p className="mt-2 text-[11px] text-fuchsia-50/80">
+                      Live coach plus direct voice prompting unlock on Pro. Free still includes balanced chat replies and draft cleanup.
+                    </p>
+                  )}
                 </div>
 
                 <textarea
                   value={conversation}
                   onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setConversation(event.target.value)}
-                  placeholder={`Them: hey sorry ive been busy\nYou: no worries\nThem: how have you been`}
+                  placeholder={isLiveCoachMode
+                    ? `Them: you always disappear when it gets interesting\nYou: haha maybe\nThem: sure you do\n\nOr describe the live moment if this is happening in person.`
+                    : `Them: hey sorry ive been busy\nYou: no worries\nThem: how have you been`}
                   className={`h-40 w-full resize-none rounded-[24px] border border-white/10 bg-black/40 px-4 py-4 text-white outline-none transition-all duration-400 placeholder:text-white/30 focus:border-white/30 focus:bg-black/50 focus:ring-2 md:h-48 text-balance ${selectedTone.ring}`}
                 />
 
                 <div className="mt-2 flex items-center justify-between gap-3 text-[11px] text-white/40">
-                  <span>Include both sides of the chat for the cleanest tone read.</span>
-                  <span>{conversation.trim() ? conversation.split("\n").filter((line) => line.trim()).length : 0} lines</span>
+                  <span>
+                    {isLiveCoachMode
+                      ? "Live coach is active — paste the latest moment or keep using the prompt above for direct next-step guidance."
+                      : "Include both sides of the chat, or use the live coach starter if you just want help with what they said or what you want to do next."}
+                  </span>
+                  <span>
+                    {conversation.trim() ? conversation.split("\n").filter((line) => line.trim()).length : 0} lines
+                    {isLiveCoachReady ? " · live cue ready" : ""}
+                  </span>
                 </div>
 
-                <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
-                  <div className="mb-2 flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
-                        Improve your own draft
+                {!standaloneLiveCoach && (
+                  <div className="mt-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3">
+                    <div className="mb-2 flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                          Improve your own draft
+                        </div>
+                        <div className="mt-1 text-xs text-white/55">
+                          Optional — paste what you were about to send and Rizzly will tighten it up without losing your vibe.
+                        </div>
                       </div>
-                      <div className="mt-1 text-xs text-white/55">
-                        Optional — paste what you were about to send and Rizzly will tighten it up without losing your vibe.
-                      </div>
+                      {isDraftImproveMode && (
+                        <div className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
+                          Improve mode on
+                        </div>
+                      )}
                     </div>
-                    {isDraftImproveMode && (
-                      <div className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-100">
-                        Improve mode on
-                      </div>
-                    )}
+
+                    <textarea
+                      value={draftMessage}
+                      onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setDraftMessage(event.target.value)}
+                      placeholder="e.g. haha you’re trouble, when are you free this week?"
+                      className={`h-24 w-full resize-none rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-all duration-300 placeholder:text-white/30 focus:border-white/20 focus:bg-black/40 focus:ring-2 text-balance ${selectedTone.ring}`}
+                    />
+
+                    <p className="mt-2 text-[11px] text-white/45">
+                      Leave this blank if you want fresh reply ideas from scratch.
+                    </p>
                   </div>
-
-                  <textarea
-                    value={draftMessage}
-                    onChange={(event: React.ChangeEvent<HTMLTextAreaElement>) => setDraftMessage(event.target.value)}
-                    placeholder="e.g. haha you’re trouble, when are you free this week?"
-                    className={`h-24 w-full resize-none rounded-xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition-all duration-300 placeholder:text-white/30 focus:border-white/20 focus:bg-black/40 focus:ring-2 text-balance ${selectedTone.ring}`}
-                  />
-
-                  <p className="mt-2 text-[11px] text-white/45">
-                    Leave this blank if you want fresh reply ideas from scratch.
-                  </p>
-                </div>
+                )}
 
                 <div className="mt-4 space-y-3">
                   <div className="flex flex-wrap gap-2 text-[11px] text-white/55">
-                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">1. Paste a chat or draft</div>
-                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">2. Pick the vibe</div>
-                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">3. Copy the best reply</div>
+                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">1. Paste a chat or live situation</div>
+                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">2. Pick the vibe + mode</div>
+                    <div className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">3. Follow the cue or copy the reply</div>
                   </div>
 
                   <p className="text-[11px] text-white/45">
-                    Best results: paste 3-8 recent lines from both sides for tone matching, or use the draft box when you just want your own message sharpened.
+                    Best results: paste 3-8 recent lines from both sides for tone matching, or switch to Live coach when you want direct next-step guidance for an active interaction.
                   </p>
 
                   <ToneDropdown
@@ -2883,10 +3299,14 @@ export default function Home() {
                         {loading
                           ? isDraftImproveMode
                             ? "Improving..."
-                            : "Analyzing..."
+                            : effectiveResponseMode === "live-coach"
+                              ? "Coaching..."
+                              : "Analyzing..."
                           : isDraftImproveMode
                             ? "Improve my message"
-                            : "Get reply options"}
+                            : effectiveResponseMode === "live-coach"
+                              ? "Coach this live"
+                              : "Get reply options"}
                       </span>
                     </button>
                   </div>
@@ -3018,7 +3438,7 @@ export default function Home() {
                 <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                   <div className="mb-2 flex items-center gap-2">
                     <span className="text-xs font-semibold text-white">Response mode</span>
-                    <span className="text-[10px] text-white/40">safe stance</span>
+                    <span className="text-[10px] text-white/40">stance / live coaching</span>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {responseModeOptions.map((item) => {
@@ -3060,7 +3480,7 @@ export default function Home() {
                     })}
                   </div>
                   <p className="mt-2 text-[11px] text-white/45">
-                    Balanced stays free. Boundary, comeback, and other advanced stances unlock on Pro.
+                    Balanced stays free. Live coach, boundary, comeback, and other advanced stances unlock on Pro.
                   </p>
                 </div>
 
@@ -3158,16 +3578,18 @@ export default function Home() {
                   />
                 </div>
 
-                <div className="mt-16 flex flex-col items-center justify-center rounded-3xl bg-[#1a1022]/80 p-10 shadow-none transition-all duration-300">
-                  <ProfileCard
-                    name={user?.fullName || "User"}
-                    email={user?.primaryEmailAddress?.emailAddress || ""}
-                    image={user?.imageUrl || undefined}
-                    googleConnected={Boolean(user?.externalAccounts?.some((acc: any) => acc.provider === "google"))}
-                  />
-                </div>
+                {!standaloneLiveCoach && (
+                  <>
+                    <div className="mt-16 flex flex-col items-center justify-center rounded-3xl bg-[#1a1022]/80 p-10 shadow-none transition-all duration-300">
+                      <ProfileCard
+                        name={user?.fullName || "User"}
+                        email={user?.primaryEmailAddress?.emailAddress || ""}
+                        image={user?.imageUrl || undefined}
+                        googleConnected={Boolean(user?.externalAccounts?.some((acc: any) => acc.provider === "google"))}
+                      />
+                    </div>
 
-                <div className="mt-4 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+                    <div className="mt-4 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
                   <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
                       <div>
@@ -3262,8 +3684,8 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="mt-4 rounded-lg border border-white/10 bg-white/3 p-4">
-                  <div className="mb-3 flex items-center justify-between">
+                    <div className="mt-4 rounded-lg border border-white/10 bg-white/3 p-4">
+                      <div className="mb-3 flex items-center justify-between">
                     <div>
                       <div className="text-xs font-semibold text-white">Faster input</div>
                       <div className="mt-1 text-sm text-white/60">Voice dictation and transcribed voice notes.</div>
@@ -3341,17 +3763,19 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Screenshot import</div>
-                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Tone calibrated</div>
-                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Outcome loop</div>
-                  <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Local memory only</div>
-                  {isDeepConversation && (
-                    <div className={`rounded-full border px-3 py-1.5 text-xs text-white ${selectedTone.panel}`}>
-                      Deep thread mode
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Screenshot import</div>
+                      <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Tone calibrated</div>
+                      <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Outcome loop</div>
+                      <div className="rounded-full border border-white/10 bg-black/25 px-3 py-1.5 text-xs text-white/55">Local memory only</div>
+                      {isDeepConversation && (
+                        <div className={`rounded-full border px-3 py-1.5 text-xs text-white ${selectedTone.panel}`}>
+                          Deep thread mode
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </>
+                )}
 
                 {loading && (
                   <div className="mt-4 rounded-[24px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.06),rgba(255,255,255,0.03))] p-4 backdrop-blur-xl">
@@ -3395,7 +3819,7 @@ export default function Home() {
               </div>
             </section>
 
-            {interestLabel && (
+            {!standaloneLiveCoach && interestLabel && (
               <section className="rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm">
                 <div className="mb-3 flex items-center justify-between">
                   <h2 className="text-lg font-bold">Interest Level</h2>
@@ -3413,7 +3837,7 @@ export default function Home() {
               </section>
             )}
 
-            {currentThread && currentThread.turns.length > 0 && (
+            {!standaloneLiveCoach && currentThread && currentThread.turns.length > 0 && (
               <section className="rounded-xl border border-white/10 bg-white/3 p-4 backdrop-blur-sm">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
@@ -3457,34 +3881,38 @@ export default function Home() {
               </section>
             )}
 
-            {currentThreadInsight && currentThread && currentThread.turns.length > 0 && (
+            {!standaloneLiveCoach && currentThreadInsight && currentThread && currentThread.turns.length > 0 && (
               <RelationshipIntelPanel insight={currentThreadInsight} />
             )}
 
-            <FollowUpRadar
-              items={followUpRadarItems}
-              isPro={isPro}
-              onOpenThread={loadThread}
-              onUnlockPro={() => promptProEnhancer("Follow-up radar")}
-            />
+            {!standaloneLiveCoach && (
+              <>
+                <FollowUpRadar
+                  items={followUpRadarItems}
+                  isPro={isPro}
+                  onOpenThread={loadThread}
+                  onUnlockPro={() => promptProEnhancer("Follow-up radar")}
+                />
 
-            <HabitMomentumPanel
-              streakCount={mvpFeatures.streak.count}
-              isPro={isPro}
-              totalThreads={threads.length}
-            />
+                <HabitMomentumPanel
+                  streakCount={mvpFeatures.streak.count}
+                  isPro={isPro}
+                  totalThreads={threads.length}
+                />
 
-            <AdminPanel isSignedIn={Boolean(isSignedIn)} />
+                <AdminPanel isSignedIn={Boolean(isSignedIn)} />
 
-            <GrowthPanel
-              isSignedIn={Boolean(isSignedIn)}
-              usageSnapshot={usageSnapshot}
-              cloudSyncState={cloudSyncState}
-              cloudSyncMessage={cloudSyncMessage}
-              onSyncNow={() => {
-                void syncCloudHistory();
-              }}
-            />
+                <GrowthPanel
+                  isSignedIn={Boolean(isSignedIn)}
+                  usageSnapshot={usageSnapshot}
+                  cloudSyncState={cloudSyncState}
+                  cloudSyncMessage={cloudSyncMessage}
+                  onSyncNow={() => {
+                    void syncCloudHistory();
+                  }}
+                />
+              </>
+            )}
 
             {analysis && (
               <>
@@ -3500,17 +3928,19 @@ export default function Home() {
               </>
             )}
 
-            <ThreadList
-              threads={threads}
-              currentThreadId={currentThreadId}
-              onLoadThread={loadThread}
-              onDeleteThread={deleteThread}
-              showThreadForm={showThreadForm}
-              onShowThreadForm={setShowThreadForm}
-              threadName={threadName}
-              onThreadNameChange={setThreadName}
-              onCreateThread={createThread}
-            />
+            {!standaloneLiveCoach && (
+              <ThreadList
+                threads={threads}
+                currentThreadId={currentThreadId}
+                onLoadThread={loadThread}
+                onDeleteThread={deleteThread}
+                showThreadForm={showThreadForm}
+                onShowThreadForm={setShowThreadForm}
+                threadName={threadName}
+                onThreadNameChange={setThreadName}
+                onCreateThread={createThread}
+              />
+            )}
           </div>
 
           <div className="space-y-6">
@@ -3523,10 +3953,40 @@ export default function Home() {
 
             {replies.length > 0 && (
               <section className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-2xl font-bold text-transparent">Your Replies</h2>
-                  <div className="text-xs font-medium text-white/40">Pick your vibe</div>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-2xl font-bold text-transparent">
+                      {isLiveCoachMode ? "Live Coach Output" : "Your Replies"}
+                    </h2>
+                    <p className="mt-1 text-xs text-white/45">
+                      {isLiveCoachMode
+                        ? "Ready-to-send lines plus the next move for this live moment."
+                        : "Pick the version that matches your vibe."}
+                    </p>
+                  </div>
+                  <div className="text-xs font-medium text-white/40">
+                    {isLiveCoachMode ? "Send now / adapt live" : "Pick your vibe"}
+                  </div>
                 </div>
+
+                {isLiveCoachMode && (
+                  <div className="rounded-[28px] border border-cyan-400/25 bg-[linear-gradient(180deg,rgba(34,211,238,0.12),rgba(255,255,255,0.03))] p-4">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-100/80">
+                      Standalone live coach
+                    </div>
+                    <p className="mt-2 text-sm text-white/80">
+                      {analysis?.liveNow || "Use the strongest option below, keep your tone relaxed, and only send one clear move."}
+                    </p>
+                    {bestReply && (
+                      <div className="mt-3 rounded-2xl border border-white/10 bg-black/20 p-3">
+                        <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
+                          Best text to send now
+                        </div>
+                        <p className="mt-2 text-sm text-white">{bestReply.text}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {replies.map((reply, index) => (
                   <div
@@ -3647,3 +4107,5 @@ export default function Home() {
     </main>
   );
 }
+
+export { Home as HomePage };

@@ -180,12 +180,11 @@ body .cl-userButtonPopoverCard {
 .cl-card *, .cl-modal *, .cl-userButtonPopoverCard * {
   color: #fff !important;
 }
-/* --- Lively Navigation and Animated Background Enhancements --- */
+/* --- Refined navigation and subtle motion --- */
 
-/* Animated navigation underline and glow */
 .nav-link, .navbar a, .navbarButton, .nav-animated {
   position: relative;
-  transition: color 0.18s cubic-bezier(0.4,0,0.2,1), filter 0.18s cubic-bezier(0.4,0,0.2,1);
+  transition: color 0.18s ease, opacity 0.18s ease;
 }
 
 .nav-link::after, .navbar a::after, .navbarButton::after, .nav-animated::after {
@@ -193,121 +192,100 @@ body .cl-userButtonPopoverCard {
   position: absolute;
   left: 22%;
   right: 22%;
-  bottom: 0.18em;
+  bottom: 0.12em;
   height: 2px;
-  background: linear-gradient(90deg, #ec4899 0%, #7dd3fc 100%);
+  background: linear-gradient(90deg, rgba(244,114,182,0.85) 0%, rgba(125,211,252,0.85) 100%);
   border-radius: 2px;
   opacity: 0;
-  transform: scaleX(0.7);
-  transition: opacity 0.18s, transform 0.18s;
+  transform: scaleX(0.85);
+  transition: opacity 0.18s ease, transform 0.18s ease;
   pointer-events: none;
-  box-shadow: 0 0 4px 0 #ec489955, 0 0 2px 0 #7dd3fc55;
-}
-.nav-link:hover::after, .navbar a:hover::after, .navbarButton:hover::after, .nav-animated:hover::after {
-  opacity: 0.7;
-  transform: scaleX(1);
-}
-.nav-link:hover, .navbar a:hover, .navbarButton:hover, .nav-animated:hover {
-  color: #f3e8ff;
-  filter: drop-shadow(0 0 2px #ec489955) drop-shadow(0 0 1px #7dd3fc55);
 }
 
-/* Animated, lively background with floating shapes */
+.nav-link:hover::after, .navbar a:hover::after, .navbarButton:hover::after, .nav-animated:hover::after {
+  opacity: 0.65;
+  transform: scaleX(1);
+}
+
+.nav-link:hover, .navbar a:hover, .navbarButton:hover, .nav-animated:hover {
+  color: #f8fafc;
+  filter: none;
+}
+
 body {
-  background: radial-gradient(ellipse at 60% 0%, rgba(190,103,154,0.13) 0%, rgba(126,151,163,0.10) 40%, #0a0a16 100%),
-              linear-gradient(120deg, rgba(190,103,154,0.09) 0%, rgba(126,151,163,0.09) 100%);
+  background: radial-gradient(ellipse at top, rgba(244,114,182,0.08) 0%, rgba(125,211,252,0.06) 38%, #0b0f17 100%);
   overflow-x: hidden;
 }
 
-@keyframes float-shape {
-  0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
-  50% { transform: translateY(-18px) scale(1.08); opacity: 1; }
-}
 .bg-float-shape {
   position: fixed;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.18;
-  filter: blur(2px) saturate(1.2);
-  animation: float-shape 7s ease-in-out infinite;
+  opacity: 0.08;
+  filter: blur(10px);
+  animation: none;
 }
-.bg-float-shape.shape1 {
-  top: 8%; left: 12%; width: 180px; height: 180px;
-  background: radial-gradient(circle, #ec4899 0%, #7dd3fc 100%);
-  border-radius: 50%;
-  animation-delay: 0s;
-}
-.bg-float-shape.shape2 {
-  top: 60%; left: 70%; width: 120px; height: 120px;
-  background: radial-gradient(circle, #7dd3fc 0%, #ec4899 100%);
-  border-radius: 50%;
-  animation-delay: 2.5s;
-}
-.bg-float-shape.shape3 {
-  top: 30%; left: 80%; width: 90px; height: 90px;
-  background: radial-gradient(circle, #f472b6 0%, #a5b4fc 100%);
-  border-radius: 50%;
-  animation-delay: 4s;
-}
+
+.bg-float-shape.shape1,
+.bg-float-shape.shape2,
+.bg-float-shape.shape3,
 .bg-float-shape.shape4 {
-  top: 80%; left: 20%; width: 110px; height: 110px;
-  background: radial-gradient(circle, #a5b4fc 0%, #f472b6 100%);
-  border-radius: 50%;
-  animation-delay: 1.5s;
+  border-radius: 9999px;
 }
 
 /* Ensure nav and header are above background shapes */
 .z-30, .z-40, .z-50, header, nav, .navbar, .MVPHeader { z-index: 10 !important; }
-/* --- Button and clickable element enhancements for lively UI --- */
+
 button, [role="button"], .btn, .clickable, a.button, a[role="button"] {
-  transition: background 0.22s cubic-bezier(0.4,0,0.2,1),
-              color 0.18s cubic-bezier(0.4,0,0.2,1),
-              box-shadow 0.22s cubic-bezier(0.4,0,0.2,1),
-              transform 0.18s cubic-bezier(0.4,0,0.2,1),
-              border 0.18s cubic-bezier(0.4,0,0.2,1),
-              opacity 0.18s cubic-bezier(0.4,0,0.2,1);
-  will-change: background, color, box-shadow, transform, opacity;
+  transition: background 0.18s ease,
+              color 0.18s ease,
+              box-shadow 0.18s ease,
+              transform 0.18s ease,
+              border 0.18s ease,
+              opacity 0.18s ease;
+  will-change: auto;
   cursor: pointer;
 }
+
 button:hover, [role="button"]:hover, .btn:hover, .clickable:hover, a.button:hover, a[role="button"]:hover {
-  filter: brightness(1.08) saturate(1.15);
-  box-shadow: 0 4px 24px 0 rgba(190,103,154,0.10), 0 1.5px 8px 0 rgba(126,151,163,0.10);
-  transform: translateY(-2px) scale(1.035);
-  opacity: 0.97;
+  filter: none;
+  box-shadow: 0 8px 24px rgba(15,23,42,0.14);
+  transform: translateY(-1px);
+  opacity: 1;
 }
+
 button:active, [role="button"]:active, .btn:active, .clickable:active, a.button:active, a[role="button"]:active {
-  filter: brightness(0.98) saturate(0.95);
-  box-shadow: 0 1.5px 8px 0 rgba(190,103,154,0.08);
-  transform: translateY(1px) scale(0.98);
-  opacity: 0.92;
+  box-shadow: 0 2px 10px rgba(15,23,42,0.10);
+  transform: translateY(0);
+  opacity: 0.96;
 }
 
-/* Animate card and panel appearance for lively feel */
 .rounded-xl, .rounded-2xl, .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-xl, .border, .bg-white\/6, .bg-black\/20, .bg-gradient-to-r, .bg-gradient-to-br {
-  transition: box-shadow 0.22s cubic-bezier(0.4,0,0.2,1),
-              background 0.22s cubic-bezier(0.4,0,0.2,1),
-              border 0.18s cubic-bezier(0.4,0,0.2,1),
-              transform 0.18s cubic-bezier(0.4,0,0.2,1),
-              opacity 0.18s cubic-bezier(0.4,0,0.2,1);
-}
-.rounded-xl:hover, .rounded-2xl:hover, .bg-white\/6:hover, .bg-black\/20:hover, .bg-gradient-to-r:hover, .bg-gradient-to-br:hover {
-  box-shadow: 0 6px 32px 0 rgba(190,103,154,0.13), 0 2px 12px 0 rgba(126,151,163,0.13);
-  transform: translateY(-2px) scale(1.012);
-  opacity: 0.99;
+  transition: box-shadow 0.18s ease,
+              background 0.18s ease,
+              border 0.18s ease,
+              transform 0.18s ease,
+              opacity 0.18s ease;
 }
 
-/* Subtle page fade-in for lively entrance */
+.rounded-xl:hover, .rounded-2xl:hover, .bg-white\/6:hover, .bg-black\/20:hover, .bg-gradient-to-r:hover, .bg-gradient-to-br:hover {
+  box-shadow: 0 10px 28px rgba(15,23,42,0.12);
+  transform: translateY(-1px);
+  opacity: 1;
+}
+
 body {
-  animation: lively-fadein 0.7s cubic-bezier(0.4,0,0.2,1);
+  animation: subtle-fadein 0.35s ease-out;
 }
-@keyframes lively-fadein {
-  from { opacity: 0; filter: blur(6px); }
-  to { opacity: 1; filter: blur(0); }
+
+@keyframes subtle-fadein {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
- 
+
 :root {
-  --background: #06070a;
-  --foreground: #f5f7fb;
+  --background: #0b0f17;
+  --foreground: #f8fafc;
 }
 
 @theme inline {
@@ -323,19 +301,25 @@ body {
 
 html {
   background: var(--background);
+  scroll-behavior: smooth;
+  scroll-padding-top: 96px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 body {
   min-height: 100vh;
   margin: 0;
-  background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
   background:
-    linear-gradient(120deg, rgba(190,103,154,0.13) 0%, rgba(126,151,163,0.13) 100%),
-    radial-gradient(ellipse at 60% 0%, rgba(190,103,154,0.18) 0%, rgba(126,151,163,0.13) 40%, #0a0a16 100%),
-    repeating-linear-gradient(135deg, rgba(236,72,153,0.04) 0 2px, transparent 2px 40px),
-    #0a0a16;
+    radial-gradient(circle at top, rgba(244,114,182,0.09) 0%, transparent 32%),
+    radial-gradient(circle at 85% 15%, rgba(56,189,248,0.08) 0%, transparent 28%),
+    linear-gradient(180deg, #0b0f17 0%, #101522 50%, #0c111b 100%);
   overflow-x: hidden;
 }
 
@@ -603,4 +587,183 @@ body .cl-navbar span:first-child {
   text-shadow: 0 0 0 #ffffff !important;
 }
 
+/* Polished Clerk account surfaces */
+body .cl-modalContent,
+body .cl-pageScrollBox,
+body .cl-scrollBox,
+body .cl-userProfile-root,
+body .cl-userProfileModal-root {
+  border-radius: 24px !important;
+}
+
+body .cl-pageScrollBox,
+body .cl-scrollBox,
+body .cl-profilePage,
+body .cl-userButtonPopoverCard {
+  background: linear-gradient(160deg, rgba(23, 13, 38, 0.98), rgba(16, 11, 27, 0.96)) !important;
+}
+
+body .cl-pageScrollBox {
+  border: 1px solid rgba(244, 114, 182, 0.14) !important;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.32) !important;
+}
+
+body .cl-navbar {
+  flex: 0 0 176px !important;
+  min-width: 176px !important;
+  max-width: 176px !important;
+  padding: 16px 12px !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)) !important;
+  border-right: 1px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+body .cl-navbarButton,
+body .cl-navbarMobileMenuRow {
+  min-height: 42px !important;
+  margin-bottom: 6px !important;
+  border-radius: 14px !important;
+  padding: 10px 12px !important;
+  color: rgba(255, 255, 255, 0.84) !important;
+}
+
+body .cl-navbarButton:hover,
+body .cl-navbarButton[aria-selected="true"],
+body .cl-navbarButton[data-selected="true"] {
+  background: linear-gradient(90deg, rgba(244, 114, 182, 0.16), rgba(192, 132, 252, 0.12)) !important;
+}
+
+body .cl-profilePage {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 24px !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 16px !important;
+}
+
+body .cl-pageHeader {
+  margin-bottom: 16px !important;
+}
+
+body .cl-profileSectionTitleText {
+  margin-bottom: 10px !important;
+  font-size: 1.05rem !important;
+  font-weight: 700 !important;
+  color: #fdf2f8 !important;
+}
+
+body .cl-profileSectionContent,
+body .cl-accordionContent {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.025)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 18px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
+  padding: 14px 16px !important;
+}
+
+body .cl-formFieldInput {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(244, 114, 182, 0.16) !important;
+  border-radius: 12px !important;
+}
+
+body .cl-formFieldInput:focus,
+body .cl-formFieldInput:focus-visible {
+  box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.18) !important;
+  border-color: rgba(244, 114, 182, 0.3) !important;
+}
+
+body .cl-profileSectionPrimaryButton,
+body .cl-formButtonPrimary,
+body .cl-footerActionLink {
+  background: linear-gradient(90deg, #fb7185 0%, #d946ef 100%) !important;
+  border: none !important;
+  border-radius: 12px !important;
+  color: #fff !important;
+  box-shadow: 0 10px 24px rgba(217, 70, 239, 0.24) !important;
+}
+
+body .cl-profileSectionPrimaryButton:hover,
+body .cl-formButtonPrimary:hover,
+body .cl-footerActionLink:hover {
+  filter: brightness(1.05) !important;
+}
+
+body .cl-modalCloseButton {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 999px !important;
+}
+
+body .cl-modalCloseButtonIcon,
+body .cl-userButtonPopoverActionButtonIcon,
+body .cl-menuItemIcon,
+body .cl-navbarButtonIcon {
+  color: rgba(255, 255, 255, 0.86) !important;
+}
+
+/* Final modal containment + separation fix */
+body .cl-modalBackdrop,
+body .cl-overlay,
+body .cl-modalOverlay {
+  background: rgba(7, 10, 18, 0.76) !important;
+  backdrop-filter: blur(14px) saturate(0.96) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(0.96) !important;
+}
+
+body .cl-rootBox {
+  position: fixed !important;
+  inset: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  z-index: 80 !important;
+}
+
+body .cl-modalContent,
+body .cl-pageScrollBox,
+body .cl-scrollBox {
+  width: min(880px, calc(100vw - 32px)) !important;
+  max-width: 880px !important;
+  max-height: min(88vh, 820px) !important;
+  overflow: hidden !important;
+  border-radius: 24px !important;
+}
+
+body .cl-scrollBox {
+  overflow-y: auto !important;
+}
+
+body .cl-profileSectionContent,
+body .cl-accordionContent,
+body .cl-actionCard {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+body .cl-pageScrollBox > div,
+body .cl-scrollBox > div {
+  max-width: 100% !important;
+}
+
+@media (max-width: 900px) {
+  body .cl-pageScrollBox,
+  body .cl-scrollBox,
+  body .cl-modalContent {
+    width: calc(100vw - 20px) !important;
+    max-height: min(92vh, 860px) !important;
+  }
+
+  body .cl-navbar {
+    flex: 0 0 150px !important;
+    min-width: 150px !important;
+    max-width: 150px !important;
+  }
+
+  body .cl-profilePage {
+    padding: 18px !important;
+  }
+}
 

@@ -27,6 +27,9 @@ export type Analysis = {
   timingWindow?: string;
   avoid?: string;
   coachNotes?: string;
+  liveNow?: string;
+  deliveryTip?: string;
+  nextIfTheyEngage?: string;
   dynamicReading?: string;
   nonReactiveResponse?: string;
   whenNotToReply?: string;
@@ -36,6 +39,11 @@ export type Analysis = {
     scenario: string;
     move: string;
     note: string;
+  }>;
+  liveScenarios?: Array<{
+    ifTheySay: string;
+    youSay: string;
+    why: string;
   }>;
 };
 

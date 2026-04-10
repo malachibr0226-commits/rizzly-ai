@@ -18,6 +18,7 @@ export type ToneKey =
 export type GoalKey = "restart" | "flirt" | "clarify" | "plan" | "repair";
 export type ResponseModeKey =
   | "balanced"
+  | "live-coach"
   | "boundary"
   | "high-value"
   | "disengage"

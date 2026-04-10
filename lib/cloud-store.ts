@@ -90,6 +90,9 @@ function sanitizeThreads(threads: Thread[]): Thread[] {
                   timingWindow: trimText(turn.analysis.timingWindow, 180),
                   avoid: trimText(turn.analysis.avoid, 180),
                   coachNotes: trimText(turn.analysis.coachNotes, 180),
+                  liveNow: trimText(turn.analysis.liveNow, 180),
+                  deliveryTip: trimText(turn.analysis.deliveryTip, 180),
+                  nextIfTheyEngage: trimText(turn.analysis.nextIfTheyEngage, 180),
                   dynamicReading: trimText(turn.analysis.dynamicReading, 180),
                   nonReactiveResponse: trimText(turn.analysis.nonReactiveResponse, 180),
                   whenNotToReply: trimText(turn.analysis.whenNotToReply, 180),
@@ -104,6 +107,13 @@ function sanitizeThreads(threads: Thread[]): Thread[] {
                         scenario: trimText(branch.scenario, 80),
                         move: trimText(branch.move, 120),
                         note: trimText(branch.note, 140),
+                      }))
+                    : [],
+                  liveScenarios: Array.isArray(turn.analysis.liveScenarios)
+                    ? turn.analysis.liveScenarios.slice(0, 3).map((item) => ({
+                        ifTheySay: trimText(item.ifTheySay, 90),
+                        youSay: trimText(item.youSay, 160),
+                        why: trimText(item.why, 140),
                       }))
                     : [],
                 }
