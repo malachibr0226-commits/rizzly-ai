@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled";
-import { FaEnvelope, FaGoogle } from "react-icons/fa";
+import { FaApple, FaEnvelope, FaGoogle } from "react-icons/fa";
 
 const Card = styled.div`
   position: relative;
@@ -156,7 +156,14 @@ export default function ProfileCard({
   name = "Malachi BR",
   email = "malachibr0226@gmail.com",
   image = "https://www.gravatar.com/avatar?d=mp",
-  googleConnected = true,
+  googleConnected = false,
+  appleConnected = false,
+}: {
+  name?: string;
+  email?: string;
+  image?: string;
+  googleConnected?: boolean;
+  appleConnected?: boolean;
 }) {
   return (
     <Card>
@@ -184,13 +191,23 @@ export default function ProfileCard({
 
       <Section>
         <Label>Connected accounts</Label>
-        <ValueRow>
-          <ValueMain>
-            <FaGoogle style={{ color: googleConnected ? "#34a853" : "#9ca3af", fontSize: "1.15em" }} />
-            <span>{googleConnected ? "Google connected" : "Not connected"}</span>
-          </ValueMain>
-          <Badge>{googleConnected ? "Synced" : "Inactive"}</Badge>
-        </ValueRow>
+        <div style={{ display: "grid", gap: "0.75rem" }}>
+          <ValueRow>
+            <ValueMain>
+              <FaApple style={{ color: appleConnected ? "#ffffff" : "#9ca3af", fontSize: "1.15em" }} />
+              <span>{appleConnected ? "Apple connected" : "Apple available"}</span>
+            </ValueMain>
+            <Badge>{appleConnected ? "Synced" : "Ready"}</Badge>
+          </ValueRow>
+
+          <ValueRow>
+            <ValueMain>
+              <FaGoogle style={{ color: googleConnected ? "#34a853" : "#9ca3af", fontSize: "1.15em" }} />
+              <span>{googleConnected ? "Google connected" : "Google available"}</span>
+            </ValueMain>
+            <Badge>{googleConnected ? "Synced" : "Ready"}</Badge>
+          </ValueRow>
+        </div>
       </Section>
     </Card>
   );

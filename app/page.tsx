@@ -3585,7 +3585,12 @@ export default function Home({
                         name={user?.fullName || "User"}
                         email={user?.primaryEmailAddress?.emailAddress || ""}
                         image={user?.imageUrl || undefined}
-                        googleConnected={Boolean(user?.externalAccounts?.some((acc: any) => acc.provider === "google"))}
+                        appleConnected={Boolean(
+                          user?.externalAccounts?.some((acc: any) => acc.provider === "apple"),
+                        )}
+                        googleConnected={Boolean(
+                          user?.externalAccounts?.some((acc: any) => acc.provider === "google"),
+                        )}
                       />
                     </div>
 

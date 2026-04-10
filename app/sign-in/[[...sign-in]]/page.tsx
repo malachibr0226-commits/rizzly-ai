@@ -6,6 +6,7 @@ import {
   ClerkLoading,
   SignIn,
 } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 import { AuthLoadingFallback } from "@/app/components/AuthLoadingFallback";
 import { AUTH_DISABLED_REASON, isClerkConfigured } from "@/lib/auth";
 
@@ -67,6 +68,9 @@ export default async function SignInPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-sm">
+        <div className="mb-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-center text-sm text-white/80 backdrop-blur-md">
+          Continue with <span className="font-semibold text-white">Apple</span>, <span className="font-semibold text-white">Google</span>, or email.
+        </div>
         <ClerkLoading>
           <AuthLoadingFallback mode="sign-in" />
         </ClerkLoading>
@@ -84,6 +88,13 @@ export default async function SignInPage() {
             fallbackRedirectUrl="/"
             forceRedirectUrl="/"
             oauthFlow="redirect"
+            appearance={{
+              baseTheme: dark,
+              layout: {
+                socialButtonsPlacement: "top",
+                socialButtonsVariant: "blockButton",
+              },
+            }}
           />
         </ClerkLoaded>
       </div>

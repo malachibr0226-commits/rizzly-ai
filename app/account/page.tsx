@@ -20,7 +20,12 @@ export default function AccountPage() {
         name={user?.fullName || "User"}
         email={user?.primaryEmailAddress?.emailAddress || ""}
         image={user?.imageUrl || undefined}
-        googleConnected={Boolean(user?.externalAccounts?.some((acc) => acc.provider === "google"))}
+        appleConnected={Boolean(
+          user?.externalAccounts?.some((acc) => acc.provider === "apple"),
+        )}
+        googleConnected={Boolean(
+          user?.externalAccounts?.some((acc) => acc.provider === "google"),
+        )}
       />
     </div>
   );
