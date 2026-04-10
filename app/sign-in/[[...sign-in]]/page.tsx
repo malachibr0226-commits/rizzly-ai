@@ -7,6 +7,7 @@ import {
   SignIn,
 } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
+import { AuthAppleButton } from "@/app/components/AuthAppleButton";
 import { AuthLoadingFallback } from "@/app/components/AuthLoadingFallback";
 import { AUTH_DISABLED_REASON, isClerkConfigured } from "@/lib/auth";
 
@@ -66,6 +67,7 @@ export default async function SignInPage() {
             Smarter conversations
           </p>
         </div>
+        <AuthAppleButton mode="sign-in" />
         <ClerkLoading>
           <AuthLoadingFallback mode="sign-in" />
         </ClerkLoading>
