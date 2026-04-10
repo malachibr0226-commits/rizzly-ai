@@ -47,6 +47,25 @@ export default async function SignInPage() {
       </div>
 
       <div className="relative z-10 w-full max-w-sm">
+        <div className="mb-6 flex flex-col items-center text-center select-none">
+          <span
+            className="text-5xl font-extrabold tracking-tight"
+            style={{
+              background: "linear-gradient(90deg, #f472b6 0%, #e879f9 50%, #a78bfa 100%)",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+              display: "block",
+              lineHeight: "1.15",
+              paddingBottom: "0.18em",
+            }}
+          >
+            Rizzly AI
+          </span>
+          <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/40">
+            Smarter conversations
+          </p>
+        </div>
         <ClerkLoading>
           <AuthLoadingFallback mode="sign-in" />
         </ClerkLoading>
