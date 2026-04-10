@@ -38,7 +38,7 @@ export default async function SignUpPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#1a1333] via-[#2d1a47] to-[#0a0612] px-4 relative overflow-hidden">
+    <div className="auth-page-shell min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#1a1333] via-[#2d1a47] to-[#0a0612] px-4 relative overflow-hidden">
       {/* Ambient glow blobs */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
         <div className="absolute -top-16 left-1/4 w-80 h-80 rounded-full bg-pink-600/18 blur-[100px]" />
@@ -93,6 +93,11 @@ export default async function SignUpPage() {
               layout: {
                 socialButtonsPlacement: "top",
                 socialButtonsVariant: "blockButton",
+              },
+              elements: {
+                rootBox: "mx-auto w-full",
+                cardBox: "mx-auto flex w-full justify-center",
+                card: "mx-auto",
               },
             }}
           />

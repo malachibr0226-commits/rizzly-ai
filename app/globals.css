@@ -722,6 +722,24 @@ body .cl-rootBox {
   z-index: 80 !important;
 }
 
+.auth-page-shell .cl-rootBox {
+  position: static !important;
+  inset: auto !important;
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+.auth-page-shell .cl-cardBox {
+  display: flex !important;
+  width: 100% !important;
+  justify-content: center !important;
+}
+
+.auth-page-shell .cl-card {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
 body .cl-modalContent,
 body .cl-pageScrollBox,
 body .cl-scrollBox {
