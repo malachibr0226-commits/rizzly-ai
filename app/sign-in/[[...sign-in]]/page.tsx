@@ -7,7 +7,6 @@ import {
   SignIn,
 } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
-import { AuthAppleButton } from "@/app/components/AuthAppleButton";
 import { AuthLoadingFallback } from "@/app/components/AuthLoadingFallback";
 import { AUTH_DISABLED_REASON, isClerkConfigured } from "@/lib/auth";
 
@@ -68,7 +67,6 @@ export default async function SignInPage() {
           </p>
         </div>
         <div className="auth-card-shell rounded-[28px] border border-white/10 bg-[#0a0a0a] p-4 sm:p-5 shadow-[0_26px_70px_rgba(0,0,0,0.5)] backdrop-blur-xl">
-          <AuthAppleButton mode="sign-in" />
           <ClerkLoading>
             <AuthLoadingFallback mode="sign-in" />
           </ClerkLoading>
