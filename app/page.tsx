@@ -6,7 +6,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppAuth } from "@/app/components/AppAuthProvider";
 import { useUser } from "@clerk/nextjs";
 import dynamic from "next/dynamic";
-const ProfileCard = dynamic(() => import("@/app/components/ProfileCard"), { ssr: false });
 import { useMVPFeatures } from "@/app/hooks/useMVPFeatures";
 import { Dashboard } from "@/app/components/Dashboard";
 import { MVPHeader } from "@/app/components/MVPHeader";
@@ -3577,24 +3576,6 @@ export default function HomePage() {
 
                 {!standaloneLiveCoach && (
                   <>
-                    <div className="mt-16 flex flex-col items-center justify-center rounded-3xl bg-[#1a1022]/80 p-10 shadow-none transition-all duration-300">
-                      <ProfileCard
-                        name={user?.fullName || "User"}
-                        email={user?.primaryEmailAddress?.emailAddress || ""}
-                        image={user?.imageUrl || undefined}
-                        appleConnected={Boolean(
-                          user?.externalAccounts?.some(
-                            (acc: { provider: string }) => acc.provider === "apple",
-                          ),
-                        )}
-                        googleConnected={Boolean(
-                          user?.externalAccounts?.some(
-                            (acc: { provider: string }) => acc.provider === "google",
-                          ),
-                        )}
-                      />
-                    </div>
-
                     <div className="mt-4 grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
                   <div className="rounded-2xl border border-white/10 bg-white/[0.035] p-4">
                     <div className="mb-3 flex items-center justify-between gap-3">
