@@ -6,7 +6,7 @@ export const size = {
 };
 
 export const contentType = "image/png";
-export const alt = "Rizzly AI — Smarter replies for real conversations";
+export const alt = "Rizzly AI — Clear replies, better timing";
 
 export default function TwitterImage() {
   return new ImageResponse(
@@ -20,7 +20,7 @@ export default function TwitterImage() {
           justifyContent: "space-between",
           padding: "56px",
           background:
-            "radial-gradient(circle at top left, rgba(236,72,153,0.28), transparent 30%), radial-gradient(circle at bottom right, rgba(34,211,238,0.22), transparent 28%), linear-gradient(135deg, #12091f 0%, #1a0f2e 55%, #0b1119 100%)",
+            "radial-gradient(circle at top, rgba(148,163,184,0.10) 0%, transparent 30%), linear-gradient(160deg, #0c1118 0%, #111827 55%, #0d141d 100%)",
           color: "white",
           fontFamily: "Segoe UI, sans-serif",
         }}
@@ -39,7 +39,7 @@ export default function TwitterImage() {
               width: 18,
               height: 18,
               borderRadius: 999,
-              background: "linear-gradient(135deg, #ec4899, #22d3ee)",
+              background: "#94a3b8",
             }}
           />
           Rizzly AI
@@ -47,17 +47,17 @@ export default function TwitterImage() {
 
         <div style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 900 }}>
           <div style={{ fontSize: 70, fontWeight: 800, lineHeight: 1.05 }}>
-            Better replies. Better outcomes.
+            Clear replies, in your voice.
           </div>
-          <div style={{ fontSize: 28, color: "rgba(255,255,255,0.82)", lineHeight: 1.4 }}>
-            Built for real texting with support for pasted chats, screenshots, and voice notes.
+          <div style={{ fontSize: 28, color: "rgba(255,255,255,0.78)", lineHeight: 1.4 }}>
+            Built for personal and everyday conversations with support for pasted chats, screenshots, and voice notes.
           </div>
         </div>
 
         <div style={{ display: "flex", gap: 14, fontSize: 24, color: "rgba(255,255,255,0.82)" }}>
-          <div>Reply smarter</div>
+          <div>Stay clear</div>
           <div>•</div>
-          <div>Move faster</div>
+          <div>Follow through</div>
         </div>
       </div>
     ),

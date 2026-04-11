@@ -132,10 +132,6 @@ type GenerateReplyResponse = {
 
 type DictationTarget = "conversation" | "context" | "live-line" | "live-context";
 
-type HomePageProps = {
-  initialStudioMode?: ResponseModeKey;
-  standaloneLiveCoach?: boolean;
-};
 
 type BrowserSpeechRecognitionEvent = {
   results: ArrayLike<ArrayLike<{ transcript: string }>>;
@@ -1020,12 +1016,10 @@ function ToneDropdown({
   );
 }
 
-export default function Home({
-  initialStudioMode = DEFAULT_DRAFT.responseMode,
-  standaloneLiveCoach = false,
-}: HomePageProps = {}) {
+export default function HomePage() {
   const { isSignedIn, authEnabled } = useAppAuth();
   const { user } = useUser();
+  const [standaloneLiveCoach, setStandaloneLiveCoach] = useState(false);
 
   // Photo reply modal state (must be inside the component)
   const [photoModalOpen, setPhotoModalOpen] = useState(false);
@@ -1039,7 +1033,7 @@ export default function Home({
   const [liveCoachContext, setLiveCoachContext] = useState(DEFAULT_DRAFT.liveCoachContext);
   const [tone, setTone] = useState<ToneKey>(DEFAULT_DRAFT.tone);
   const [goal, setGoal] = useState<GoalKey>(DEFAULT_DRAFT.goal);
-  const [responseMode, setResponseMode] = useState<ResponseModeKey>(initialStudioMode);
+  const [responseMode, setResponseMode] = useState<ResponseModeKey>(DEFAULT_DRAFT.responseMode);
   const [userContext, setUserContext] = useState(DEFAULT_DRAFT.userContext);
   const [profileName, setProfileName] = useState(DEFAULT_DRAFT.profileName);
   const [relationshipNotes, setRelationshipNotes] = useState(
@@ -1058,10 +1052,28 @@ export default function Home({
   const [loading, setLoading] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [systemNotice, setSystemNotice] = useState<string | null>(
-    standaloneLiveCoach ? "Live coach is ready — add the moment and get what to say next." : null,
-  );
+  const [systemNotice, setSystemNotice] = useState<string | null>(null);
   const [visibleReplyCount, setVisibleReplyCount] = useState(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const liveCoachView = params.get("view") === "live-coach";
+    const nextMode =
+      params.get("mode") === "live-coach"
+        ? "live-coach"
+        : DEFAULT_DRAFT.responseMode;
+
+    setStandaloneLiveCoach(liveCoachView);
+    setResponseMode(nextMode);
+
+    if (liveCoachView) {
+      setSystemNotice("Live coach is ready — add the moment and get what to say next.");
+    }
+  }, []);
   const [analysisVisible, setAnalysisVisible] = useState(false);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [threads, setThreads] = useState<Thread[]>([]);
@@ -2617,7 +2629,7 @@ export default function Home({
   };
 
   return (
-    <main id="main-content" tabIndex={-1} className="relative min-h-screen overflow-hidden bg-[#140f1f] pb-32 text-white sm:pb-0">
+    <main id="main-content" tabIndex={-1} className="relative min-h-screen overflow-hidden bg-[#0e141d] pb-32 text-white sm:pb-0">
       <style>{`
         @media (min-width: 1280px) {
           .main-responsive-grid {
@@ -2700,36 +2712,30 @@ export default function Home({
         .typing-dot { animation: typing-bounce 1.4s ease-in-out infinite; }
       `}</style>
 
-      {/* Romantic, lively background accents */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_14%,rgba(251,113,133,0.16),transparent_0%,transparent_36%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_14%,rgba(217,70,239,0.14),transparent_0%,transparent_30%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_52%_78%,rgba(56,189,248,0.08),transparent_0%,transparent_28%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),transparent)]" />
-      <div className="pointer-events-none absolute left-[7%] top-24 h-44 w-44 rounded-full bg-rose-400/10 blur-3xl glow-pulse" />
-      <div className="pointer-events-none absolute right-[8%] top-18 h-52 w-52 rounded-full bg-fuchsia-400/10 blur-3xl drift" />
+      {/* Subtle background accents */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_12%,rgba(148,163,184,0.08),transparent_0%,transparent_34%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_12%,rgba(59,130,246,0.06),transparent_0%,transparent_28%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
 
       <div className="relative z-10 mx-auto w-full wider-main-ui px-4 py-10 md:px-8 lg:px-10" style={{ maxWidth: "1680px" }}>
         <header className="mb-12 flex flex-col items-center justify-center gap-3 md:mb-14">
-          <div className="inline-flex items-center rounded-full border border-rose-300/20 bg-rose-500/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-rose-100">
-            Romantic reply studio
+          <div className="inline-flex items-center rounded-full border border-slate-300/15 bg-slate-800/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-200">
+            Message studio
           </div>
           <div className="flex flex-col items-center gap-2">
-            <div className="relative">
-              <div className="absolute inset-0 animate-pulse rounded-2xl bg-gradient-to-br from-rose-500/14 via-fuchsia-500/10 to-cyan-500/8 blur-xl" style={{ animationDuration: "4s" }} />
-              <div className="relative rounded-2xl border border-rose-300/15 bg-gradient-to-br from-[#1b1326]/95 to-[#120f1e]/90 p-2 shadow-[0_10px_28px_rgba(244,63,94,0.14)] backdrop-blur-md">
-                <svg width="56" height="56" viewBox="0 0 64 64" className="logo-glow" fill="none">
-                  <rect x="10" y="14" width="24" height="22" rx="5" ry="5" stroke="#fb7185" strokeWidth="2.5" fill="none" />
-                  <polygon points="18,36 14,42 22,36" fill="#fb7185" />
-                  <rect x="28" y="22" width="26" height="22" rx="5" ry="5" stroke="#c084fc" strokeWidth="2.5" fill="none" />
-                  <polygon points="46,44 50,50 42,44" fill="#c084fc" />
-                </svg>
-              </div>
+            <div className="rounded-2xl border border-slate-300/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(17,24,39,0.92))] p-2 shadow-[0_10px_24px_rgba(15,23,42,0.18)] backdrop-blur-md">
+              <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
+                <rect x="10" y="14" width="24" height="22" rx="5" ry="5" stroke="#94a3b8" strokeWidth="2.5" fill="none" />
+                <polygon points="18,36 14,42 22,36" fill="#94a3b8" />
+                <rect x="28" y="22" width="26" height="22" rx="5" ry="5" stroke="#cbd5e1" strokeWidth="2.5" fill="none" />
+                <polygon points="46,44 50,50 42,44" fill="#cbd5e1" />
+              </svg>
             </div>
-            <div className="bg-gradient-to-r from-rose-200 via-pink-200 to-fuchsia-200 bg-clip-text text-xs font-bold uppercase tracking-[0.3em] text-transparent opacity-90">
+            <div className="text-xs font-bold uppercase tracking-[0.3em] text-slate-300/90">
               Rizzly
             </div>
-            <div className="shine mt-1 bg-gradient-to-r from-white via-rose-100 to-fuchsia-100 bg-clip-text text-lg font-black text-transparent md:text-xl" style={{ animationDuration: "4s" }}>
-              Charm, clarity, timing
+            <div className="mt-1 text-lg font-black text-white md:text-xl">
+              Clear replies, better timing
             </div>
           </div>
         </header>
@@ -2769,14 +2775,14 @@ export default function Home({
 
 
 
-            <h1 className="mb-6 text-balance text-4xl font-extrabold leading-tight tracking-[-0.03em] md:text-5xl xl:text-6xl" style={{ textShadow: "0 6px 18px rgba(244, 63, 94, 0.14)" }}>
-              <span className="block bg-gradient-to-r from-white via-rose-100 to-fuchsia-100 bg-clip-text text-transparent">
-                Better replies, warmer chemistry.
+            <h1 className="mb-6 text-balance text-4xl font-extrabold leading-tight tracking-[-0.03em] text-white md:text-5xl xl:text-6xl">
+              <span className="block">
+                Clear replies, in your voice.
               </span>
             </h1>
 
-            <p className="max-w-2xl text-balance text-base font-[450] leading-relaxed tracking-[0.3px] text-white/68 md:text-lg" style={{ letterSpacing: "0.3px" }}>
-              Rizzly turns chats, screenshots, and voice notes into smoother next messages that feel <span className="font-semibold text-white/90">playful, natural, and still like you</span> — whether you are flirting, reconnecting, or locking in real plans.
+            <p className="max-w-2xl text-balance text-base font-[450] leading-relaxed tracking-[0.3px] text-white/70 md:text-lg" style={{ letterSpacing: "0.3px" }}>
+              Rizzly turns chats, screenshots, and voice notes into grounded next messages that feel <span className="font-semibold text-white/90">natural, useful, and ready to send</span> for personal, work, and everyday conversations.
             </p>
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -2786,31 +2792,29 @@ export default function Home({
                   trackCtaClick("try_free", "hero");
                   jumpToStudio();
                 }}
-                className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-rose-500 via-pink-500 to-fuchsia-500 px-5 py-3 text-sm font-semibold text-white shadow-[0_12px_30px_rgba(244,63,94,0.28)] transition hover:scale-[1.01]"
+                className="inline-flex items-center justify-center rounded-full border border-slate-200/20 bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white"
               >
-                Try it free
+                Open the studio
               </button>
-
 
               <a
                 href={isSignedIn ? "#message-studio" : "/sign-up"}
                 onClick={() => trackCtaClick(isSignedIn ? "open_thread" : "create_account", "hero")}
-                className="inline-flex items-center justify-center rounded-full border border-rose-200/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/85 transition hover:border-rose-200/25 hover:bg-white/10"
+                className="inline-flex items-center justify-center rounded-full border border-slate-300/15 bg-slate-900/70 px-5 py-3 text-sm font-semibold text-white/85 transition hover:border-slate-300/25 hover:bg-slate-800/80"
               >
-                {isSignedIn ? "Open your thread" : "Create account"}
+                {isSignedIn ? "Open your workspace" : "Create account"}
               </a>
             </div>
 
-
             <div className="mt-4 flex flex-wrap gap-2 text-balance text-xs text-white/60">
-              <div className="rounded-full border border-rose-200/15 bg-rose-500/10 px-3 py-1.5">💖 Warm restarts</div>
-              <div className="rounded-full border border-fuchsia-200/15 bg-fuchsia-500/10 px-3 py-1.5">✨ Flirty replies</div>
-              <div className="rounded-full border border-cyan-200/15 bg-cyan-500/10 px-3 py-1.5">📅 Plans that land</div>
+              <div className="rounded-full border border-slate-300/15 bg-slate-800/70 px-3 py-1.5">Personal chats</div>
+              <div className="rounded-full border border-slate-300/15 bg-slate-800/70 px-3 py-1.5">Follow-ups</div>
+              <div className="rounded-full border border-slate-300/15 bg-slate-800/70 px-3 py-1.5">Plans and scheduling</div>
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-xl min-w-[340px] overflow-hidden rounded-[30px] border border-rose-200/12 bg-[linear-gradient(180deg,rgba(30,18,44,0.92),rgba(15,11,25,0.98))] p-4 shadow-[0_22px_48px_rgba(76,29,149,0.22)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
-            <div className="overflow-hidden rounded-[24px] border border-rose-100/10 bg-white/[0.035] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] sm:p-4 md:p-5">
+          <div className="mx-auto w-full max-w-xl min-w-[340px] overflow-hidden rounded-[30px] border border-slate-300/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(15,23,42,0.98))] p-4 shadow-[0_18px_36px_rgba(15,23,42,0.2)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
+            <div className="overflow-hidden rounded-[24px] border border-slate-300/10 bg-white/[0.03] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] sm:p-4 md:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-4">
                 <div className="rounded-2xl px-3 py-2.5">
                   <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/40">Mood</div>
@@ -3586,10 +3590,14 @@ export default function Home({
                         email={user?.primaryEmailAddress?.emailAddress || ""}
                         image={user?.imageUrl || undefined}
                         appleConnected={Boolean(
-                          user?.externalAccounts?.some((acc: any) => acc.provider === "apple"),
+                          user?.externalAccounts?.some(
+                            (acc: { provider: string }) => acc.provider === "apple",
+                          ),
                         )}
                         googleConnected={Boolean(
-                          user?.externalAccounts?.some((acc: any) => acc.provider === "google"),
+                          user?.externalAccounts?.some(
+                            (acc: { provider: string }) => acc.provider === "google",
+                          ),
                         )}
                       />
                     </div>
@@ -4112,5 +4120,3 @@ export default function Home({
     </main>
   );
 }
-
-export { Home as HomePage };

@@ -38,10 +38,11 @@ RIZZLY_ALLOWED_ORIGINS=http://localhost:3000,https://rizzlyai.com,https://www.ri
 > `STRIPE_PRICE_ID` and `NEXT_PUBLIC_STRIPE_PAYMENT_LINK` can still point to your Pro offer as backwards-compatible fallbacks.
 
 ## Security checks
-Before shipping:
+Before shipping or after any DNS / hosting change:
 
 ```bash
 npm run security:check
+npm run deploy:verify
 ```
 
 Or run the checks manually:
@@ -49,7 +50,10 @@ Or run the checks manually:
 ```bash
 npm audit --omit=dev
 npm run build
+node ./scripts/verify-production.mjs
 ```
+
+The deployment verifier fails fast if the production domain resolves to private IP space or if `https://rizzlyai.com/api/health` stops responding cleanly.
 
 See `SECURITY.md` for the full hardening checklist, secret-handling rules, and production lockdown guidance.
 

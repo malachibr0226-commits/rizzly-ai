@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "security:check": "npm audit --omit=dev && npm run build"
+    "security:check": "npm audit --omit=dev && npm run build",
+    "deploy:verify": "node ./scripts/verify-production.mjs",
+    "ops:check": "npm run security:check && npm run deploy:verify"
   },
   "dependencies": {
     "@capacitor/core": "^8.3.0",

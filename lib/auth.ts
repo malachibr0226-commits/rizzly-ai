@@ -12,8 +12,8 @@ const clerkPublishableKey =
 const clerkEnvIsConfigured = Boolean(
   process.env.CLERK_SECRET_KEY && clerkPublishableKey,
 );
-const BUILT_IN_ADMIN_EMAILS = ["malachibr0226@gmail.com"];
-const BUILT_IN_PRO_EMAILS = ["malachibr0226@gmail.com"];
+const BUILT_IN_ADMIN_EMAILS: string[] = [];
+const BUILT_IN_PRO_EMAILS: string[] = [];
 export const AUTH_DISABLED_REASON = !clerkEnvIsConfigured
   ? "Clerk environment variables are missing."
   : null;

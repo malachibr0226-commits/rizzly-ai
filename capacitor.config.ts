@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'Rizzly AI',
   webDir: 'public',
   server: {
-    url: 'https://rizzlyai.com',
+    url: process.env.CAPACITOR_SERVER_URL || 'https://rizzlyai.com',
     cleartext: false,
   },
 };

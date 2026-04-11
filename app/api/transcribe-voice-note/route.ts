@@ -22,11 +22,11 @@ export async function POST(req: Request) {
     );
   }
 
-  const { limited, remaining } = rateLimit(req);
+  const { limited, remaining, retryAfterMs } = rateLimit(req, { max: 10, windowMs: 60_000 });
   if (limited) {
     return NextResponse.json(
       { error: "Too many requests. Please wait a moment and try again." },
-      { status: 429, headers: { "X-RateLimit-Remaining": String(remaining) } },
+      { status: 429, headers: { "X-RateLimit-Remaining": "0", "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } },
     );
   }
 

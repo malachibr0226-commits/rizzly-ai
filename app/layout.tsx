@@ -28,7 +28,7 @@ function resolveClerkPublishableKey() {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#1a0f2e",
+  themeColor: "#111827",
   colorScheme: "dark",
 };
 
@@ -75,9 +75,9 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Rizzly AI — Smarter replies for real conversations",
+    title: "Rizzly AI — Your AI Message Studio",
     description:
-      "Generate natural replies, follow-up ideas, and conversation guidance from real chats in seconds.",
+      "Craft better replies, analyze conversations, and level up your messaging with AI-powered tools.",
     url: siteUrl.toString(),
     siteName: "Rizzly AI",
     type: "website",
@@ -92,9 +92,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Rizzly AI — Smarter replies for real conversations",
+    title: "Rizzly AI — Your AI Message Studio",
     description:
-      "Paste a chat, import a screenshot, or transcribe a voice note and get sharper reply options fast.",
+      "Craft better replies, analyze conversations, and level up your messaging with AI-powered tools.",
     images: ["/twitter-image"],
   },
 };
@@ -142,9 +142,9 @@ export default function RootLayout({
             appearance={{
               baseTheme: dark,
               variables: {
-                colorPrimary: "#ec4899",
-                colorBackground: "#120a24",
-                colorInputBackground: "#2a1a40",
+                colorPrimary: "#3b82f6",
+                colorBackground: "#0f172a",
+                colorInputBackground: "#1e293b",
                 colorText: "#ffffff",
                 colorTextSecondary: "rgba(255,255,255,0.60)",
                 colorTextOnPrimaryBackground: "#ffffff",
@@ -172,7 +172,7 @@ export default function RootLayout({
                 dividerText: { color: "rgba(255,255,255,0.45)" },
                 // Footer action (sign up / sign in link) — keep visible
                 footerActionText: { color: "rgba(255,255,255,0.5)" },
-                footerActionLink: { color: "#f472b6", fontWeight: "600" },
+                footerActionLink: { color: "#60a5fa", fontWeight: "600" },
                 // Hide the "Secured by Clerk" logo row
                 footer: { display: "none" },
                 // Form
@@ -180,17 +180,17 @@ export default function RootLayout({
                 formFieldInput: {
                   borderRadius: "12px",
                   border: "1px solid rgba(255,255,255,0.10)",
-                  background: "#2a1a40",
+                  background: "#1e293b",
                   color: "#ffffff",
                   transition: "border-color 0.2s",
                 },
                 formButtonPrimary: {
-                  background: "linear-gradient(135deg, #ec4899 0%, #9333ea 100%)",
+                  background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
                   color: "#ffffff",
                   fontWeight: "700",
                 },
                 // Profile / account page
-                navbar: "bg-[#180a2c]/95 text-white",
+                navbar: "bg-[#0f172a]/95 text-white",
                 navbarButton: "text-white/90 hover:bg-white/10",
                 profileSectionTitleText: "text-white",
                 pageHeaderTitle: "!text-white !opacity-100",

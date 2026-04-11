@@ -7,11 +7,11 @@ import { rateLimit } from "@/lib/rate-limit";
 const STRIPE_SESSION_ID_PATTERN = /^cs_(?:test_|live_)?[A-Za-z0-9_]+$/;
 
 export async function GET(req: Request) {
-  const { limited, remaining } = rateLimit(req);
+  const { limited, remaining, retryAfterMs } = rateLimit(req, { max: 10, windowMs: 60_000 });
   if (limited) {
     return NextResponse.json(
       { error: "Too many requests. Please wait a moment and try again." },
-      { status: 429, headers: { "X-RateLimit-Remaining": String(remaining) } },
+      { status: 429, headers: { "X-RateLimit-Remaining": "0", "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } },
     );
   }
 

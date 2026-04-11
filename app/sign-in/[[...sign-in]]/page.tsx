@@ -15,8 +15,8 @@ export default async function SignInPage() {
 
   if (!isClerkConfigured()) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a1333] via-[#2d1a47] to-[#0a0612] px-4">
-        <div className="relative z-10 mx-auto w-full max-w-md rounded-2xl border border-pink-400/30 bg-[#1a1333]/95 p-8 text-center shadow-2xl backdrop-blur-xl">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617] px-4">
+        <div className="relative z-10 mx-auto w-full max-w-md rounded-2xl border border-slate-500/30 bg-[#0f172a]/95 p-8 text-center shadow-2xl backdrop-blur-xl">
           <div className="inline-flex rounded-full border border-white/10 bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-white/70 mb-2">
             Local Auth
           </div>
@@ -29,7 +29,7 @@ export default async function SignInPage() {
           </p>
           <Link
             href="/"
-            className="mt-6 inline-flex rounded-full bg-gradient-to-r from-pink-500 to-cyan-500 px-6 py-2.5 text-base font-semibold text-white shadow-md hover:scale-105 transition-transform"
+            className="mt-6 inline-flex rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 px-6 py-2.5 text-base font-semibold text-white shadow-md hover:scale-105 transition-transform"
           >
             Back to app
           </Link>
@@ -39,12 +39,12 @@ export default async function SignInPage() {
   }
 
   return (
-    <div className="auth-page-shell min-h-screen flex items-center justify-center bg-gradient-to-br from-[#1a1333] via-[#2d1a47] to-[#0a0612] px-4 relative overflow-hidden">
+    <div className="auth-page-shell min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617] px-4 relative overflow-hidden">
       {/* Ambient glow blobs */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute -top-16 left-1/4 h-80 w-80 rounded-full bg-pink-600/18 blur-[100px]" />
-        <div className="absolute top-1/2 -right-16 h-64 w-64 rounded-full bg-purple-700/20 blur-[80px]" />
-        <div className="absolute bottom-12 left-1/3 h-56 w-56 rounded-full bg-fuchsia-500/14 blur-[70px]" />
+        <div className="absolute -top-16 left-1/4 h-80 w-80 rounded-full bg-blue-600/18 blur-[100px]" />
+        <div className="absolute top-1/2 -right-16 h-64 w-64 rounded-full bg-indigo-700/20 blur-[80px]" />
+        <div className="absolute bottom-12 left-1/3 h-56 w-56 rounded-full bg-sky-500/14 blur-[70px]" />
       </div>
 
       <div className="relative z-10 w-full max-w-md">
@@ -52,7 +52,7 @@ export default async function SignInPage() {
           <span
             className="text-5xl font-extrabold tracking-tight"
             style={{
-              background: "linear-gradient(90deg, #f472b6 0%, #e879f9 50%, #a78bfa 100%)",
+              background: "linear-gradient(90deg, #60a5fa 0%, #818cf8 50%, #a78bfa 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -67,7 +67,7 @@ export default async function SignInPage() {
             Smarter conversations
           </p>
         </div>
-        <div className="auth-card-shell rounded-[28px] border border-white/10 bg-[linear-gradient(160deg,rgba(17,10,38,0.96),rgba(22,12,40,0.94))] p-4 sm:p-5 shadow-[0_26px_70px_rgba(11,6,24,0.42)] backdrop-blur-xl">
+        <div className="auth-card-shell rounded-[28px] border border-white/10 bg-[linear-gradient(160deg,rgba(15,23,42,0.96),rgba(30,41,59,0.94))] p-4 sm:p-5 shadow-[0_26px_70px_rgba(2,6,23,0.42)] backdrop-blur-xl">
           <AuthAppleButton mode="sign-in" />
           <ClerkLoading>
             <AuthLoadingFallback mode="sign-in" />

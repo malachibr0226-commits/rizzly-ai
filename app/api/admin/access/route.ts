@@ -14,6 +14,8 @@ async function getAuthorizedUser() {
   return { userId, user };
 }
 
+const ADMIN_RATE_LIMIT = { max: 5, windowMs: 60_000 };
+
 export async function GET(req: Request) {
   const { userId, user } = await getAuthorizedUser();
 
@@ -21,11 +23,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ allowed: false, currentUserEmail: null }, { status: 401 });
   }
 
-  const { limited, remaining } = rateLimit(req);
+  const { limited, remaining, retryAfterMs } = rateLimit(req, ADMIN_RATE_LIMIT);
   if (limited) {
     return NextResponse.json(
       { error: "Too many requests. Please wait a moment and try again." },
-      { status: 429, headers: { "X-RateLimit-Remaining": String(remaining) } },
+      { status: 429, headers: { "X-RateLimit-Remaining": "0", "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } },
     );
   }
 
@@ -75,11 +77,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   }
 
-  const { limited, remaining } = rateLimit(req);
+  const { limited, remaining, retryAfterMs } = rateLimit(req, ADMIN_RATE_LIMIT);
   if (limited) {
     return NextResponse.json(
       { error: "Too many requests. Please wait a moment and try again." },
-      { status: 429, headers: { "X-RateLimit-Remaining": String(remaining) } },
+      { status: 429, headers: { "X-RateLimit-Remaining": "0", "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } },
     );
   }
 
@@ -135,11 +137,11 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   }
 
-  const { limited, remaining } = rateLimit(req);
+  const { limited, remaining, retryAfterMs } = rateLimit(req, ADMIN_RATE_LIMIT);
   if (limited) {
     return NextResponse.json(
       { error: "Too many requests. Please wait a moment and try again." },
-      { status: 429, headers: { "X-RateLimit-Remaining": String(remaining) } },
+      { status: 429, headers: { "X-RateLimit-Remaining": "0", "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } },
     );
   }
 

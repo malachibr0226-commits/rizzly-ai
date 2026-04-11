@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { HomePage } from "../page";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Live Coach | Rizzly AI",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function LiveCoachRoute() {
-  return <HomePage initialStudioMode="live-coach" standaloneLiveCoach />;
+  redirect("/?mode=live-coach&view=live-coach");
 }
