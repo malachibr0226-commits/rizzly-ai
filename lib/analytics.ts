@@ -1,5 +1,5 @@
 /**
- * Sparkline MVP Analytics Module
+ * Rizzly MVP Analytics Module
  * Handles pattern recognition, achievements, streaks, and insights
  */
 
@@ -171,12 +171,12 @@ export function updateStreak(): StreakData {
     return { count: 0, lastDate: new Date().toDateString() };
   }
 
-  const saved = localStorage.getItem("sparkline-streak");
+  const saved = localStorage.getItem("rizzly-streak");
   const today = new Date().toDateString();
 
   if (!saved) {
     const data: StreakData = { count: 1, lastDate: today };
-    localStorage.setItem("sparkline-streak", JSON.stringify(data));
+    localStorage.setItem("rizzly-streak", JSON.stringify(data));
     return data;
   }
 
@@ -194,7 +194,7 @@ export function updateStreak(): StreakData {
     lastDate: today,
   };
 
-  localStorage.setItem("sparkline-streak", JSON.stringify(newData));
+  localStorage.setItem("rizzly-streak", JSON.stringify(newData));
   return newData;
 }
 
@@ -233,7 +233,7 @@ export function exportConversation(
           )
           .join("\n---\n\n")}`;
 
-  const filename = `sparkline-${thread.id.slice(-8)}.${
+  const filename = `rizzly-${thread.id.slice(-8)}.${
     format === "json" ? "json" : "txt"
   }`;
   const blob = new Blob([content], {

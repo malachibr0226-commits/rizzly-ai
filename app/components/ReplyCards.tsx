@@ -1,5 +1,5 @@
 /**
- * Sparkline Reply Cards Component
+ * Rizzly Reply Cards Component
  * Renders reply cards with rating and favorite interactions
  */
 

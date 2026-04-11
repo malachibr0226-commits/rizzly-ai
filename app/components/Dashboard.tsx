@@ -1,5 +1,5 @@
 /**
- * Sparkline Dashboard Component
+ * Rizzly Dashboard Component
  * Displays analytics, achievements, and export functionality
  */
 

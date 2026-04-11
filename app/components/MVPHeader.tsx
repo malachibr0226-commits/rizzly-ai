@@ -52,10 +52,10 @@ export function MVPHeader({
   return (
     <div className="relative z-30 pb-6 pt-4">
       <div className="flex flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between">
-        {/* Streak counter - Romantic glow effect */}
+        {/* Streak counter */}
         <div className="flex flex-wrap items-center gap-2">
           {streak.count > 0 && (
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/15 bg-slate-800/70 px-4 py-2 text-slate-100">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-white">
               <span className="text-lg">🔥</span>
               <span className="text-sm font-semibold">
                 {streak.count}-day streak
@@ -64,10 +64,10 @@ export function MVPHeader({
           )}
         </div>
 
-        {/* Achievement badges + Stats button */}
+        {/* Navigation + Auth */}
         <div className="flex flex-wrap items-center gap-2 md:justify-end">
           {unlockedCount > 0 && (
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-slate-300/15 bg-slate-800/70 px-4 py-2 text-slate-100">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-white">
               <span className="text-lg">🏆</span>
               <span className="text-sm font-semibold">
                 {unlockedCount} milestone{unlockedCount !== 1 ? "s" : ""}
@@ -77,25 +77,24 @@ export function MVPHeader({
 
           <Link
             href={featuresHref}
-            className="nav-link rounded-full border border-slate-300/12 bg-slate-900/65 px-4 py-2.5 text-sm font-semibold text-white/80 transition hover:border-slate-200/20 hover:bg-slate-800/75"
+            className="nav-link rounded-full border border-white/8 px-4 py-2.5 text-sm font-semibold text-white/60 transition hover:border-white/20 hover:text-white/90"
           >
             Features
           </Link>
 
           <Link
             href={faqHref}
-            className="nav-link rounded-full border border-slate-300/12 bg-slate-900/65 px-4 py-2.5 text-sm font-semibold text-white/80 transition hover:border-slate-200/20 hover:bg-slate-800/75"
+            className="nav-link rounded-full border border-white/8 px-4 py-2.5 text-sm font-semibold text-white/60 transition hover:border-white/20 hover:text-white/90"
           >
             FAQ
           </Link>
 
-          {/* Dashboard toggle - Enhanced with glow */}
           <button
             onClick={onToggleDashboard}
             className={`nav-link whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold transition-colors duration-150 ${
               showDashboard
-                ? "border border-slate-300/20 bg-slate-700 text-white"
-                : "border border-slate-300/15 bg-slate-900/65 text-slate-100 hover:border-slate-200/20 hover:bg-slate-800/75"
+                ? "border border-blue-500/30 bg-blue-500/15 text-white"
+                : "border border-white/8 text-white/60 hover:border-white/20 hover:text-white/90"
             }`}
             title="View stats and analytics"
           >
@@ -104,7 +103,7 @@ export function MVPHeader({
 
           <Link
             href={upgradeHref}
-            className="nav-link relative z-40 cursor-pointer pointer-events-auto rounded-full border border-slate-200/20 bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-white"
+            className="nav-link relative z-40 cursor-pointer pointer-events-auto rounded-full bg-blue-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-400"
           >
             Plans
           </Link>
@@ -118,13 +117,13 @@ export function MVPHeader({
             <>
               <Link
                 href={authLinks.signUp}
-                className="nav-link relative z-40 cursor-pointer pointer-events-auto rounded-full border border-slate-300/12 bg-slate-900/65 px-4 py-2.5 text-sm font-semibold text-white/85 transition hover:border-slate-200/20 hover:bg-slate-800/75"
+                className="nav-link relative z-40 cursor-pointer pointer-events-auto rounded-full border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:border-white/25 hover:text-white"
               >
                 Create account
               </Link>
               <Link
                 href={authLinks.signIn}
-                className="relative z-40 cursor-pointer pointer-events-auto rounded-full border border-slate-200/20 bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-900 transition-colors duration-150 hover:bg-white"
+                className="relative z-40 cursor-pointer pointer-events-auto rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black transition-colors duration-150 hover:bg-white/90"
               >
                 Sign In
               </Link>
@@ -135,7 +134,7 @@ export function MVPHeader({
                 Signed in{userFirstName ? ` as ${userFirstName}` : ""}
               </div>
               <SignOutButton>
-                <button className="px-4 py-2.5 rounded-full text-sm font-semibold border border-white/15 bg-white/5 text-white/85 transition hover:border-white/25 hover:bg-white/10">
+                <button className="px-4 py-2.5 rounded-full text-sm font-semibold border border-white/10 text-white/70 transition hover:border-white/25 hover:text-white">
                   Sign Out
                 </button>
               </SignOutButton>
@@ -143,8 +142,8 @@ export function MVPHeader({
                 appearance={{
                   baseTheme: dark,
                   variables: {
-                    colorPrimary: "#38bdf8",
-                    colorBackground: "#111827",
+                    colorPrimary: "#3b82f6",
+                    colorBackground: "#000000",
                     colorInputBackground: "rgba(255,255,255,0.06)",
                     colorText: "#ffffff",
                     colorTextSecondary: "rgba(255,255,255,0.96)",
@@ -152,17 +151,17 @@ export function MVPHeader({
                     colorNeutral: "#ffffff",
                   },
                   elements: {
-                    avatarBox: "w-9 h-9 ring-2 ring-sky-400/30",
-                    userButtonPopoverCard: "bg-[#111827]/95 text-white border border-slate-300/15",
+                    avatarBox: "w-9 h-9 ring-2 ring-blue-500/30",
+                    userButtonPopoverCard: "bg-[#0a0a0a] text-white border border-white/10",
                     userButtonPopoverActionButton: "text-white hover:bg-white/10",
                     userButtonPopoverActionButtonText: "text-white",
                     userButtonPopoverActionButtonIcon: "text-white/80",
                     userPreviewMainIdentifier: "text-white",
                     userPreviewSecondaryIdentifier: "text-white/80",
-                    card: "bg-[#180a2c] text-white",
-                    navbar: "bg-[#180a2c]/95 text-white",
+                    card: "bg-[#0a0a0a] text-white",
+                    navbar: "bg-[#0a0a0a] text-white",
                     navbarButton: "text-white/85 hover:bg-white/10",
-                    pageScrollBox: "bg-[#180a2c] text-white [&_*]:!text-white",
+                    pageScrollBox: "bg-[#0a0a0a] text-white [&_*]:!text-white",
                     profileSectionTitleText: "text-white",
                     pageHeaderTitle: "!text-white !opacity-100",
                     pageHeaderSubtitle: "!text-white/90 !opacity-100",

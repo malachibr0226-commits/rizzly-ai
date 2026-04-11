@@ -28,7 +28,7 @@ function resolveClerkPublishableKey() {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#111827",
+  themeColor: "#000000",
   colorScheme: "dark",
 };
 
@@ -116,13 +116,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full">
-        {/* Animated floating background shapes for lively effect */}
-        <div className="bg-float-shape shape1" />
-        <div className="bg-float-shape shape2" />
-        <div className="bg-float-shape shape3" />
-        <div className="bg-float-shape shape4" />
-        {/* Animated sparkles overlay for extra depth */}
-        <div className="bg-sparkle" />
+
         <a
           href="#main-content"
           className="sr-only absolute left-3 top-3 z-50 rounded-full bg-black px-4 py-2 text-sm font-semibold text-white focus:not-sr-only"
@@ -143,8 +137,8 @@ export default function RootLayout({
               baseTheme: dark,
               variables: {
                 colorPrimary: "#3b82f6",
-                colorBackground: "#0f172a",
-                colorInputBackground: "#1e293b",
+                colorBackground: "#000000",
+                colorInputBackground: "#0a0a0a",
                 colorText: "#ffffff",
                 colorTextSecondary: "rgba(255,255,255,0.60)",
                 colorTextOnPrimaryBackground: "#ffffff",
@@ -180,7 +174,7 @@ export default function RootLayout({
                 formFieldInput: {
                   borderRadius: "12px",
                   border: "1px solid rgba(255,255,255,0.10)",
-                  background: "#1e293b",
+                  background: "#0a0a0a",
                   color: "#ffffff",
                   transition: "border-color 0.2s",
                 },
@@ -190,7 +184,7 @@ export default function RootLayout({
                   fontWeight: "700",
                 },
                 // Profile / account page
-                navbar: "bg-[#0f172a]/95 text-white",
+                navbar: "bg-[#0a0a0a] text-white",
                 navbarButton: "text-white/90 hover:bg-white/10",
                 profileSectionTitleText: "text-white",
                 pageHeaderTitle: "!text-white !opacity-100",

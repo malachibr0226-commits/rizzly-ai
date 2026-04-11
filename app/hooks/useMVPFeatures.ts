@@ -1,5 +1,5 @@
 /**
- * Sparkline MVP Features Hook
+ * Rizzly MVP Features Hook
  * Centralized state management and handlers for all MVP features
  */
 
@@ -87,47 +87,47 @@ export function useMVPFeatures(threads: Thread[]): MVPFeaturesState {
 
   useEffect(() => {
     queueMicrotask(() => {
-      setCategory(readStoredJson<CategoryKey>("sparkline-category", "other"));
-      setToneIntensity(readStoredJson<number>("sparkline-intensity", 5));
-      setBulkCount(readStoredJson<number>("sparkline-bulk-count", 1));
-      setFavorites(readStoredJson<string[]>("sparkline-favorites", []));
+      setCategory(readStoredJson<CategoryKey>("rizzly-category", "other"));
+      setToneIntensity(readStoredJson<number>("rizzly-intensity", 5));
+      setBulkCount(readStoredJson<number>("rizzly-bulk-count", 1));
+      setFavorites(readStoredJson<string[]>("rizzly-favorites", []));
       setReplyRatings(
-        readStoredJson<Record<string, number>>("sparkline-ratings", {})
+        readStoredJson<Record<string, number>>("rizzly-ratings", {})
       );
       setAchievementState(
         readStoredJson<Achievement[]>(
-          "sparkline-achievements",
+          "rizzly-achievements",
           getDefaultAchievements()
         )
       );
-      setUsedTones(new Set(readStoredJson<ToneKey[]>("sparkline-tones", [])));
+      setUsedTones(new Set(readStoredJson<ToneKey[]>("rizzly-tones", [])));
       setStreak(updateStreak());
     });
   }, []);
 
   useEffect(() => {
-    localStorage.setItem("sparkline-category", JSON.stringify(category));
+    localStorage.setItem("rizzly-category", JSON.stringify(category));
   }, [category]);
 
   useEffect(() => {
-    localStorage.setItem("sparkline-intensity", JSON.stringify(toneIntensity));
+    localStorage.setItem("rizzly-intensity", JSON.stringify(toneIntensity));
   }, [toneIntensity]);
 
   useEffect(() => {
-    localStorage.setItem("sparkline-bulk-count", JSON.stringify(bulkCount));
+    localStorage.setItem("rizzly-bulk-count", JSON.stringify(bulkCount));
   }, [bulkCount]);
 
   // Persist favorites
   useEffect(() => {
     if (favorites.length > 0) {
-      localStorage.setItem("sparkline-favorites", JSON.stringify(favorites));
+      localStorage.setItem("rizzly-favorites", JSON.stringify(favorites));
     }
   }, [favorites]);
 
   // Persist ratings
   useEffect(() => {
     if (Object.keys(replyRatings).length > 0) {
-      localStorage.setItem("sparkline-ratings", JSON.stringify(replyRatings));
+      localStorage.setItem("rizzly-ratings", JSON.stringify(replyRatings));
     }
   }, [replyRatings]);
 
@@ -165,7 +165,7 @@ export function useMVPFeatures(threads: Thread[]): MVPFeaturesState {
   useEffect(() => {
     if (achievements.length > 0) {
       localStorage.setItem(
-        "sparkline-achievements",
+        "rizzly-achievements",
         JSON.stringify(achievements)
       );
     }
@@ -175,7 +175,7 @@ export function useMVPFeatures(threads: Thread[]): MVPFeaturesState {
   useEffect(() => {
     if (usedTones.size > 0) {
       localStorage.setItem(
-        "sparkline-tones",
+        "rizzly-tones",
         JSON.stringify(Array.from(usedTones))
       );
     }

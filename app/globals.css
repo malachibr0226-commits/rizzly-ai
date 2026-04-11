@@ -43,21 +43,21 @@ body .cl-profilePage *, body .cl-profileSectionContent *, body .cl-profileSectio
 @import "tailwindcss";
 /* Clerk sign-in/sign-up card: glassy dark card, no distracting ring */
 .cl-card {
-  background: rgba(18, 10, 44, 0.96) !important;
+  background: rgba(10, 10, 10, 0.98) !important;
   backdrop-filter: blur(24px) saturate(1.3) !important;
   -webkit-backdrop-filter: blur(24px) saturate(1.3) !important;
   color: #fff !important;
   border-radius: 18px !important;
-  box-shadow: 0 12px 56px 0 rgba(190,103,154,0.18), 0 2px 16px 0 rgba(126,151,163,0.10) !important;
-  border: none !important;
+  box-shadow: 0 12px 56px 0 rgba(0,0,0,0.4), 0 2px 16px 0 rgba(59,130,246,0.08) !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
 }
 /* Clerk user button popover card */
 .cl-userButtonPopoverCard {
-  background: rgba(18, 10, 44, 0.98) !important;
+  background: rgba(10, 10, 10, 0.98) !important;
   backdrop-filter: blur(18px) saturate(1.18) !important;
   -webkit-backdrop-filter: blur(18px) saturate(1.18) !important;
   border-radius: 14px !important;
-  box-shadow: 0 8px 36px 0 rgba(190,103,154,0.15), 0 2px 12px 0 rgba(126,151,163,0.10) !important;
+  box-shadow: 0 8px 36px 0 rgba(0,0,0,0.35), 0 2px 12px 0 rgba(59,130,246,0.06) !important;
   border: 1px solid rgba(255,255,255,0.08) !important;
 }
 
@@ -162,8 +162,8 @@ body .cl-userButtonPopoverCard {
 
 .cl-userButtonPopoverCard {
   border: none !important;
-  background: rgba(18, 10, 44, 0.92) !important;
-  box-shadow: 0 6px 32px 0 rgba(190,103,154,0.10), 0 2px 12px 0 rgba(126,151,163,0.10) !important;
+  background: rgba(10, 10, 10, 0.98) !important;
+  box-shadow: 0 6px 32px 0 rgba(0,0,0,0.3), 0 2px 12px 0 rgba(59,130,246,0.06) !important;
 }
 /* Remove white overlay background from Clerk modal root overlay */
 .cl-rootBox, .cl-overlay, .cl-modalOverlay, .cl-modalBackdrop {
@@ -213,7 +213,7 @@ body .cl-userButtonPopoverCard {
 }
 
 body {
-  background: radial-gradient(circle at top, rgba(148,163,184,0.08) 0%, transparent 30%), linear-gradient(180deg, #0b1017 0%, #0f1722 48%, #0b1119 100%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(59,130,246,0.06) 0%, transparent 50%), #000000;
   overflow-x: hidden;
 }
 
@@ -296,8 +296,9 @@ body {
 }
 
 :root {
-  --background: #0b0f17;
+  --background: #000000;
   --foreground: #f8fafc;
+  --accent: #3b82f6;
 }
 
 @theme inline {
@@ -334,14 +335,8 @@ body {
   margin: 0;
   color: var(--foreground);
   font-family: var(--font-sans);
-  background:
-    radial-gradient(circle at top, rgba(148, 163, 184, 0.06) 0%, transparent 26%),
-    linear-gradient(180deg, #0c1118 0%, #111827 48%, #0d141d 100%);
+  background: #000000;
   overflow-x: hidden;
-}
-
-.bg-sparkle {
-  display: none;
 }
 
 /* Card content wrapping and scaling for responsive fit */
@@ -379,28 +374,27 @@ html {
 
 @media (max-width: 640px) {
   body {
-    background: radial-gradient(ellipse at 50% -10%, rgba(148,163,184,0.12) 0%, rgba(71,85,105,0.08) 35%, #070b12 100%),
-                linear-gradient(160deg, rgba(15,23,42,0.92) 0%, rgba(17,24,39,0.98) 100%);
+    background: #000000;
   }
 }
 
 ::selection {
-  background: rgba(217, 70, 239, 0.35);
+  background: rgba(59, 130, 246, 0.35);
   color: #ffffff;
 }
 
 ::-webkit-scrollbar {
-  width: 12px;
+  width: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #090b10;
+  background: #000000;
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 3px solid #090b10;
+  border: 3px solid #000000;
   border-radius: 999px;
-  background: linear-gradient(180deg, #9d5a75, #7e97a3);
+  background: rgba(255,255,255,0.15);
 }
 
 body .cl-header,
@@ -427,14 +421,14 @@ body .cl-formFieldLabelRow label {
 body .cl-formFieldInput {
   border-radius: 12px !important;
   border: 1px solid rgba(255, 255, 255, 0.10) !important;
-  background: #2a1a40 !important;
+  background: rgba(255,255,255,0.06) !important;
   color: #ffffff !important;
   transition: border-color 0.2s !important;
 }
 body .cl-formFieldInput:focus {
-  border-color: rgba(244, 114, 182, 0.55) !important;
+  border-color: rgba(59, 130, 246, 0.55) !important;
   outline: none !important;
-  box-shadow: 0 0 0 3px rgba(244, 114, 182, 0.12) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12) !important;
 }
 
 /* Social buttons: visible with border on dark bg */
@@ -527,7 +521,7 @@ body .cl-profilePage,
 body .cl-navbar,
 body .cl-scrollBox,
 body .cl-pageScrollBox {
-  background: rgba(24, 10, 44, 0.96) !important;
+  background: rgba(10, 10, 10, 0.98) !important;
   color: #ffffff !important;
 }
 
@@ -605,12 +599,12 @@ body .cl-pageScrollBox,
 body .cl-scrollBox,
 body .cl-profilePage,
 body .cl-userButtonPopoverCard {
-  background: linear-gradient(160deg, rgba(23, 13, 38, 0.98), rgba(16, 11, 27, 0.96)) !important;
+  background: linear-gradient(160deg, rgba(10, 10, 10, 0.99), rgba(5, 5, 5, 0.97)) !important;
 }
 
 body .cl-pageScrollBox {
-  border: 1px solid rgba(244, 114, 182, 0.14) !important;
-  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.32) !important;
+  border: 1px solid rgba(59, 130, 246, 0.14) !important;
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5) !important;
 }
 
 body .cl-navbar {
@@ -634,7 +628,7 @@ body .cl-navbarMobileMenuRow {
 body .cl-navbarButton:hover,
 body .cl-navbarButton[aria-selected="true"],
 body .cl-navbarButton[data-selected="true"] {
-  background: linear-gradient(90deg, rgba(244, 114, 182, 0.16), rgba(192, 132, 252, 0.12)) !important;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.16), rgba(99, 102, 241, 0.12)) !important;
 }
 
 body .cl-profilePage {
@@ -655,12 +649,12 @@ body .cl-profileSectionTitleText {
   margin-bottom: 10px !important;
   font-size: 1.05rem !important;
   font-weight: 700 !important;
-  color: #fdf2f8 !important;
+  color: #e2e8f0 !important;
 }
 
 body .cl-profileSectionContent,
 body .cl-accordionContent {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.025)) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.02)) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
   border-radius: 18px !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03) !important;
@@ -669,24 +663,24 @@ body .cl-accordionContent {
 
 body .cl-formFieldInput {
   background: rgba(255, 255, 255, 0.06) !important;
-  border: 1px solid rgba(244, 114, 182, 0.16) !important;
+  border: 1px solid rgba(59, 130, 246, 0.16) !important;
   border-radius: 12px !important;
 }
 
 body .cl-formFieldInput:focus,
 body .cl-formFieldInput:focus-visible {
-  box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.18) !important;
-  border-color: rgba(244, 114, 182, 0.3) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.18) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
 }
 
 body .cl-profileSectionPrimaryButton,
 body .cl-formButtonPrimary,
 body .cl-footerActionLink {
-  background: linear-gradient(90deg, #fb7185 0%, #d946ef 100%) !important;
+  background: linear-gradient(90deg, #3b82f6 0%, #6366f1 100%) !important;
   border: none !important;
   border-radius: 12px !important;
   color: #fff !important;
-  box-shadow: 0 10px 24px rgba(217, 70, 239, 0.24) !important;
+  box-shadow: 0 10px 24px rgba(59, 130, 246, 0.24) !important;
 }
 
 body .cl-profileSectionPrimaryButton:hover,

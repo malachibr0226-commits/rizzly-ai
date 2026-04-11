@@ -15,8 +15,8 @@ export default async function SignUpPage() {
 
   if (!isClerkConfigured()) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617] px-4">
-        <div className="relative z-10 mx-auto w-full max-w-md rounded-2xl border border-slate-500/30 bg-[#0f172a]/95 p-8 text-center shadow-2xl backdrop-blur-xl">
+      <div className="min-h-screen flex items-center justify-center bg-black px-4">
+        <div className="relative z-10 mx-auto w-full max-w-md rounded-2xl border border-white/10 bg-[#0a0a0a] p-8 text-center shadow-2xl backdrop-blur-xl">
           <div className="inline-flex rounded-full border border-white/10 bg-white/10 px-4 py-1 text-xs font-bold uppercase tracking-widest text-white/70 mb-2">
             Local Auth
           </div>
@@ -39,7 +39,7 @@ export default async function SignUpPage() {
   }
 
   return (
-    <div className="auth-page-shell min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#020617] px-4 relative overflow-hidden">
+    <div className="auth-page-shell min-h-screen flex items-center justify-center bg-black px-4 relative overflow-hidden">
       {/* Ambient glow blobs */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden="true">
         <div className="absolute -top-16 left-1/4 h-80 w-80 rounded-full bg-blue-600/18 blur-[100px]" />
@@ -67,7 +67,7 @@ export default async function SignUpPage() {
             Smarter conversations
           </p>
         </div>
-        <div className="auth-card-shell rounded-[28px] border border-white/10 bg-[linear-gradient(160deg,rgba(15,23,42,0.96),rgba(30,41,59,0.94))] p-4 sm:p-5 shadow-[0_26px_70px_rgba(2,6,23,0.42)] backdrop-blur-xl">
+        <div className="auth-card-shell rounded-[28px] border border-white/10 bg-[#0a0a0a] p-4 sm:p-5 shadow-[0_26px_70px_rgba(0,0,0,0.5)] backdrop-blur-xl">
           <AuthAppleButton mode="sign-up" />
           <ClerkLoading>
             <AuthLoadingFallback mode="sign-up" />

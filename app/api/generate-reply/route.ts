@@ -50,7 +50,7 @@ type LiveScenario = {
   why: string;
 };
 
-type SparklineResponse = {
+type RizzlyResponse = {
   analysis: {
     summary: string;
     vibe: string;
@@ -591,7 +591,7 @@ function fallbackResponse(
   tone: ToneKey,
   draftMessage = "",
   liveCoachPrompt = "",
-): SparklineResponse {
+): RizzlyResponse {
   const toneUsed = toneMap[tone];
   const isDraftPolish = Boolean(draftMessage.trim());
   const isCoachPrompt = Boolean(liveCoachPrompt.trim());
@@ -753,12 +753,12 @@ function clampScore(value: unknown) {
 }
 
 function sanitizeModelPayload(
-  payload: Partial<SparklineResponse> | null | undefined,
+  payload: Partial<RizzlyResponse> | null | undefined,
   tone: ToneKey,
   replyCount = 3,
   draftMessage = "",
   liveCoachPrompt = "",
-): SparklineResponse {
+): RizzlyResponse {
   const fallback = fallbackResponse(tone, draftMessage, liveCoachPrompt);
   const incomingReplies = Array.isArray(payload?.replies) ? payload.replies : [];
   const replies = dedupeReplies(
@@ -1196,7 +1196,7 @@ export async function POST(req: Request) {
             verbosity: "low",
             format: {
               type: "json_schema",
-              name: "sparkline_reply_analysis",
+              name: "rizzly_reply_analysis",
               strict: true,
               schema: responseSchema,
             },
@@ -1207,7 +1207,7 @@ export async function POST(req: Request) {
         }),
       ])) as { output_text: string };
 
-      const parsed = JSON.parse(response.output_text) as SparklineResponse;
+      const parsed = JSON.parse(response.output_text) as RizzlyResponse;
       const safePayload = sanitizeModelPayload(parsed, tone, replyCount, draftMessage, liveCoachPrompt);
 
       return NextResponse.json(planWarning ? { ...safePayload, warning: planWarning } : safePayload, {

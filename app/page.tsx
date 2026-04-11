@@ -1776,9 +1776,16 @@ export default function HomePage() {
       setCurrentThreadId(loadCurrentThreadId());
       setVoiceSupported(detectVoiceSupport());
       setSavedPersonas(readSavedPersonas());
-      setUsageSnapshot(getUsageSnapshot());
+      // Only trust stored plan tier if user is signed in;
+      // unauthenticated users always start on free to prevent
+      // stale localStorage granting paid access.
+      if (!isSignedIn) {
+        setUsageSnapshot(setStoredPlanTier("free"));
+      } else {
+        setUsageSnapshot(getUsageSnapshot());
+      }
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Keyboard shortcuts (1-5 for tones, Ctrl+Enter to generate, etc.)
   useEffect(() => {
@@ -2713,29 +2720,33 @@ export default function HomePage() {
       `}</style>
 
       {/* Subtle background accents */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_14%_12%,rgba(148,163,184,0.08),transparent_0%,transparent_34%)]" />
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_12%,rgba(59,130,246,0.06),transparent_0%,transparent_28%)]" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[linear-gradient(180deg,rgba(255,255,255,0.03),transparent)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(59,130,246,0.07),transparent_50%)]" />
 
       <div className="relative z-10 mx-auto w-full wider-main-ui px-4 py-10 md:px-8 lg:px-10" style={{ maxWidth: "1680px" }}>
-        <header className="mb-12 flex flex-col items-center justify-center gap-3 md:mb-14">
-          <div className="inline-flex items-center rounded-full border border-slate-300/15 bg-slate-800/70 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-200">
-            Message studio
+        <header className="mb-16 flex flex-col items-center justify-center gap-6 md:mb-20">
+          {/* Official Rizzly AI Logo */}
+          <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-3 shadow-[0_12px_40px_rgba(59,130,246,0.12)] backdrop-blur-sm">
+            <svg width="64" height="64" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="logo-bg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#0f172a"/>
+                  <stop offset="100%" stopColor="#1e293b"/>
+                </linearGradient>
+                <linearGradient id="logo-bubble" x1="4" y1="6" x2="28" y2="26" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#3b82f6"/>
+                  <stop offset="100%" stopColor="#6366f1"/>
+                </linearGradient>
+              </defs>
+              <rect width="32" height="32" rx="7" fill="url(#logo-bg)"/>
+              <path d="M7 9C7 7.34 8.34 6 10 6H22C23.66 6 25 7.34 25 9V18C25 19.66 23.66 21 22 21H18L13 26V21H10C8.34 21 7 19.66 7 18V9Z" fill="url(#logo-bubble)"/>
+              <circle cx="12.5" cy="13.5" r="1.8" fill="white"/>
+              <circle cx="16" cy="13.5" r="1.8" fill="white"/>
+              <circle cx="19.5" cy="13.5" r="1.8" fill="white"/>
+            </svg>
           </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="rounded-2xl border border-slate-300/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(17,24,39,0.92))] p-2 shadow-[0_10px_24px_rgba(15,23,42,0.18)] backdrop-blur-md">
-              <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
-                <rect x="10" y="14" width="24" height="22" rx="5" ry="5" stroke="#94a3b8" strokeWidth="2.5" fill="none" />
-                <polygon points="18,36 14,42 22,36" fill="#94a3b8" />
-                <rect x="28" y="22" width="26" height="22" rx="5" ry="5" stroke="#cbd5e1" strokeWidth="2.5" fill="none" />
-                <polygon points="46,44 50,50 42,44" fill="#cbd5e1" />
-              </svg>
-            </div>
-            <div className="text-xs font-bold uppercase tracking-[0.3em] text-slate-300/90">
-              Rizzly
-            </div>
-            <div className="mt-1 text-lg font-black text-white md:text-xl">
-              Clear replies, better timing
+          <div className="text-center">
+            <div className="text-xs font-bold uppercase tracking-[0.35em] text-white/50">
+              Rizzly AI
             </div>
           </div>
         </header>
@@ -2775,46 +2786,45 @@ export default function HomePage() {
 
 
 
-            <h1 className="mb-6 text-balance text-4xl font-extrabold leading-tight tracking-[-0.03em] text-white md:text-5xl xl:text-6xl">
-              <span className="block">
-                Clear replies, in your voice.
-              </span>
+            <h1 className="mb-6 text-balance text-5xl font-black leading-[1.05] tracking-[-0.04em] text-white md:text-6xl lg:text-7xl xl:text-8xl">
+              Clear replies,{" "}
+              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">in your voice.</span>
             </h1>
 
-            <p className="max-w-2xl text-balance text-base font-[450] leading-relaxed tracking-[0.3px] text-white/70 md:text-lg" style={{ letterSpacing: "0.3px" }}>
-              Rizzly turns chats, screenshots, and voice notes into grounded next messages that feel <span className="font-semibold text-white/90">natural, useful, and ready to send</span> for personal, work, and everyday conversations.
+            <p className="max-w-2xl text-balance text-lg font-medium leading-relaxed text-white/55 md:text-xl">
+              Turn chats, screenshots, and voice notes into grounded next messages — <span className="text-white/80">natural, useful, and ready to send.</span>
             </p>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <button
                 type="button"
                 onClick={() => {
                   trackCtaClick("try_free", "hero");
                   jumpToStudio();
                 }}
-                className="inline-flex items-center justify-center rounded-full border border-slate-200/20 bg-slate-100 px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-white"
+                className="inline-flex items-center justify-center rounded-full bg-blue-500 px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] transition hover:bg-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.45)]"
               >
-                Open the studio
+                Start
               </button>
 
               <a
                 href={isSignedIn ? "#message-studio" : "/sign-up"}
                 onClick={() => trackCtaClick(isSignedIn ? "open_thread" : "create_account", "hero")}
-                className="inline-flex items-center justify-center rounded-full border border-slate-300/15 bg-slate-900/70 px-5 py-3 text-sm font-semibold text-white/85 transition hover:border-slate-300/25 hover:bg-slate-800/80"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 px-7 py-3.5 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:text-white"
               >
-                {isSignedIn ? "Open your workspace" : "Create account"}
+                {isSignedIn ? "Open workspace" : "Create account"}
               </a>
             </div>
 
-            <div className="mt-4 flex flex-wrap gap-2 text-balance text-xs text-white/60">
-              <div className="rounded-full border border-slate-300/15 bg-slate-800/70 px-3 py-1.5">Personal chats</div>
-              <div className="rounded-full border border-slate-300/15 bg-slate-800/70 px-3 py-1.5">Follow-ups</div>
-              <div className="rounded-full border border-slate-300/15 bg-slate-800/70 px-3 py-1.5">Plans and scheduling</div>
+            <div className="mt-6 flex flex-wrap gap-2 text-xs text-white/40">
+              <div className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5">Personal chats</div>
+              <div className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5">Follow-ups</div>
+              <div className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5">Plans & scheduling</div>
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-xl min-w-[340px] overflow-hidden rounded-[30px] border border-slate-300/12 bg-[linear-gradient(180deg,rgba(15,23,42,0.94),rgba(15,23,42,0.98))] p-4 shadow-[0_18px_36px_rgba(15,23,42,0.2)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
-            <div className="overflow-hidden rounded-[24px] border border-slate-300/10 bg-white/[0.03] p-3.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] sm:p-4 md:p-5">
+          <div className="mx-auto w-full max-w-xl min-w-[340px] overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_20px_50px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
+            <div className="overflow-hidden rounded-[22px] border border-white/8 bg-white/[0.02] p-3.5 sm:p-4 md:p-5">
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-4">
                 <div className="rounded-2xl px-3 py-2.5">
                   <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/40">Mood</div>
