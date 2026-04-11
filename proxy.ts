@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { isClerkConfigured } from "@/lib/auth";
 
 const isPublicRoute = createRouteMatcher([
@@ -9,10 +9,33 @@ const isPublicRoute = createRouteMatcher([
   "/api(.*)",
 ]);
 
+function redirectToCanonicalHost(req: NextRequest) {
+  const hostname = req.nextUrl.hostname.toLowerCase();
+  const isPreviewHost = hostname.endsWith(".vercel.app");
+  const isWwwHost = hostname === "www.rizzlyai.com";
+  const isApiRoute = req.nextUrl.pathname.startsWith("/api");
+
+  if (process.env.NODE_ENV !== "production" || isApiRoute || (!isPreviewHost && !isWwwHost)) {
+    return null;
+  }
+
+  const canonicalUrl = req.nextUrl.clone();
+  canonicalUrl.protocol = "https";
+  canonicalUrl.host = "rizzlyai.com";
+  return NextResponse.redirect(canonicalUrl, 308);
+}
+
 const configuredProxy = clerkMiddleware(async (auth, req) => {
+  const redirect = redirectToCanonicalHost(req);
+  if (redirect) {
+    return redirect;
+  }
+
   if (!isPublicRoute(req)) {
     await auth.protect();
   }
+
+  return NextResponse.next();
 });
 
 const shouldUseClerkProxy =
@@ -20,8 +43,8 @@ const shouldUseClerkProxy =
 
 export default shouldUseClerkProxy
   ? configuredProxy
-  : function proxy() {
-      return NextResponse.next();
+  : function proxy(req: NextRequest) {
+      return redirectToCanonicalHost(req) ?? NextResponse.next();
     };
 
 export const config = {
