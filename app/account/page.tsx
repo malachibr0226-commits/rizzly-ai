@@ -1,31 +1,37 @@
 "use client";
-import { useUser } from "@clerk/nextjs";
-import ProfileCard from "../components/ProfileCard";
+import { UserProfile } from "@clerk/nextjs";
+import { dark } from "@clerk/themes";
 
 export default function AccountPage() {
-  const { user } = useUser();
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px",
-        background:
-          "radial-gradient(circle at top, rgba(148,163,184,0.10) 0%, transparent 30%), linear-gradient(160deg, #0c1118 0%, #111827 55%, #0d141d 100%)",
-      }}
-    >
-      <ProfileCard
-        name={user?.fullName || "User"}
-        email={user?.primaryEmailAddress?.emailAddress || ""}
-        image={user?.imageUrl || undefined}
-        appleConnected={Boolean(
-          user?.externalAccounts?.some((acc) => acc.provider === "apple"),
-        )}
-        googleConnected={Boolean(
-          user?.externalAccounts?.some((acc) => acc.provider === "google"),
-        )}
+    <div className="flex min-h-screen items-center justify-center bg-black px-4 py-12">
+      <UserProfile
+        appearance={{
+          baseTheme: dark,
+          variables: {
+            colorPrimary: "#3b82f6",
+            colorBackground: "#0a0a0a",
+            colorInputBackground: "#111111",
+            colorText: "#ffffff",
+            colorTextSecondary: "rgba(255,255,255,0.6)",
+            colorTextOnPrimaryBackground: "#ffffff",
+            borderRadius: "0.75rem",
+          },
+          elements: {
+            card: "bg-[#0a0a0a] border border-white/8 shadow-none",
+            navbar: "bg-transparent border-r border-white/6",
+            navbarButton: "text-white/70 hover:text-white hover:bg-white/5",
+            pageScrollBox: "bg-transparent",
+            page: "bg-transparent",
+            profileSectionTitleText: "text-white/50 uppercase tracking-widest text-xs",
+            profileSectionPrimaryButton: "bg-blue-500 hover:bg-blue-400 text-white",
+            formButtonPrimary: "bg-blue-500 hover:bg-blue-400 text-white",
+            headerTitle: "text-white text-lg font-semibold",
+            headerSubtitle: "text-white/50",
+            badge: "bg-white/10 text-white/80 border-0",
+            footer: { display: "none" },
+          },
+        }}
       />
     </div>
   );

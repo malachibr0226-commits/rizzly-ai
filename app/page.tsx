@@ -2719,36 +2719,27 @@ export default function HomePage() {
         .typing-dot { animation: typing-bounce 1.4s ease-in-out infinite; }
       `}</style>
 
-      {/* Subtle background accents */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(59,130,246,0.07),transparent_50%)]" />
+      {/* Subtle top glow */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(59,130,246,0.05),transparent_60%)]" />
 
       <div className="relative z-10 mx-auto w-full wider-main-ui px-4 py-10 md:px-8 lg:px-10" style={{ maxWidth: "1680px" }}>
-        <header className="mb-16 flex flex-col items-center justify-center gap-6 md:mb-20">
-          {/* Official Rizzly AI Logo */}
-          <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-3 shadow-[0_12px_40px_rgba(59,130,246,0.12)] backdrop-blur-sm">
-            <svg width="64" height="64" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <linearGradient id="logo-bg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#0f172a"/>
-                  <stop offset="100%" stopColor="#1e293b"/>
-                </linearGradient>
-                <linearGradient id="logo-bubble" x1="4" y1="6" x2="28" y2="26" gradientUnits="userSpaceOnUse">
-                  <stop offset="0%" stopColor="#3b82f6"/>
-                  <stop offset="100%" stopColor="#6366f1"/>
-                </linearGradient>
-              </defs>
-              <rect width="32" height="32" rx="7" fill="url(#logo-bg)"/>
-              <path d="M7 9C7 7.34 8.34 6 10 6H22C23.66 6 25 7.34 25 9V18C25 19.66 23.66 21 22 21H18L13 26V21H10C8.34 21 7 19.66 7 18V9Z" fill="url(#logo-bubble)"/>
-              <circle cx="12.5" cy="13.5" r="1.8" fill="white"/>
-              <circle cx="16" cy="13.5" r="1.8" fill="white"/>
-              <circle cx="19.5" cy="13.5" r="1.8" fill="white"/>
-            </svg>
-          </div>
-          <div className="text-center">
-            <div className="text-xs font-bold uppercase tracking-[0.35em] text-white/50">
-              Rizzly AI
-            </div>
-          </div>
+        <header className="mb-20 flex flex-col items-center justify-center gap-5 pt-8 md:mb-24 md:pt-12">
+          {/* Logo — seamless on black */}
+          <svg width="52" height="52" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="hero-bubble" x1="4" y1="6" x2="28" y2="26" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#3b82f6"/>
+                <stop offset="100%" stopColor="#6366f1"/>
+              </linearGradient>
+            </defs>
+            <path d="M7 9C7 7.34 8.34 6 10 6H22C23.66 6 25 7.34 25 9V18C25 19.66 23.66 21 22 21H18L13 26V21H10C8.34 21 7 19.66 7 18V9Z" fill="url(#hero-bubble)"/>
+            <circle cx="12.5" cy="13.5" r="1.8" fill="white"/>
+            <circle cx="16" cy="13.5" r="1.8" fill="white"/>
+            <circle cx="19.5" cy="13.5" r="1.8" fill="white"/>
+          </svg>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.4em] text-white/30">
+            Rizzly AI
+          </span>
         </header>
 
         <MVPHeader
@@ -2759,12 +2750,12 @@ export default function HomePage() {
         />
 
         {isSignedIn && hasPaidPlan && (
-          <div className="mb-6 rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-50">
-            <div className="font-semibold">{isPro ? "Rizzly Pro is active" : "Rizzly Plus is active"}</div>
-            <p className="mt-1 text-emerald-100/85">
+          <div className="mb-8 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-4 text-sm">
+            <div className="font-semibold text-white/70">{isPro ? "Pro active" : "Plus active"}</div>
+            <p className="mt-1 text-white/30">
               {isPro
-                ? "Higher reply limits, synced memory, and the full premium workflow stack are now unlocked."
-                : "More daily volume, saved voice setup, and extra tone modes are now unlocked."}
+                ? "Higher limits, synced memory, and the full premium stack are unlocked."
+                : "More daily volume, saved voice setup, and extra tone modes are unlocked."}
             </p>
           </div>
         )}
@@ -2781,28 +2772,26 @@ export default function HomePage() {
           />
         )}
 
-        <section className="mb-16 main-responsive-grid gap-16 xl:gap-24">
+        <section className="mb-24 main-responsive-grid gap-16 xl:gap-24">
           <div className="w-full max-w-5xl">
 
-
-
-            <h1 className="mb-6 text-balance text-5xl font-black leading-[1.05] tracking-[-0.04em] text-white md:text-6xl lg:text-7xl xl:text-8xl">
-              Clear replies,{" "}
-              <span className="bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">in your voice.</span>
+            <h1 className="mb-8 text-balance text-5xl font-black leading-[1.02] tracking-[-0.045em] text-white md:text-7xl lg:text-8xl">
+              Clear replies,<br />
+              <span className="bg-gradient-to-r from-blue-400 via-blue-300 to-indigo-400 bg-clip-text text-transparent">in your voice.</span>
             </h1>
 
-            <p className="max-w-2xl text-balance text-lg font-medium leading-relaxed text-white/55 md:text-xl">
-              Turn chats, screenshots, and voice notes into grounded next messages — <span className="text-white/80">natural, useful, and ready to send.</span>
+            <p className="max-w-xl text-pretty text-base leading-relaxed text-white/40 md:text-lg">
+              Turn chats, screenshots, and voice notes into grounded next messages — natural, useful, and ready to send.
             </p>
 
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="mt-12 flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={() => {
                   trackCtaClick("try_free", "hero");
                   jumpToStudio();
                 }}
-                className="inline-flex items-center justify-center rounded-full bg-blue-500 px-7 py-3.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(59,130,246,0.3)] transition hover:bg-blue-400 hover:shadow-[0_0_30px_rgba(59,130,246,0.45)]"
+                className="inline-flex items-center justify-center rounded-full bg-white px-8 py-3.5 text-sm font-bold text-black transition hover:bg-white/90"
               >
                 Start
               </button>
@@ -2810,61 +2799,55 @@ export default function HomePage() {
               <a
                 href={isSignedIn ? "#message-studio" : "/sign-up"}
                 onClick={() => trackCtaClick(isSignedIn ? "open_thread" : "create_account", "hero")}
-                className="inline-flex items-center justify-center rounded-full border border-white/15 px-7 py-3.5 text-sm font-semibold text-white/80 transition hover:border-white/30 hover:text-white"
+                className="inline-flex items-center justify-center rounded-full border border-white/10 px-8 py-3.5 text-sm font-medium text-white/50 transition hover:border-white/20 hover:text-white/70"
               >
                 {isSignedIn ? "Open workspace" : "Create account"}
               </a>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-2 text-xs text-white/40">
-              <div className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5">Personal chats</div>
-              <div className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5">Follow-ups</div>
-              <div className="rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-1.5">Plans & scheduling</div>
+            <div className="mt-8 flex flex-wrap gap-2.5 text-[11px] text-white/25">
+              <span>Personal chats</span>
+              <span className="text-white/15">·</span>
+              <span>Follow-ups</span>
+              <span className="text-white/15">·</span>
+              <span>Plans & scheduling</span>
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-xl min-w-[340px] overflow-hidden rounded-[28px] border border-white/10 bg-white/[0.03] p-4 shadow-[0_20px_50px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:p-5 md:min-h-[250px] md:p-7">
-            <div className="overflow-hidden rounded-[22px] border border-white/8 bg-white/[0.02] p-3.5 sm:p-4 md:p-5">
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-4">
-                <div className="rounded-2xl px-3 py-2.5">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.28em] text-white/40">Mood</div>
-                  <div className="mt-2 text-[1.35rem] font-bold leading-none text-white/95">{liveStatus.label}</div>
+          <div className="mx-auto w-full max-w-md min-w-[320px] rounded-[24px] border border-white/[0.06] bg-white/[0.02] p-5 md:p-7">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/25">Mood</div>
+                  <div className="mt-1.5 text-xl font-bold text-white/90">{liveStatus.label}</div>
                 </div>
-                <div className="inline-flex min-h-[50px] w-full max-w-full items-center gap-2 rounded-[20px] border border-white/8 bg-white/[0.04] px-4 py-2 text-sm leading-snug text-white/62 shadow-[inset_0_1px_0_rgba(255,255,255,0.035)] sm:max-w-[250px] xl:max-w-[270px]">
-                  <span className={`mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full ${liveStatus.dot}`} />
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.06] px-3.5 py-1.5 text-xs text-white/40">
+                  <span className={`h-1.5 w-1.5 rounded-full ${liveStatus.dot}`} />
                   <span>{liveStatus.detail}</span>
                 </div>
               </div>
 
-              <div className="mt-5 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
+              <div className="my-5 h-px bg-white/[0.06]" />
 
-              <div className="mt-5">
-                <div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.24em] text-white/38">
+              <div>
+                <div className="mb-4 text-[10px] font-medium uppercase tracking-[0.3em] text-white/20">
                   Chemistry snapshot
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5 md:gap-3">
-                  <div className="col-span-2 flex min-h-[96px] min-w-0 flex-col justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] md:px-4 md:py-5">
-                    <div className="flex flex-1 items-center justify-center px-2 text-center bg-gradient-to-r from-rose-200 via-blue-200 to-slate-200 bg-clip-text text-[clamp(0.9rem,1.15vw,1.08rem)] font-extrabold leading-tight tracking-[-0.03em] text-transparent drop-shadow-sm">
-                      <span className="max-w-full whitespace-normal break-words text-balance">{pulseMetrics.toneLabel}</span>
-                    </div>
-                    <div className="mt-2 flex min-h-[1.5rem] items-center justify-center text-[9px] font-semibold uppercase tracking-[0.14em] leading-relaxed text-white/46 sm:text-[10px]">Tone</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="col-span-2 rounded-2xl bg-white/[0.03] px-4 py-4 text-center">
+                    <div className="text-sm font-semibold text-white/70">{pulseMetrics.toneLabel}</div>
+                    <div className="mt-1.5 text-[10px] uppercase tracking-[0.2em] text-white/25">Tone</div>
                   </div>
-                  <div className="flex min-h-[112px] min-w-0 flex-col justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] md:px-4 md:py-5">
-                    <div className="flex min-h-[2.75rem] items-center justify-center bg-gradient-to-r from-emerald-200 to-green-100 bg-clip-text text-[clamp(1rem,1.6vw,1.45rem)] font-bold leading-tight text-transparent drop-shadow-sm">
-                      {pulseMetrics.confidenceLabel}
-                    </div>
-                    <div className="mt-2 flex min-h-[1.75rem] items-center justify-center text-[9px] font-semibold uppercase tracking-[0.12em] leading-relaxed text-white/46 sm:text-[10px]">Confidence</div>
+                  <div className="rounded-2xl bg-white/[0.03] px-4 py-4 text-center">
+                    <div className="text-sm font-semibold text-white/70">{pulseMetrics.confidenceLabel}</div>
+                    <div className="mt-1.5 text-[10px] uppercase tracking-[0.2em] text-white/25">Confidence</div>
                   </div>
-                  <div className="flex min-h-[112px] min-w-0 flex-col justify-between rounded-2xl border border-white/8 bg-white/[0.03] px-3 py-4 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.025)] md:px-4 md:py-5">
-                    <div className="flex min-h-[2.75rem] items-center justify-center bg-gradient-to-r from-yellow-200 via-amber-100 to-white bg-clip-text text-[clamp(1rem,1.6vw,1.45rem)] font-bold leading-tight text-transparent drop-shadow-sm">
-                      {pulseMetrics.energyLabel}
-                    </div>
-                    <div className="mt-2 flex min-h-[1.75rem] items-center justify-center text-[9px] font-semibold uppercase tracking-[0.12em] leading-relaxed text-white/46 sm:text-[10px]">Interest</div>
+                  <div className="rounded-2xl bg-white/[0.03] px-4 py-4 text-center">
+                    <div className="text-sm font-semibold text-white/70">{pulseMetrics.energyLabel}</div>
+                    <div className="mt-1.5 text-[10px] uppercase tracking-[0.2em] text-white/25">Interest</div>
                   </div>
                 </div>
               </div>
-            </div>
           </div>
         </section>
 

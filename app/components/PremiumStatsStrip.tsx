@@ -37,16 +37,16 @@ export function PremiumStatsStrip({
   ];
 
   return (
-    <section className="mb-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+    <section className="mb-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
       {items.map((item) => (
         <div
           key={item.label}
-          className={`rounded-[22px] border px-4 py-3 backdrop-blur-sm shadow-[0_10px_24px_rgba(15,23,42,0.10)] ${item.tone}`}
+          className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-4"
         >
-          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45">
+          <div className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/20">
             {item.label}
           </div>
-          <div className="mt-2 text-xl font-bold text-white">{item.value}</div>
+          <div className="mt-2 text-lg font-bold text-white/80">{item.value}</div>
         </div>
       ))}
     </section>

@@ -120,21 +120,21 @@ export function LandingUpgradeSections({
   onJumpToStudio: () => void;
 }) {
   return (
-    <div className="mb-8 space-y-10 max-w-7xl mx-auto">
+    <div className="mb-8 space-y-16 max-w-7xl mx-auto">
       <section
         id="features"
-        className="rounded-[32px] border border-slate-300/12 bg-[linear-gradient(135deg,rgba(15,23,42,0.96),rgba(17,24,39,0.94))] p-10 shadow-[0_18px_36px_rgba(15,23,42,0.16)] backdrop-blur-xl sm:p-14"
+        className="rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-10 sm:p-14"
       >
-        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <div className="inline-flex rounded-full border border-slate-300/15 bg-slate-800/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-200">
-              Why it feels smoother
+            <div className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/25">
+              Why it works
             </div>
-            <h2 className="mt-2 text-2xl font-bold text-white md:text-3xl">
-              Built for real conversations, not AI-sounding filler
+            <h2 className="mt-3 text-2xl font-bold tracking-tight text-white md:text-3xl">
+              Built for real conversations
             </h2>
-            <p className="mt-2 max-w-2xl text-sm text-white/60 md:text-base">
-              Each step is tuned to help you reply faster, keep your tone intact, and stay clear without forcing the wording.
+            <p className="mt-2 max-w-2xl text-sm text-white/35 md:text-base">
+              Each step is tuned to help you reply faster and keep your tone intact.
             </p>
           </div>
 
@@ -144,94 +144,84 @@ export function LandingUpgradeSections({
               trackCtaClick("jump_to_studio", "features_section");
               onJumpToStudio();
             }}
-            className="inline-flex items-center justify-center rounded-full border border-slate-200/20 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-white"
+            className="inline-flex items-center justify-center rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-white/90"
           >
-            {isSignedIn ? "Open your workspace" : "Try guest mode"}
+            {isSignedIn ? "Open workspace" : "Try free"}
           </button>
         </div>
 
-        <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
           {featureCards.map((card) => (
             <div
               key={card.title}
-              className="mode-card flex h-full min-w-0 flex-col rounded-3xl border border-slate-300/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-8 shadow-[0_10px_24px_rgba(15,23,42,0.1)]"
+              className="mode-card flex h-full min-w-0 flex-col rounded-2xl border border-white/[0.05] bg-white/[0.02] p-7"
             >
               <div className="mode-card-content flex flex-col h-full min-w-0">
-                <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300/80">
+                <div className="text-[10px] font-medium uppercase tracking-[0.25em] text-white/25">
                   {card.eyebrow}
                 </div>
-                <div className="mt-2 text-base font-semibold text-white break-words">{card.title}</div>
-                <p className="mt-2 text-sm leading-6 text-white/60 break-words">{card.body}</p>
+                <div className="mt-3 text-sm font-semibold text-white/80">{card.title}</div>
+                <p className="mt-2 text-sm leading-relaxed text-white/30">{card.body}</p>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/65">
+        <div className="mt-6 flex flex-wrap gap-3 text-[11px] text-white/25">
           {socialProof.map((item) => (
-            <span
-              key={item}
-              className="rounded-full border border-slate-300/12 bg-slate-800/70 px-3 py-1.5 text-slate-100"
-            >
-              {item}
-            </span>
+            <span key={item}>{item}</span>
           ))}
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">
-            No card needed to try Free
-          </span>
+          <span className="text-white/15">·</span>
+          <span>No card needed to try Free</span>
         </div>
       </section>
 
-      <section className="rounded-[32px] border border-slate-300/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.95),rgba(15,23,42,0.9))] p-8 shadow-[0_18px_36px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:p-12">
-        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+      <section className="rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-8 sm:p-12">
+        <div className="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <div className="inline-flex rounded-full border border-slate-300/15 bg-slate-800/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-200">
+            <div className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/25">
               How it works
             </div>
-            <h2 className="mt-2 text-2xl font-bold text-white md:text-3xl">
-              A simple path from context to a message you can send
+            <h2 className="mt-3 text-2xl font-bold tracking-tight text-white md:text-3xl">
+              From context to a message you can send
             </h2>
           </div>
-          <div className="flex flex-wrap gap-2 text-xs text-white/55">
-            {useCases.map((item) => (
-              <span
-                key={item}
-                className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5"
-              >
-                {item}
+          <div className="flex flex-wrap gap-2.5 text-[11px] text-white/25">
+            {useCases.map((item, i) => (
+              <span key={item}>
+                {item}{i < useCases.length - 1 && <span className="ml-2.5 text-white/10">·</span>}
               </span>
             ))}
           </div>
         </div>
 
-        <div className="mb-6 grid gap-6 lg:grid-cols-3">
+        <div className="mb-8 grid gap-4 lg:grid-cols-3">
           {workflowSteps.map((step) => (
             <div
               key={step.step}
-              className="rounded-3xl border border-slate-300/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] p-7 shadow-[0_10px_24px_rgba(15,23,42,0.1)]"
+              className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-7"
             >
-              <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300/80">
+              <div className="text-[10px] font-medium uppercase tracking-[0.25em] text-white/20">
                 Step {step.step}
               </div>
-              <div className="mt-2 text-base font-semibold text-white">{step.title}</div>
-              <p className="mt-2 text-sm leading-6 text-white/60">{step.body}</p>
+              <div className="mt-3 text-sm font-semibold text-white/80">{step.title}</div>
+              <p className="mt-2 text-sm leading-relaxed text-white/30">{step.body}</p>
             </div>
           ))}
         </div>
 
-        <div className="mb-4 h-px bg-gradient-to-r from-transparent via-white/12 to-transparent" />
-        <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <div className="inline-flex rounded-full border border-slate-300/15 bg-slate-800/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-200">
-              Start faster
-            </div>
-            <h2 className="mt-2 text-2xl font-bold text-white md:text-3xl">
-              Common starting points for everyday conversations
-            </h2>
-            <p className="mt-2 max-w-2xl text-sm text-white/60 md:text-base">
-              Pick a scenario, load the chat, and let Rizzly shape the next move around the tone and level of clarity you want.
-            </p>
+        <div className="my-8 h-px bg-white/[0.06]" />
+
+        <div className="mb-6">
+          <div className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/25">
+            Quick start
           </div>
+          <h2 className="mt-3 text-2xl font-bold tracking-tight text-white md:text-3xl">
+            Common starting points
+          </h2>
+          <p className="mt-2 max-w-2xl text-sm text-white/35 md:text-base">
+            Pick a scenario, load the chat, and let Rizzly shape the next move.
+          </p>
         </div>
 
         <div className="grid gap-3 lg:grid-cols-3">
@@ -244,43 +234,43 @@ export function LandingUpgradeSections({
                 onChooseScenario(scenario);
                 onJumpToStudio();
               }}
-              className="rounded-2xl border border-slate-300/10 bg-black/20 p-4 text-left transition hover:border-slate-200/20 hover:bg-white/5"
+              className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-5 text-left transition hover:border-white/10 hover:bg-white/[0.04]"
             >
               <div className="flex items-center justify-between gap-2">
-                <div className="text-sm font-semibold text-white">{scenario.label}</div>
-                <span className="rounded-full border border-slate-300/12 bg-slate-800/70 px-2 py-1 text-[10px] uppercase tracking-[0.16em] text-slate-200/85">
+                <div className="text-sm font-semibold text-white/80">{scenario.label}</div>
+                <span className="text-[10px] uppercase tracking-[0.2em] text-white/25">
                   {scenario.tone}
                 </span>
               </div>
-              <p className="mt-2 text-sm text-white/60">{getScenarioNote(scenario.goal)}</p>
-              <div className="mt-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-300/80">
-                Load this starter
+              <p className="mt-2 text-sm text-white/30">{getScenarioNote(scenario.goal)}</p>
+              <div className="mt-4 text-[10px] font-medium uppercase tracking-[0.25em] text-blue-400/60">
+                Load this starter →
               </div>
             </button>
           ))}
         </div>
       </section>
 
-      <section id="faq" className="rounded-[32px] border border-slate-300/10 bg-[linear-gradient(135deg,rgba(15,23,42,0.95),rgba(15,23,42,0.9))] p-8 shadow-[0_18px_36px_rgba(15,23,42,0.14)] backdrop-blur-xl sm:p-12">
-        <div className="mb-4">
-          <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/70">
+      <section id="faq" className="rounded-[28px] border border-white/[0.06] bg-white/[0.02] p-8 sm:p-12">
+        <div className="mb-6">
+          <div className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/25">
             FAQ
           </div>
-          <h2 className="mt-2 text-2xl font-bold text-white md:text-3xl">
-            Quick answers before you send anything
+          <h2 className="mt-3 text-2xl font-bold tracking-tight text-white md:text-3xl">
+            Quick answers
           </h2>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           {faqItems.map((item) => (
             <details
               key={item.question}
-              className="rounded-3xl border border-slate-300/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.02))] px-7 py-5 text-white/80 shadow-[0_10px_24px_rgba(15,23,42,0.1)]"
+              className="rounded-2xl border border-white/[0.05] bg-white/[0.02] px-6 py-5"
             >
-              <summary className="cursor-pointer list-none text-sm font-semibold text-white">
+              <summary className="cursor-pointer list-none text-sm font-semibold text-white/70">
                 {item.question}
               </summary>
-              <p className="mt-2 text-sm leading-6 text-white/60">{item.answer}</p>
+              <p className="mt-3 text-sm leading-relaxed text-white/30">{item.answer}</p>
             </details>
           ))}
         </div>

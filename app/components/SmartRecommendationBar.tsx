@@ -10,24 +10,24 @@ export function SmartRecommendationBar({
   topGoal: string | null;
 }) {
   return (
-    <section className="mb-6 rounded-2xl border border-white/10 bg-[linear-gradient(90deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-4 backdrop-blur-sm">
+    <section className="mb-8 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <div className="inline-flex rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/70">
-            Smart recommendation
+          <div className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/20">
+            Recommendation
           </div>
-          <p className="mt-2 text-sm text-white/75">{suggestion}</p>
+          <p className="mt-2 text-sm text-white/45">{suggestion}</p>
         </div>
 
-        <div className="flex flex-wrap gap-2 text-xs text-white/65">
+        <div className="flex flex-wrap gap-3 text-[11px] text-white/30">
           {topTone && (
-            <span className="rounded-full border border-cyan-400/20 bg-cyan-500/10 px-3 py-1.5 capitalize text-cyan-100">
-              Top tone: {topTone}
+            <span className="capitalize">
+              Tone: {topTone}
             </span>
           )}
           {topGoal && (
-            <span className="rounded-full border border-fuchsia-400/20 bg-fuchsia-500/10 px-3 py-1.5 capitalize text-fuchsia-100">
-              Top goal: {topGoal}
+            <span className="capitalize">
+              Goal: {topGoal}
             </span>
           )}
         </div>
