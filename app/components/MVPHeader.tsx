@@ -11,6 +11,10 @@ import { SignOutButton, UserButton } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { useAppAuth } from "@/app/components/AppAuthProvider";
 import type { Achievement, StreakData } from "@/lib/analytics";
+import {
+  resolveCanonicalAppUrl,
+  shouldUseCanonicalAuthForHost,
+} from "@/lib/site-url";
 
 interface MVPHeaderProps {
   streak: StreakData;
@@ -29,72 +33,74 @@ export function MVPHeader({
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
   const isNonCanonicalHost =
     typeof window !== "undefined" &&
-    window.location.hostname.endsWith(".vercel.app");
+    shouldUseCanonicalAuthForHost(window.location.hostname);
   const authLinks = isNonCanonicalHost
     ? {
-        signIn: "https://rizzlyai.com/sign-in",
-        signUp: "https://rizzlyai.com/sign-up",
+        signIn: resolveCanonicalAppUrl("/sign-in").toString(),
+        signUp: resolveCanonicalAppUrl("/sign-up").toString(),
       }
     : {
         signIn: "/sign-in",
         signUp: "/sign-up",
       };
   const featuresHref = isNonCanonicalHost
-    ? "https://rizzlyai.com/#features"
+    ? resolveCanonicalAppUrl("/#features").toString()
     : "#features";
   const faqHref = isNonCanonicalHost
-    ? "https://rizzlyai.com/#faq"
+    ? resolveCanonicalAppUrl("/#faq").toString()
     : "#faq";
   const upgradeHref = isNonCanonicalHost
-    ? "https://rizzlyai.com/#upgrade"
+    ? resolveCanonicalAppUrl("/#upgrade").toString()
     : "#upgrade";
 
   return (
-    <div className="relative z-30 pb-6 pt-4">
-      <div className="flex flex-col gap-3 px-4 md:flex-row md:items-center md:justify-between">
-        {/* Streak counter */}
+    <div className="relative z-30 mb-2 pb-4 pt-2">
+      {/* Glass backdrop bar */}
+      <div className="absolute inset-0 -mx-4 rounded-2xl bg-black/20 backdrop-blur-md md:-mx-8" style={{ zIndex: -1 }} />
+      <div className="flex flex-col gap-3 px-1 md:flex-row md:items-center md:justify-between">
+
+        {/* Left: streak + milestones */}
         <div className="flex flex-wrap items-center gap-2">
           {streak.count > 0 && (
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-white">
-              <span className="text-lg">🔥</span>
-              <span className="text-sm font-semibold">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-orange-400/20 bg-orange-500/10 px-3.5 py-1.5 text-white">
+              <span className="text-base">🔥</span>
+              <span className="text-sm font-bold text-orange-100">
                 {streak.count}-day streak
+              </span>
+            </div>
+          )}
+          {unlockedCount > 0 && (
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/20 bg-amber-500/10 px-3.5 py-1.5 text-white">
+              <span className="text-base">🏆</span>
+              <span className="text-sm font-bold text-amber-100">
+                {unlockedCount} milestone{unlockedCount !== 1 ? "s" : ""}
               </span>
             </div>
           )}
         </div>
 
-        {/* Navigation + Auth */}
+        {/* Right: Navigation + Auth */}
         <div className="flex flex-wrap items-center gap-2 md:justify-end">
-          {unlockedCount > 0 && (
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-white">
-              <span className="text-lg">🏆</span>
-              <span className="text-sm font-semibold">
-                {unlockedCount} milestone{unlockedCount !== 1 ? "s" : ""}
-              </span>
-            </div>
-          )}
-
           <Link
             href={featuresHref}
-            className="nav-link rounded-full border border-white/8 px-4 py-2.5 text-sm font-semibold text-white/60 transition hover:border-white/20 hover:text-white/90"
+            className="nav-link rounded-full px-4 py-2 text-sm font-medium text-white/55 transition hover:text-white/90"
           >
             Features
           </Link>
 
           <Link
             href={faqHref}
-            className="nav-link rounded-full border border-white/8 px-4 py-2.5 text-sm font-semibold text-white/60 transition hover:border-white/20 hover:text-white/90"
+            className="nav-link rounded-full px-4 py-2 text-sm font-medium text-white/55 transition hover:text-white/90"
           >
             FAQ
           </Link>
 
           <button
             onClick={onToggleDashboard}
-            className={`nav-link whitespace-nowrap rounded-full px-5 py-2.5 text-sm font-semibold transition-colors duration-150 ${
+            className={`nav-link whitespace-nowrap rounded-full border px-4 py-2 text-sm font-semibold transition-all duration-150 ${
               showDashboard
-                ? "border border-blue-500/30 bg-blue-500/15 text-white"
-                : "border border-white/8 text-white/60 hover:border-white/20 hover:text-white/90"
+                ? "border-blue-400/40 bg-blue-500/20 text-blue-200 shadow-[0_0_16px_rgba(59,130,246,0.2)]"
+                : "border-white/10 bg-white/[0.04] text-white/55 hover:border-white/20 hover:bg-white/[0.07] hover:text-white/80"
             }`}
             title="View stats and analytics"
           >
@@ -103,39 +109,39 @@ export function MVPHeader({
 
           <Link
             href={upgradeHref}
-            className="nav-link relative z-40 cursor-pointer pointer-events-auto rounded-full bg-blue-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-blue-400"
+            className="nav-link relative z-40 cursor-pointer pointer-events-auto rounded-full border border-blue-400/30 bg-blue-500/15 px-4 py-2 text-sm font-bold text-blue-200 transition hover:border-blue-400/50 hover:bg-blue-500/25 hover:text-blue-100 hover:shadow-[0_0_16px_rgba(59,130,246,0.25)]"
           >
             Plans
           </Link>
 
           {/* Auth */}
           {!authEnabled ? (
-            <div className="max-w-full rounded-full border border-amber-400/20 bg-amber-500/8 px-3 py-2 text-xs font-semibold text-amber-100">
+            <div className="max-w-full rounded-full border border-amber-400/20 bg-amber-500/8 px-3 py-2 text-xs font-semibold text-amber-200">
               Guest mode
             </div>
           ) : !isSignedIn ? (
             <>
               <Link
                 href={authLinks.signUp}
-                className="nav-link relative z-40 cursor-pointer pointer-events-auto rounded-full border border-white/10 px-4 py-2.5 text-sm font-semibold text-white/70 transition hover:border-white/25 hover:text-white"
+                className="nav-link relative z-40 cursor-pointer pointer-events-auto rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 text-sm font-semibold text-white/65 transition hover:border-white/25 hover:bg-white/[0.08] hover:text-white"
               >
-                Create account
+                Sign up
               </Link>
               <Link
                 href={authLinks.signIn}
-                className="relative z-40 cursor-pointer pointer-events-auto rounded-full bg-white px-5 py-2.5 text-sm font-bold text-black transition-colors duration-150 hover:bg-white/90"
+                className="relative z-40 cursor-pointer pointer-events-auto rounded-full bg-white px-5 py-2 text-sm font-bold text-black transition hover:bg-white/92 hover:shadow-[0_0_20px_rgba(255,255,255,0.15)]"
               >
-                Sign In
+                Sign in
               </Link>
             </>
           ) : (
             <>
-              <div className="max-w-full rounded-full border border-emerald-400/20 bg-emerald-500/8 px-3 py-2 text-xs font-semibold text-emerald-200">
-                Signed in{userFirstName ? ` as ${userFirstName}` : ""}
+              <div className="max-w-full rounded-full border border-emerald-400/25 bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-300">
+                {userFirstName ? `Hi, ${userFirstName}` : "Signed in"}
               </div>
               <SignOutButton>
-                <button className="px-4 py-2.5 rounded-full text-sm font-semibold border border-white/10 text-white/70 transition hover:border-white/25 hover:text-white">
-                  Sign Out
+                <button className="px-4 py-2 rounded-full text-sm font-semibold border border-white/10 bg-white/[0.04] text-white/60 transition hover:border-white/25 hover:bg-white/[0.08] hover:text-white">
+                  Sign out
                 </button>
               </SignOutButton>
               <UserButton

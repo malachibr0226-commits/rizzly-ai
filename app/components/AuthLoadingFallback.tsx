@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-
-const CANONICAL_APP_URL = "https://rizzlyai.com";
+import {
+  resolveCanonicalAppUrl,
+  shouldUseCanonicalAuthForHost,
+} from "@/lib/site-url";
 
 export function AuthLoadingFallback({
   mode,
@@ -30,11 +32,10 @@ export function AuthLoadingFallback({
     }
 
     const hostname = window.location.hostname.toLowerCase();
-    const isPreviewHost = hostname.endsWith(".vercel.app");
-    const isWwwHost = hostname === "www.rizzlyai.com";
+    const shouldRedirectToCanonicalHost = shouldUseCanonicalAuthForHost(hostname);
 
-    if (isPreviewHost || isWwwHost) {
-      const target = new URL(`${CANONICAL_APP_URL}/${mode}`);
+    if (shouldRedirectToCanonicalHost) {
+      const target = resolveCanonicalAppUrl(`/${mode}`);
       target.search = window.location.search;
       window.location.replace(target.toString());
       return;

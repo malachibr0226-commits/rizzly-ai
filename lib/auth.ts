@@ -6,12 +6,14 @@
  */
 
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { CANONICAL_PRODUCTION_URL } from "@/lib/site-url";
 
 const clerkPublishableKey =
   process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.trim() ?? "";
 const clerkEnvIsConfigured = Boolean(
   process.env.CLERK_SECRET_KEY && clerkPublishableKey,
 );
+export const CLERK_PROXY_PATH = "/__clerk";
 const BUILT_IN_ADMIN_EMAILS: string[] = [];
 const BUILT_IN_PRO_EMAILS: string[] = [];
 export const AUTH_DISABLED_REASON = !clerkEnvIsConfigured
@@ -50,6 +52,31 @@ export interface User {
 
 export function isClerkConfigured() {
   return clerkEnvIsConfigured;
+}
+
+export function resolveClerkProxyUrl() {
+  if (!clerkEnvIsConfigured) {
+    return undefined;
+  }
+
+  const rawProxyPath =
+    process.env.NEXT_PUBLIC_CLERK_PROXY_URL?.trim() || CLERK_PROXY_PATH;
+
+  if (/^https?:\/\//i.test(rawProxyPath)) {
+    return rawProxyPath;
+  }
+
+  const normalizedPath = rawProxyPath.startsWith("/")
+    ? rawProxyPath
+    : `/${rawProxyPath.replace(/^\/+/, "")}`;
+  const baseUrl =
+    process.env.NODE_ENV === "production"
+      ? CANONICAL_PRODUCTION_URL
+      : "http://localhost:3000";
+
+  // Force Clerk through a stable same-origin proxy so sign-in does not depend
+  // on the currently broken `clerk.rizzlyai.com` DNS or preview domains.
+  return new URL(normalizedPath, baseUrl).toString();
 }
 
 export function hasAdminEmailAccess(email: string | null | undefined) {

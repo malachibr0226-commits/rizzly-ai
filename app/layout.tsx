@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import { AppAuthProvider } from "@/app/components/AppAuthProvider";
-import { isClerkConfigured } from "@/lib/auth";
+import { isClerkConfigured, resolveClerkProxyUrl } from "@/lib/auth";
 import { resolveSiteUrl } from "@/lib/site-url";
 import "./globals.css";
 
@@ -58,7 +58,11 @@ export const metadata: Metadata = {
     follow: true,
   },
   icons: {
-    icon: "/icon.svg",
+    icon: [
+      { url: "/logo.png", sizes: "512x512", type: "image/png" },
+      { url: "/icon.svg", sizes: "any", type: "image/svg+xml" },
+    ],
+    shortcut: "/logo.png",
     apple: "/logo.png",
   },
   appleWebApp: {
@@ -106,6 +110,7 @@ export default function RootLayout({
 }>) {
   const authEnabled = isClerkConfigured();
   const publishableKey = resolveClerkPublishableKey();
+  const clerkProxyUrl = resolveClerkProxyUrl();
 
   const appShell = (
     <AppAuthProvider authEnabled={authEnabled} publishableKey={publishableKey}>
@@ -130,6 +135,7 @@ export default function RootLayout({
         {authEnabled ? (
           <ClerkProvider
             publishableKey={publishableKey}
+            proxyUrl={clerkProxyUrl}
             signInUrl="/sign-in"
             signUpUrl="/sign-up"
             afterSignOutUrl="/"

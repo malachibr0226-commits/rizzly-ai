@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 type AdminSnapshot = {
   allowed: boolean;
@@ -28,7 +28,7 @@ export function AdminPanel({ isSignedIn }: { isSignedIn: boolean }) {
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
 
-  const fetchSnapshot = async () => {
+  const fetchSnapshot = useCallback(async () => {
     if (!isSignedIn) {
       setSnapshot(EMPTY_SNAPSHOT);
       setResolved(true);
@@ -70,11 +70,11 @@ export function AdminPanel({ isSignedIn }: { isSignedIn: boolean }) {
       setLoading(false);
       setResolved(true);
     }
-  };
+  }, [isSignedIn]);
 
   useEffect(() => {
     void fetchSnapshot();
-  }, [isSignedIn]);
+  }, [fetchSnapshot]);
 
   const metricCards = useMemo(
     () => [

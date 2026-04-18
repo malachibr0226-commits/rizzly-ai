@@ -4,8 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAppAuth } from "@/app/components/AppAuthProvider";
-import { useUser } from "@clerk/nextjs";
-import dynamic from "next/dynamic";
 import { useMVPFeatures } from "@/app/hooks/useMVPFeatures";
 import { Dashboard } from "@/app/components/Dashboard";
 import { MVPHeader } from "@/app/components/MVPHeader";
@@ -63,6 +61,7 @@ import {
   type UsageSnapshot,
 } from "@/lib/product-features";
 import type { PlanTier } from "@/lib/pricing";
+import { resolveAuthNavigationTarget } from "@/lib/site-url";
 
 type Reply = {
   text: string;
@@ -1017,7 +1016,6 @@ function ToneDropdown({
 
 export default function HomePage() {
   const { isSignedIn, authEnabled } = useAppAuth();
-  const { user } = useUser();
   const [standaloneLiveCoach, setStandaloneLiveCoach] = useState(false);
 
   // Photo reply modal state (must be inside the component)
@@ -1104,7 +1102,6 @@ export default function HomePage() {
   const handleGenerateRef = useRef<() => void>(() => {});
 
   const currentPlan = usageSnapshot.planTier;
-  const isPlus = currentPlan === "plus";
   const isPro = currentPlan === "pro";
   const hasPaidPlan = currentPlan !== "free";
   const effectiveTone = hasPlanAccess(
@@ -1946,11 +1943,10 @@ export default function HomePage() {
   const promptSignIn = (message: string) => {
     setError(message);
     if (typeof window !== "undefined") {
-      const isNonCanonicalHost = window.location.hostname.endsWith(".vercel.app");
-
-      window.location.href = isNonCanonicalHost
-        ? "https://rizzlyai.com/sign-in"
-        : "/sign-in";
+      window.location.href = resolveAuthNavigationTarget(
+        "/sign-in",
+        window.location.hostname,
+      );
     }
   };
 
@@ -2635,7 +2631,7 @@ export default function HomePage() {
   };
 
   return (
-    <main id="main-content" tabIndex={-1} className="relative min-h-screen overflow-hidden bg-[#0e141d] pb-32 text-white sm:pb-0">
+    <main id="main-content" tabIndex={-1} className="relative min-h-screen overflow-hidden bg-[#080c14] pb-32 text-white sm:pb-0">
       <style>{`
         @media (min-width: 1280px) {
           .main-responsive-grid {
@@ -2718,25 +2714,30 @@ export default function HomePage() {
         .typing-dot { animation: typing-bounce 1.4s ease-in-out infinite; }
       `}</style>
 
-      {/* Subtle top glow */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(59,130,246,0.05),transparent_60%)]" />
+      {/* Background glows */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(59,130,246,0.12),transparent_55%)]" />
+      <div className="pointer-events-none absolute left-[10%] top-[30%] h-96 w-96 rounded-full bg-fuchsia-700/5 blur-3xl" />
+      <div className="pointer-events-none absolute right-[5%] top-[60%] h-80 w-80 rounded-full bg-blue-700/5 blur-3xl" />
 
       <div className="relative z-10 mx-auto w-full wider-main-ui px-4 py-10 md:px-8 lg:px-10" style={{ maxWidth: "1680px" }}>
-        <header className="mb-20 flex flex-col items-center justify-center gap-5 pt-8 md:mb-24 md:pt-12">
-          {/* Logo — seamless on black */}
-          <svg width="52" height="52" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="hero-bubble" x1="4" y1="6" x2="28" y2="26" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#3b82f6"/>
-                <stop offset="100%" stopColor="#6366f1"/>
-              </linearGradient>
-            </defs>
-            <path d="M7 9C7 7.34 8.34 6 10 6H22C23.66 6 25 7.34 25 9V18C25 19.66 23.66 21 22 21H18L13 26V21H10C8.34 21 7 19.66 7 18V9Z" fill="url(#hero-bubble)"/>
-            <circle cx="12.5" cy="13.5" r="1.8" fill="white"/>
-            <circle cx="16" cy="13.5" r="1.8" fill="white"/>
-            <circle cx="19.5" cy="13.5" r="1.8" fill="white"/>
-          </svg>
-          <span className="text-[11px] font-semibold uppercase tracking-[0.4em] text-white/30">
+        <header className="mb-16 flex flex-col items-center justify-center gap-4 pt-8 md:mb-20 md:pt-10">
+          {/* Logo with glow ring */}
+          <div className="relative flex h-[72px] w-[72px] items-center justify-center rounded-2xl border border-blue-400/20 bg-gradient-to-br from-blue-600/20 to-indigo-700/20 shadow-[0_0_36px_rgba(59,130,246,0.2)]">
+            <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="hero-bubble" x1="4" y1="6" x2="28" y2="26" gradientUnits="userSpaceOnUse">
+                  <stop offset="0%" stopColor="#60a5fa"/>
+                  <stop offset="100%" stopColor="#818cf8"/>
+                </linearGradient>
+              </defs>
+              <path d="M7 9C7 7.34 8.34 6 10 6H22C23.66 6 25 7.34 25 9V18C25 19.66 23.66 21 22 21H18L13 26V21H10C8.34 21 7 19.66 7 18V9Z" fill="url(#hero-bubble)"/>
+              <circle cx="12.5" cy="13.5" r="1.8" fill="white"/>
+              <circle cx="16" cy="13.5" r="1.8" fill="white"/>
+              <circle cx="19.5" cy="13.5" r="1.8" fill="white"/>
+            </svg>
+          </div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.4em] text-blue-300">
+            <span className="h-1.5 w-1.5 rounded-full bg-blue-400" />
             Rizzly AI
           </span>
         </header>
@@ -2749,9 +2750,12 @@ export default function HomePage() {
         />
 
         {isSignedIn && hasPaidPlan && (
-          <div className="mb-8 rounded-2xl border border-white/[0.06] bg-white/[0.02] px-5 py-4 text-sm">
-            <div className="font-semibold text-white/70">{isPro ? "Pro active" : "Plus active"}</div>
-            <p className="mt-1 text-white/30">
+          <div className="mb-8 rounded-2xl border border-emerald-400/20 bg-gradient-to-r from-emerald-500/10 to-teal-500/5 px-5 py-4 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <div className="font-bold text-emerald-200">{isPro ? "Rizzly Pro active" : "Rizzly Plus active"}</div>
+            </div>
+            <p className="mt-1.5 text-white/50">
               {isPro
                 ? "Higher limits, synced memory, and the full premium stack are unlocked."
                 : "More daily volume, saved voice setup, and extra tone modes are unlocked."}
@@ -2776,10 +2780,10 @@ export default function HomePage() {
 
             <h1 className="mb-8 text-balance text-5xl font-black leading-[1.02] tracking-[-0.045em] text-white md:text-7xl lg:text-8xl">
               Clear replies,<br />
-              <span className="bg-gradient-to-r from-blue-400 via-blue-300 to-indigo-400 bg-clip-text text-transparent">in your voice.</span>
+              <span className="bg-gradient-to-r from-blue-400 via-violet-300 to-indigo-400 bg-clip-text text-transparent">in your voice.</span>
             </h1>
 
-            <p className="max-w-xl text-pretty text-base leading-relaxed text-white/40 md:text-lg">
+            <p className="max-w-xl text-pretty text-base leading-relaxed text-white/60 md:text-lg">
               Turn chats, screenshots, and voice notes into grounded next messages — natural, useful, and ready to send.
             </p>
 
@@ -2790,60 +2794,58 @@ export default function HomePage() {
                   trackCtaClick("try_free", "hero");
                   jumpToStudio();
                 }}
-                className="inline-flex items-center justify-center rounded-full bg-white px-8 py-3.5 text-sm font-bold text-black transition hover:bg-white/90"
+                className="cta-glow-btn inline-flex items-center justify-center rounded-full bg-white px-8 py-3.5 text-sm font-bold text-black transition hover:bg-white/92 hover:shadow-[0_0_32px_rgba(255,255,255,0.18)]"
               >
-                Start
+                Start free
               </button>
 
               <a
                 href={isSignedIn ? "#message-studio" : "/sign-up"}
                 onClick={() => trackCtaClick(isSignedIn ? "open_thread" : "create_account", "hero")}
-                className="inline-flex items-center justify-center rounded-full border border-white/10 px-8 py-3.5 text-sm font-medium text-white/50 transition hover:border-white/20 hover:text-white/70"
+                className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/[0.06] px-8 py-3.5 text-sm font-semibold text-white/65 transition hover:border-white/25 hover:bg-white/[0.1] hover:text-white/85"
               >
                 {isSignedIn ? "Open workspace" : "Create account"}
               </a>
             </div>
 
-            <div className="mt-8 flex flex-wrap gap-2.5 text-[11px] text-white/25">
-              <span>Personal chats</span>
-              <span className="text-white/15">·</span>
-              <span>Follow-ups</span>
-              <span className="text-white/15">·</span>
-              <span>Plans & scheduling</span>
+            <div className="mt-8 flex flex-wrap gap-2">
+              {["Personal chats", "Follow-ups", "Plans & scheduling"].map((tag) => (
+                <span key={tag} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] text-white/45">{tag}</span>
+              ))}
             </div>
           </div>
 
-          <div className="mx-auto w-full max-w-md min-w-[320px] rounded-[24px] border border-white/[0.06] bg-white/[0.02] p-5 md:p-7">
+          <div className="mx-auto w-full max-w-md min-w-[320px] rounded-[28px] border border-white/[0.1] bg-[linear-gradient(135deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] p-5 shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-xl md:p-7">
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-[10px] font-medium uppercase tracking-[0.3em] text-white/25">Mood</div>
-                  <div className="mt-1.5 text-xl font-bold text-white/90">{liveStatus.label}</div>
+                  <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/35">Live status</div>
+                  <div className="mt-1.5 text-xl font-black text-white">{liveStatus.label}</div>
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.06] px-3.5 py-1.5 text-xs text-white/40">
-                  <span className={`h-1.5 w-1.5 rounded-full ${liveStatus.dot}`} />
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.1] bg-black/20 px-3.5 py-1.5 text-xs text-white/55">
+                  <span className={`h-2 w-2 rounded-full ${liveStatus.dot} shadow-[0_0_6px_currentColor]`} />
                   <span>{liveStatus.detail}</span>
                 </div>
               </div>
 
-              <div className="my-5 h-px bg-white/[0.06]" />
+              <div className="my-5 h-px bg-white/[0.08]" />
 
               <div>
-                <div className="mb-4 text-[10px] font-medium uppercase tracking-[0.3em] text-white/20">
+                <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.3em] text-white/30">
                   Chemistry snapshot
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="col-span-2 rounded-2xl bg-white/[0.03] px-4 py-4 text-center">
-                    <div className="text-sm font-semibold text-white/70">{pulseMetrics.toneLabel}</div>
-                    <div className="mt-1.5 text-[10px] uppercase tracking-[0.2em] text-white/25">Tone</div>
+                  <div className="col-span-2 rounded-2xl border border-white/[0.07] bg-white/[0.04] px-4 py-4 text-center">
+                    <div className="text-sm font-bold text-white/85">{pulseMetrics.toneLabel}</div>
+                    <div className="mt-1.5 text-[10px] uppercase tracking-[0.2em] text-white/35">Tone</div>
                   </div>
-                  <div className="rounded-2xl bg-white/[0.03] px-4 py-4 text-center">
-                    <div className="text-sm font-semibold text-white/70">{pulseMetrics.confidenceLabel}</div>
-                    <div className="mt-1.5 text-[10px] uppercase tracking-[0.2em] text-white/25">Confidence</div>
+                  <div className="rounded-2xl border border-white/[0.07] bg-white/[0.04] px-4 py-4 text-center">
+                    <div className="text-sm font-bold text-white/85">{pulseMetrics.confidenceLabel}</div>
+                    <div className="mt-1.5 text-[10px] uppercase tracking-[0.2em] text-white/35">Confidence</div>
                   </div>
-                  <div className="rounded-2xl bg-white/[0.03] px-4 py-4 text-center">
-                    <div className="text-sm font-semibold text-white/70">{pulseMetrics.energyLabel}</div>
-                    <div className="mt-1.5 text-[10px] uppercase tracking-[0.2em] text-white/25">Interest</div>
+                  <div className="rounded-2xl border border-white/[0.07] bg-white/[0.04] px-4 py-4 text-center">
+                    <div className="text-sm font-bold text-white/85">{pulseMetrics.energyLabel}</div>
+                    <div className="mt-1.5 text-[10px] uppercase tracking-[0.2em] text-white/35">Interest</div>
                   </div>
                 </div>
               </div>
@@ -2877,13 +2879,13 @@ export default function HomePage() {
         <div className="grid gap-6 lg:grid-cols-2">
           <div className="space-y-6 min-w-0">
             {!standaloneLiveCoach && currentThread && (
-              <div className="rounded-lg border border-white/10 bg-white/4 p-4">
+              <div className="rounded-xl border border-white/[0.1] bg-white/[0.04] p-4">
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="text-xs uppercase tracking-[0.15em] text-white/40">
+                    <div className="text-xs uppercase tracking-[0.15em] text-white/45">
                       Active Thread
                     </div>
-                    <div className="mt-1 truncate text-sm font-semibold text-white">
+                    <div className="mt-1 truncate text-sm font-bold text-white">
                       {currentThread.name}
                     </div>
                     {currentThread.profileName && (
@@ -2935,7 +2937,7 @@ export default function HomePage() {
               />
             )}
 
-            <section id="message-studio" className="overflow-visible rounded-xl border border-white/10 bg-white/3 backdrop-blur-sm before:hidden min-w-0">
+            <section id="message-studio" className="overflow-visible rounded-2xl border border-white/[0.1] bg-[linear-gradient(160deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] backdrop-blur-sm before:hidden min-w-0">
               <div className="border-b border-white/10 px-5 py-4">
                 <div className="mb-3 inline-flex w-fit rounded-full border border-white/10 bg-black/20 p-1">
                   <button
@@ -3148,7 +3150,7 @@ export default function HomePage() {
                   </div>
 
                   <p className="mt-2 text-[11px] text-cyan-50/70">
-                    Example: <span className="text-white/80">they said "idk maybe"</span> or <span className="text-white/80">"start a conversation"</span> → live coach gives what to text back, how to say it, and what to do next.
+                    Example: <span className="text-white/80">they said &quot;idk maybe&quot;</span> or <span className="text-white/80">&quot;start a conversation&quot;</span> → live coach gives what to text back, how to say it, and what to do next.
                   </p>
                   {!isPro && (
                     <p className="mt-2 text-[11px] text-fuchsia-50/80">

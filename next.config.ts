@@ -55,6 +55,16 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.rizzlyai.com" }],
+        destination: "https://rizzlyai.com/:path*",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

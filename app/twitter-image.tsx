@@ -29,19 +29,42 @@ export default function TwitterImage() {
           style={{
             display: "flex",
             alignItems: "center",
-            gap: 14,
+            gap: 18,
             fontSize: 28,
-            opacity: 0.9,
+            opacity: 0.96,
           }}
         >
           <div
             style={{
-              width: 18,
-              height: 18,
-              borderRadius: 999,
-              background: "#94a3b8",
+              width: 54,
+              height: 54,
+              borderRadius: 16,
+              background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+              overflow: "hidden",
             }}
-          />
+          >
+            <div
+              style={{
+                width: 34,
+                height: 26,
+                borderRadius: 10,
+                background: "linear-gradient(135deg, #3b82f6 0%, #6366f1 100%)",
+                position: "relative",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 4,
+              }}
+            >
+              <div style={{ width: 5, height: 5, borderRadius: 999, background: "white" }} />
+              <div style={{ width: 5, height: 5, borderRadius: 999, background: "white" }} />
+              <div style={{ width: 5, height: 5, borderRadius: 999, background: "white" }} />
+            </div>
+          </div>
           Rizzly AI
         </div>
 

@@ -51,7 +51,10 @@ export async function POST(req: Request) {
     );
   }
 
-  const { limited, remaining, retryAfterMs } = rateLimit(req, { max: 10, windowMs: 60_000 });
+  const { limited, retryAfterMs } = rateLimit(req, {
+    max: 10,
+    windowMs: 60_000,
+  });
   if (limited) {
     return NextResponse.json(
       { error: "Too many requests. Please wait a moment and try again." },

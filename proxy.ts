@@ -1,6 +1,6 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextRequest, NextResponse } from "next/server";
-import { isClerkConfigured } from "@/lib/auth";
+import { CLERK_PROXY_PATH, isClerkConfigured } from "@/lib/auth";
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -25,18 +25,26 @@ function redirectToCanonicalHost(req: NextRequest) {
   return NextResponse.redirect(canonicalUrl, 308);
 }
 
-const configuredProxy = clerkMiddleware(async (auth, req) => {
-  const redirect = redirectToCanonicalHost(req);
-  if (redirect) {
-    return redirect;
-  }
+const configuredProxy = clerkMiddleware(
+  async (auth, req) => {
+    const redirect = redirectToCanonicalHost(req);
+    if (redirect) {
+      return redirect;
+    }
 
-  if (!isPublicRoute(req)) {
-    await auth.protect();
-  }
+    if (!isPublicRoute(req)) {
+      await auth.protect();
+    }
 
-  return NextResponse.next();
-});
+    return NextResponse.next();
+  },
+  {
+    frontendApiProxy: {
+      enabled: true,
+      path: CLERK_PROXY_PATH,
+    },
+  },
+);
 
 const shouldUseClerkProxy =
   process.env.NODE_ENV === "production" && isClerkConfigured();
@@ -51,7 +59,7 @@ export const config = {
   matcher: [
     // Skip Next.js internals and all static files
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
-    "/(api|trpc)(.*)",
+    // Always run for API routes and Clerk proxy requests
+    "/(api|trpc|__clerk)(.*)",
   ],
 };
